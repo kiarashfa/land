@@ -27,6 +27,7 @@ Every decision gets an ID. Status is **decided**, **leaning** (a recommendation 
 | D-021 | Project objects | decided | Every project gets a bespoke sculpture designed for it (not an extruded icon). Its own round can refine it. | R02 |
 | D-022 | Flagships | decided | PolymerAtlas, Xefy, Markey, eXir, ARMAG, DrXRates, LaLista, Galerium. Spread across families on purpose. | R02 |
 | D-023 | Museums | decided | No museum worlds; Galerium already is one. More generally, avoid repeating Kia's own projects (PolymerAtlas compass, Galerium museum). | R02 |
-| D-024 | World concept | open | Round 02 offers new 3D worlds plus a sculpture study. Awaiting Kia's verdicts. | R02 |
+| D-024 | World concept | open | Round 02 offers a sculpture study plus Shadow Play, Mobile, Prism II, Quicksilver, Tunnel Book, Antique Shop (Kia's idea), Trophy Shelf (Kia's idea) and Riso Boxes (Kia's idea). Awaiting Kia's verdicts. | R02 |
 | D-025 | Mock history | decided | Mocks are never deleted; revisions are new files with `-v2`, `-v3`. | R02 |
 | D-026 | Particle emblem | leaning | Particles condensing into a shape, driven by scroll, belongs on project pages as an effect, not as the main world. | R02 |
+| D-027 | Riso reference | decided | Kia's "live boxes" risograph prompt is kept verbatim in `docs/references/riso-boxes-spec.md` as the spec for that direction. | R02 |

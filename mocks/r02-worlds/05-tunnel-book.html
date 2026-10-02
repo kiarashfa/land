@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tunnel Book · Round 02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cormorant+SC:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Layout: the screen is the peep-hole. Paper layers recede into it; a small colophon sits outside the frame. */
+:root{
+  --paper:#F1ECE3; --ink:#2A2520; --muted:#857C70; --rule:rgba(42,37,32,.18);
+  --serif:'EB Garamond',ui-serif,Georgia,serif; --sc:'Cormorant SC',ui-serif,Georgia,serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--paper);color:var(--ink);overflow:hidden;font-family:var(--serif)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(20px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:2;font-size:14px}
+.mk{font-family:var(--sc);font-size:22px;letter-spacing:.08em}
+nav{display:flex;gap:24px;color:var(--muted);font-style:italic}
+.colophon{position:fixed;left:clamp(16px,3vw,44px);bottom:clamp(22px,4vh,40px);z-index:2;max-width:min(380px,calc(100vw - 32px));background:rgba(241,236,227,.88);padding:12px 14px;border:1px solid var(--rule)}
+.colophon .k{font-family:var(--sc);font-size:13px;letter-spacing:.14em;color:var(--muted)}
+.colophon .n{font-size:34px;line-height:1.05;margin:2px 0 4px}
+.colophon .l{font-size:16px;line-height:1.4;color:var(--muted)}
+.colophon .f{font-style:italic;font-size:15px;margin-top:6px}
+.title{position:fixed;right:clamp(16px,3vw,44px);bottom:clamp(22px,4vh,40px);z-index:2;text-align:right;font-size:15px;font-style:italic;color:var(--muted);max-width:24ch;line-height:1.35}
+.title b{display:block;font-family:var(--sc);font-style:normal;font-weight:500;font-size:20px;letter-spacing:.06em;color:var(--ink)}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#ece6dc;background:rgba(42,37,32,.88);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#fff;font-weight:500}
+@media (max-width:760px){ nav{display:none} .title{display:none} .colophon .n{font-size:28px} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} .colophon{bottom:34px} }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="A paper tunnel book; each chamber holds a project cut from paper"></canvas>
+<header><span class="mk">KiarashFa</span><nav><span>Index</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<aside class="colophon" id="col"><div class="k" id="ck"></div><div class="n" id="cn"></div><div class="l" id="cl"></div><div class="f" id="cf"></div></aside>
+<p class="title"><b>A book you walk into</b>Each chamber is cut from paper for one project. Scroll to step through the next frame.</p>
+<a class="mockbar" href="../">← concepts · <b>R02 · 05 Tunnel Book</b> · three.js · alpha-cut paper + shadows</a>
+
+<script type="module">
+import * as T from '../vendor/three.bundle.min.js';
+import { PROJECTS, FAMILIES } from './_data.js';
+import { silhouette } from './_silhouette.js';
+
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFShadowMap;
+renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+const scene = new T.Scene(); const PAPER = new T.Color(0xf1ece3); scene.background = PAPER; scene.fog = new T.Fog(0xe9e2d6, 6, 26);
+const camera = new T.PerspectiveCamera(42, 1, .05, 60);
+scene.add(new T.HemisphereLight(0xfffaf2, 0xcfc4b2, 1.25));
+const sun = new T.DirectionalLight(0xfff3e0, 2.1); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: .5, far: 30 }); sun.shadow.bias = -.0008; sun.shadow.radius = 3;
+scene.add(sun, sun.target);
+
+const portrait = innerWidth < innerHeight, LW = portrait ? 3.6 : 6.4, LH = portrait ? 6.2 : 4.2, D = 6.2;
+// paper texture with fibres and a little tooth
+function paper(w, h, base, draw){
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
+  g.fillStyle = base; g.fillRect(0, 0, w, h);
+  const img = g.getImageData(0, 0, w, h); for (let i = 0; i < img.data.length; i += 4) { const n = (Math.random() - .5) * 10; img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n; } g.putImageData(img, 0, 0);
+  g.strokeStyle = 'rgba(0,0,0,.035)'; for (let k = 0; k < 220; k++) { g.beginPath(); const x = Math.random() * w, y = Math.random() * h; g.moveTo(x, y); g.quadraticCurveTo(x + Math.random() * 30, y + Math.random() * 10, x + Math.random() * 40, y + Math.random() * 6); g.stroke(); }
+  g.globalCompositeOperation = 'destination-out'; draw && draw(g, w, h); g.globalCompositeOperation = 'source-over';
+  const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+function layer(tex, w, h){ const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshStandardMaterial({ map: tex, alphaTest: .5, side: T.DoubleSide, roughness: .95 }));
+  m.customDepthMaterial = new T.MeshDepthMaterial({ depthPacking: T.RGBADepthPacking, map: tex, alphaTest: .5 }); m.castShadow = m.receiveShadow = true; return m; }
+const mixHex = (a, b, t) => '#' + new T.Color(a).lerp(new T.Color(b), t).getHexString();
+
+// openings vary from chamber to chamber
+const OPEN = [
+  (g, w, h) => { g.beginPath(); g.moveTo(w * .2, h); g.lineTo(w * .2, h * .45); g.arc(w * .5, h * .45, w * .3, Math.PI, 0); g.lineTo(w * .8, h); g.fill(); },
+  (g, w, h) => { g.beginPath(); g.ellipse(w * .5, h * .55, w * .32, h * .36, 0, 0, Math.PI * 2); g.fill(); },
+  (g, w, h) => { g.beginPath(); g.moveTo(w * .16, h); g.lineTo(w * .16, h * .4); for (let i = 0; i <= 8; i++) { const x = w * (.16 + i * .085); g.arc(x + w * .0425, h * .4, w * .0425, Math.PI, 0); } g.lineTo(w * .84, h); g.fill(); },
+  (g, w, h) => { const r = w * .06; g.beginPath(); g.roundRect(w * .17, h * .22, w * .66, h * .7, [r * 4, r * 4, r, r]); g.fill(); },
+];
+const chambers = [];
+function build(){
+  PROJECTS.forEach((p, i) => {
+    const z0 = -i * D, light = mixHex(p.color, '#f1ece3', .7), mid = mixHex(p.color, '#f1ece3', .35), deep = mixHex(p.color, '#2a2520', .25);
+    const grp = new T.Group(); grp.position.z = z0; scene.add(grp);
+    // front frame with the name cut out of it
+    const frame = layer(paper(1024, Math.round(1024 * LH / LW), light, (g, w, h) => { OPEN[i % OPEN.length](g, w, h);
+      g.font = `500 ${Math.round(w * .055)}px 'Cormorant SC', Georgia, serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.letterSpacing = '6px';
+      g.fillText(p.name.toUpperCase(), w * .5, h * .1); }), LW, LH);
+    grp.add(frame);
+    // a scalloped cloud layer, then the object itself cut from darker stock
+    const cloud = layer(paper(1024, 512, mid, (g, w, h) => { g.beginPath(); g.moveTo(0, 0); g.lineTo(w, 0); g.lineTo(w, h * .55);
+      for (let x = w; x >= 0; x -= w / 9) g.arc(x - w / 18, h * .55, w / 18, 0, Math.PI, false); g.lineTo(0, 0); g.fill(); g.fillRect(0, 0, w, h * .52); }), LW * .96, LH * .48);
+    cloud.position.set(0, -LH * .28, -.8); grp.add(cloud);
+    const sil = silhouette(renderer, p, 512);
+    const sc = document.createElement('canvas'); sc.width = sc.height = 512; const sg = sc.getContext('2d'); sg.drawImage(sil.canvas, 0, 0); sg.globalCompositeOperation = 'source-in'; sg.fillStyle = deep; sg.fillRect(0, 0, 512, 512);
+    const stex = new T.CanvasTexture(sc); stex.colorSpace = T.SRGBColorSpace;
+    const S = Math.min(LW, LH) * .62, obj = layer(stex, S, S); obj.position.set(0, -LH * .06, -1.6); grp.add(obj);
+    // ground strip and back wall with a sunburst
+    const ground = layer(paper(1024, 256, mid, (g, w, h) => { g.beginPath(); g.moveTo(0, 0); for (let x = 0; x <= w; x += 8) g.lineTo(x, h * .25 + Math.sin(x * .02 + i) * h * .08); g.lineTo(w, 0); g.fill(); }), LW * .9, LH * .2);
+    ground.position.set(0, -LH * .38, -1.3); grp.add(ground);
+    const back = layer(paper(1024, Math.round(1024 * LH / LW), light, null), LW, LH); back.position.z = -2.6;
+    const bg = back.material.map.image.getContext('2d'); bg.strokeStyle = mixHex(p.color, '#f1ece3', .55); bg.lineWidth = 3;
+    for (let k = 0; k < 48; k++) { const a = k / 48 * Math.PI * 2; bg.beginPath(); bg.moveTo(512, 380); bg.lineTo(512 + Math.cos(a) * 1400, 380 + Math.sin(a) * 1400); bg.stroke(); }
+    back.material.map.needsUpdate = true; grp.add(back);
+    // accordion folds along both sides, the spine of a tunnel book
+    [-1, 1].forEach(s => { for (let k = 0; k < 6; k++) { const f = new T.Mesh(new T.PlaneGeometry(.55, LH * 1.02), new T.MeshStandardMaterial({ color: k % 2 ? 0xe6dfd2 : 0xf3eee6, side: T.DoubleSide, roughness: .95 }));
+      f.position.set(s * (LW / 2 + .12), 0, -k * .44 - .2); f.rotation.y = s * (k % 2 ? .9 : -.9) + Math.PI / 2; f.receiveShadow = f.castShadow = true; grp.add(f); } });
+    chambers.push({ p, grp, frame, z0 });
+  });
+}
+document.fonts.ready.then(() => { build(); requestAnimationFrame(frame); });
+
+// virtual scroll through the chambers
+let target = 0, pos = 0;
+addEventListener('wheel', e => { target += e.deltaY * .0011; }, { passive: true });
+let ty = null; addEventListener('pointerdown', e => ty = e.clientY); addEventListener('pointerup', () => ty = null);
+addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; if (ty !== null && e.pointerType !== 'mouse') { target -= (e.clientY - ty) * .004; ty = e.clientY; } });
+let mx = 0, my = 0;
+const start = +(location.hash.slice(1)); if (location.hash && start >= 0) target = pos = start;
+function resize(){ renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.fov = portrait ? 58 : 42; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+const ck = document.getElementById('ck'), cn = document.getElementById('cn'), cl = document.getElementById('cl'), cf = document.getElementById('cf');
+let shown = -1;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(){
+  target = Math.max(0, Math.min(PROJECTS.length - 1, target)); pos += (target - pos) * (reduce ? 1 : .06);
+  const camZ = (portrait ? 5.6 : 5.3) - pos * D; camera.position.set(mx * .35, my * -.2, camZ); camera.lookAt(mx * .1, -.1, camZ - 6);
+  sun.position.set(-3, 5, camZ + 3); sun.target.position.set(0, -1, camZ - 4);
+  chambers.forEach(c => { const d = c.z0 - camZ; c.grp.visible = d < -.05 && d > -14; });
+  const i = Math.min(PROJECTS.length - 1, Math.max(0, Math.round(pos)));
+  if (i !== shown) { shown = i; const p = PROJECTS[i]; ck.textContent = FAMILIES.find(f => f.id === p.family).name + (p.flagship ? ' · Flagship' : ''); cn.textContent = p.name; cl.textContent = p.line; cf.textContent = p.for ? `Made for ${p.for}.` : ''; }
+  renderer.render(scene, camera); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

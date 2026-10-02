@@ -19,6 +19,7 @@ The future `kiarashfa.github.io`: a landing site that gathers all of Kia's side 
 | `docs/02-decisions.md` | Decision log (D-xxx). Update it at the end of every round. |
 | `docs/03-stress-test.md` | Risks (R-xxx) and mitigations, plus sandbox environment notes. |
 | `docs/04-roadmap.md` | Round plan and inputs needed from Kia. |
+| `docs/references/` | Reference material from Kia (e.g. the risograph "live boxes" spec). |
 | `mocks/` | Design mocks, one folder per round. `mocks/index.html` is the gallery. |
 | `tools/screenshots/` | Headless screenshot and thumbnail scripts for checking mocks. |
 
@@ -48,6 +49,8 @@ The production Astro app does not exist yet; it arrives in the architecture roun
 - Project icons and preview images copied from each repo live in `mocks/assets/projects/<slug>/` for mock use only. The real site should load icons from each project's own Pages site.
 - Mock pages are standalone HTML. Third-party code is vendored in `mocks/vendor/` (CDNs are blocked in the sandbox, and the artifact viewer only allows a few CDNs). `three.bundle.min.js` is three.js r186 plus the addons used, built with esbuild.
 - Every mock has a small `.mockbar` link back to the gallery naming the concept and its tech.
+- `08-riso-boxes.html` is deliberately self-contained (inline data, system fonts, Canvas 2D, one request), following `docs/references/riso-boxes-spec.md`.
+- `_dev-*` files are scratch pages (git-ignored), e.g. `r02-worlds/_dev-sheet.html` renders every sculpture in one contact sheet.
 - The gallery is authored in `mocks/_gallery-body.html` (the Artifact page source, no `<html>` wrapper). `mocks/index.html` is generated from it for GitHub Pages / local viewing. Edit the body file, then regenerate.
 - Respect `prefers-reduced-motion` in every mock and page.
 - Future project pages live under a URL prefix (`/p/<slug>/`), never at a top-level path that could match a project repo name (risk R-02).

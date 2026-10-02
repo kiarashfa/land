@@ -57,170 +57,183 @@ pre{background:var(--surface);border:1px solid var(--line);padding:14px 16px;fon
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media (max-width:860px){ .sheet,.lede,section.ask{grid-template-columns:1fr} .keys{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:16px} }
 @media (prefers-reduced-motion:reduce){ .card > a.shot img{transition:none} }
+.round{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin:clamp(36px,5vw,64px) 0 18px;border-top:2px solid var(--fg);padding-top:14px}
+.round h2{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.4vw,44px);line-height:1;margin:0}
+.round span{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.heard{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 28px;margin:0 0 clamp(28px,4vw,44px);padding:0;list-style:none;font-size:13.5px}
+.heard li{border-top:1px solid var(--line);padding-top:10px}
+.heard b{display:block;font-family:var(--mono);font-weight:400;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.card.wide{grid-column:1 / -1}
+.card.wide > a.shot{aspect-ratio:21/9}
+.yours{font-family:var(--mono);font-size:10.5px;color:var(--accent);border:1px solid var(--accent);padding:2px 6px;border-radius:2px;margin-left:auto;white-space:nowrap}
+.archive{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.arc{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);padding:10px;min-width:0}
+.arc img{width:96px;aspect-ratio:16/10;object-fit:cover;display:block;background:#000}
+.arc b{font-family:var(--serif);font-weight:400;font-size:20px;display:flex;gap:8px;align-items:baseline}
+.arc p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.v{font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:2px;border:1px solid var(--line)}
+.v.maybe{color:var(--accent);border-color:var(--accent)}
+.arc a{color:inherit;text-decoration:none}
+@media (max-width:860px){ .heard,.archive{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><b>KiarashFa</b><span>Landing site · Round 01 · World concepts · 9 mocks</span></div>
-  <h1>Nine worlds for <i>twenty-five</i> side projects.</h1>
+  <div class="top"><b>KiarashFa</b><span>Landing site · concept gallery · newest round first</span></div>
+  <h1>Round 02: <i>more 3D,</i> one object per project.</h1>
   <div class="lede">
     <div>
-      <p>Each mock is a different answer to one question: what kind of place should hold everything you make for the joy of it? They differ in metaphor, mood and technology. They are taste mocks, so judge the world and the feeling, not the content or the controls.</p>
-      <p>Open each one on a computer and on your phone. Only the first ten names are real projects; the rest are placeholders, and tiers are my guesses. Screens rendered on a real GPU look better than the thumbnails, which come from a software renderer.</p>
+      <p>Built from your Round 01 feedback and your project READMEs. Every world here holds any number of projects, and none of them states a count. The finite devices (the prism) only ever show a curated set. Each project now has its own sculpture, and the worlds restyle those same objects in gold, chrome, paper or brass.</p>
+      <p>Open each mock on a computer and on your phone. Scroll, drag or point inside them; most respond. Screens rendered on a real GPU look better than these thumbnails, which come from a software renderer.</p>
     </div>
     <div class="keys">
       <h2>How to read the tech labels</h2>
       <dl>
-        <dt>three.js</dt><dd>A 3D library. It draws through WebGL (or WebGPU) for us, with materials, lights and shadows.</dd>
-        <dt>raw shader</dt><dd>Hand-written GPU code with no library. Tiny and very fast, best for 2D light, terrain or lens effects.</dd>
-        <dt>Canvas 2D</dt><dd>No GPU 3D at all. Drawn line by line, like an engraving. Lightest and most robust.</dd>
-        <dt>physics</dt><dd>A rigid-body engine (matter.js here; Rapier for 3D) moves things you can grab and throw.</dd>
+        <dt>three.js</dt><dd>A 3D library drawing through WebGL or WebGPU, with materials, lights and shadows.</dd>
+        <dt>raw shader</dt><dd>Hand-written GPU code with no library. Quicksilver is ray-marched entirely in one shader.</dd>
+        <dt>Canvas 2D</dt><dd>No GPU 3D. Riso Boxes simulates the whole print process in code, with one network request.</dd>
       </dl>
     </div>
   </div>
+  <ul class="heard">
+    <li><b>Heard</b>Never count the projects. Whatever world holds them must work for any number.</li>
+    <li><b>Heard</b>Nothing academic. This is the maker, developer and designer side of you.</li>
+    <li><b>Heard</b>No museums (Galerium is one) and no compass dials (PolymerAtlas has one).</li>
+  </ul>
 
   <main class="sheet">
-    <article class="card">
-      <a class="shot" href="r01-concepts/01-monomer.html"><img src="r01-concepts/thumbs/01-monomer.jpg" alt="A chain of gold, glass, onyx and pearl beads floating in black" loading="lazy"></a>
+    <article class="card wide">
+      <a class="shot" href="r02-worlds/00-sculptures.html"><img src="r02-worlds/thumbs/00-sculptures.jpg" alt="Sculpture study page with a gold wire globe and a silver cloche" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">01</span><h3>Monomer</h3></div>
-        <p class="pitch">Twenty-five beads on one chain.</p>
-        <div class="chips"><span class="chip">dark luxury</span><span class="chip">tactile</span><span class="chip">three.js</span><span class="chip">verlet physics</span></div>
+        <div class="head"><span class="n">00</span><h3>Objects</h3></div>
+        <p class="pitch">An object for every project, designed for it.</p>
+        <div class="chips"><span class="chip">three.js</span><span class="chip">procedural sculpture</span><span class="chip">shared by every world below</span></div>
         <dl>
-          <dt>Story</dt><dd>You are a polymer scientist, so your body of work becomes one macromolecule. Each project is a monomer, and the chain doubles as a necklace.</dd>
-          <dt>The 25</dt><dd>One bead per project. Material and size encode tier (gold flagships, then glass, onyx, pearl). Drag the chain; hover a bead for its name.</dd>
-          <dt>Project 26</dt><dd>One more monomer joins the chain.</dd>
-          <dt>Watch out</dt><dd>Glass is heavy on weak phones and needs a fallback material. Reading names is indirect, so it needs a plain index view beside it.</dd>
+          <dt>What</dt><dd>First drafts of a bespoke sculpture per project, each from what its README says it is. A gold wire globe for PolymerAtlas, a cloche lifting off a glowing dish for Xefy, a fastback in wind-tunnel streamlines for Markey, a crystal coupe for eXir, a brass cartridge for ARMAG, the 108 flip clock for LOSTimer, Lumon's terminal for Pseudoku, a rain monolith on a black river for ConStyx, a mirror for your own site, and more.</dd>
+          <dt>Why it matters</dt><dd>Whatever world you choose, these objects carry the projects. Tell me which ones are right and which need rethinking.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/01-monomer.html">Open concept →</a><span>drag the chain</span></div>
+        <div class="open"><a href="r02-worlds/00-sculptures.html">Open the study →</a><span>hover an object to spin it</span></div>
       </div>
     </article>
 
     <article class="card">
-      <a class="shot" href="r01-concepts/02-prism.html"><img src="r01-concepts/thumbs/02-prism.jpg" alt="A white beam enters a glass prism and fans into 25 coloured lines, each labelled with a project" loading="lazy"></a>
+      <a class="shot" href="r02-worlds/01-shadow-play.html"><img src="r02-worlds/thumbs/01-shadow-play.jpg" alt="A tangle of brass rods casting the shadow of a cocktail glass on a lit wall" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">02</span><h3>Prism</h3></div>
-        <p class="pitch">One curiosity, twenty-five colours.</p>
-        <div class="chips"><span class="chip">dark minimal</span><span class="chip">scientific</span><span class="chip">raw shader</span><span class="chip">no library</span></div>
+        <div class="head"><span class="n">01</span><h3>Shadow Play</h3></div>
+        <p class="pitch">Every project is a tangle until you see it from the right angle.</p>
+        <div class="chips"><span class="chip">dark theatrical</span><span class="chip">three.js</span><span class="chip">instanced rods</span><span class="chip">real shadows</span></div>
         <dl>
-          <dt>Story</dt><dd>White light (your curiosity) enters a prism and splits. Every project is one wavelength, and the index of projects is the spectrum.</dd>
-          <dt>The 25</dt><dd>Each project owns a wavelength, which becomes its colour across the whole site. Hover a name to light its line.</dd>
-          <dt>Project 26</dt><dd>It takes a free wavelength. Existing colours never change.</dd>
-          <dt>Watch out</dt><dd>A prism invites the Dark Side of the Moon comparison. A 3D glass prism and a moving light source would make it ours.</dd>
+          <dt>Story</dt><dd>A bundle of brass rods hangs in a dark room. As you scroll it turns, and at exactly one angle its shadow on the wall becomes the project's object. Then the rods fly apart and re-form as the next one.</dd>
+          <dt>Any number</dt><dd>One project at a time in sequence, with an index at the side. The tangle is computed from each object's silhouette, so new projects need no manual work.</dd>
+          <dt>Watch out</dt><dd>The rod count must drop on older phones. The reveal is strongest for objects with clear silhouettes.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/02-prism.html">Open concept →</a><span>move the mouse up and down</span></div>
+        <div class="open"><a href="r02-worlds/01-shadow-play.html">Open →</a><span>scroll slowly</span></div>
       </div>
     </article>
 
     <article class="card">
-      <a class="shot" href="r01-concepts/03-cabinet.html"><img src="r01-concepts/thumbs/03-cabinet.jpg" alt="A museum page with engraved specimen plates and hanging labels" loading="lazy"></a>
+      <a class="shot" href="r02-worlds/02-mobile.html"><img src="r02-worlds/thumbs/02-mobile.jpg" alt="A Calder-style hanging mobile with small sculptures on black wire arms" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">03</span><h3>Cabinet</h3></div>
-        <p class="pitch">A cabinet of things I wished existed.</p>
-        <div class="chips"><span class="chip">light museum</span><span class="chip">editorial</span><span class="chip">Canvas 2D</span><span class="chip">no WebGL</span></div>
+        <div class="head"><span class="n">02</span><h3>Mobile</h3></div>
+        <p class="pitch">A mobile is never finished.</p>
+        <div class="chips"><span class="chip">light gallery</span><span class="chip">kinetic, calm</span><span class="chip">three.js</span><span class="chip">balanced tree</span></div>
         <dl>
-          <dt>Story</dt><dd>A cabinet of curiosities. Every project is a specimen with a catalogue number and a Latin name, and its plate is engraved by code from its name, in the spirit of Haeckel's drawings.</dd>
-          <dt>The 25</dt><dd>A 5 × 5 drawer of plates with labels on threads. Plates turn slowly when you hover.</dd>
-          <dt>Project 26</dt><dd>A new drawer, and a new plate generated from its name.</dd>
-          <dt>Watch out</dt><dd>The least spectacular option. It lives or dies on typographic precision.</dd>
+          <dt>Story</dt><dd>A Calder-style mobile hangs against a pale wall. Each family is a branch and each piece is a project's object. Moving across it makes a little wind; tapping a piece holds it still.</dd>
+          <dt>Any number</dt><dd>The tree is balanced by weight, so adding a project hangs one more piece and the whole thing finds its rest again. That is the scaling story told literally.</dd>
+          <dt>Watch out</dt><dd>With many pieces they get small, so it needs a zoom into a family branch.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/03-cabinet.html">Open concept →</a><span>scroll, hover a plate</span></div>
+        <div class="open"><a href="r02-worlds/02-mobile.html">Open →</a><span>move across it</span></div>
       </div>
     </article>
 
     <article class="card">
-      <a class="shot" href="r01-concepts/04-complications.html"><img src="r01-concepts/thumbs/04-complications.jpg" alt="A blue guilloché watch dial in a rose-gold case with 25 Roman numerals" loading="lazy"></a>
+      <a class="shot" href="r02-worlds/03-prism-ii.html"><img src="r02-worlds/thumbs/03-prism-ii.jpg" alt="A glass prism splitting white light into coloured beams that land on sculptures" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">04</span><h3>Complications</h3></div>
-        <p class="pitch">My day job tells the time. These are my complications.</p>
-        <div class="chips"><span class="chip">dark luxury</span><span class="chip">horology</span><span class="chip">Canvas 2D</span><span class="chip">no WebGL</span></div>
+        <div class="head"><span class="n">03</span><h3>Prism II</h3></div>
+        <p class="pitch">White light in. Things I wished existed, out.</p>
+        <div class="chips"><span class="chip">dark</span><span class="chip">curated sets only</span><span class="chip">three.js</span><span class="chip">dispersion + bloom</span></div>
         <dl>
-          <dt>Story</dt><dd>In watchmaking, a complication is anything a watch does beyond telling the time. The PhD is the time; the side projects are the complications.</dd>
-          <dt>The 25</dt><dd>25 indices with applied gold batons (doubled for flagships). A blued-steel hand swings to the project you point at; the date window shows its number; sub-dials show year and family.</dd>
-          <dt>Project 26</dt><dd>The dial re-divides into 26 indices.</dd>
-          <dt>Watch out</dt><dd>A very specific luxury reference. It gets dense on small phones, and must not read like a watch advert.</dd>
+          <dt>Story</dt><dd>Your favourite Round 01 idea, now in 3D. A real glass prism splits the beam, and each colour lands on a project's object and lights it.</dd>
+          <dt>Curated</dt><dd>As you suggested, the prism only splits a chosen set: the flagships on the home page, or one family on its own page. Try the switch at the top.</dd>
+          <dt>Watch out</dt><dd>It is a home-page hero, not the whole collection; the full set lives in another view.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/04-complications.html">Open concept →</a><span>point at the dial</span></div>
+        <div class="open"><a href="r02-worlds/03-prism-ii.html">Open →</a><span>switch sets, point at a colour</span></div>
       </div>
     </article>
 
     <article class="card">
-      <a class="shot" href="r01-concepts/05-latent.html"><img src="r01-concepts/thumbs/05-latent.jpg" alt="Tens of thousands of points forming concentric shells" loading="lazy"></a>
+      <a class="shot" href="r02-worlds/04-quicksilver.html"><img src="r02-worlds/thumbs/04-quicksilver.jpg" alt="A liquid-chrome armillary sphere on a dark mirror floor" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">05</span><h3>Latent</h3></div>
-        <p class="pitch">Everything I've made, embedded.</p>
-        <div class="chips"><span class="chip">dark scientific</span><span class="chip">three.js</span><span class="chip">48k GPU particles</span></div>
+        <div class="head"><span class="n">04</span><h3>Quicksilver</h3></div>
+        <p class="pitch">Every name is two words, fused. So is every project.</p>
+        <div class="chips"><span class="chip">dark chrome</span><span class="chip">raw shader</span><span class="chip">ray-marched</span><span class="chip">no library</span></div>
         <dl>
-          <dt>Story</dt><dd>Your machine-learning side. Projects are clusters in an embedding space, and each cluster condenses into its emblem: a helix, streamlines, a coupe glass, Mars, the letter ñ. It could be real: embed your own descriptions and project them at build time.</dd>
-          <dt>The 25</dt><dd>Clusters with a legend. The cloud tours from emblem to emblem; hovering the legend holds one.</dd>
-          <dt>Project 26</dt><dd>A new cluster lands where its description falls, plus one emblem shape designed in its own round.</dd>
-          <dt>Watch out</dt><dd>Particle clouds are a popular look. The emblems and the real embedding are what make it yours.</dd>
+          <dt>Story</dt><dd>Your project names fuse two words: marque and key, arm and magazine, gallery and museum. Two mercury droplets carry the two words, fuse, then pour into the project's object.</dd>
+          <dt>Any number</dt><dd>A sequence, one at a time. Each object is modelled as a signed distance field, a natural task for that project's own round.</dd>
+          <dt>Watch out</dt><dd>GPU-heavy on phones, so it renders at lower resolution there.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/05-latent.html">Open concept →</a><span>wait for the morph, hover the legend</span></div>
+        <div class="open"><a href="r02-worlds/04-quicksilver.html">Open →</a><span>scroll to pour the next</span></div>
       </div>
     </article>
 
     <article class="card">
-      <a class="shot" href="r01-concepts/06-kinetic.html"><img src="r01-concepts/thumbs/06-kinetic.jpg" alt="A brass pendulum sculpture with 25 swinging metal balls on a pale floor" loading="lazy"></a>
+      <a class="shot" href="r02-worlds/05-tunnel-book.html"><img src="r02-worlds/thumbs/05-tunnel-book.jpg" alt="A paper tunnel book with an oval cut-out frame and a red paper cloche" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">06</span><h3>Kinetic</h3></div>
-        <p class="pitch">Twenty-five things, each on its own rhythm.</p>
-        <div class="chips"><span class="chip">light gallery</span><span class="chip">playful</span><span class="chip">three.js</span><span class="chip">PBR + shadows</span></div>
+        <div class="head"><span class="n">05</span><h3>Tunnel Book</h3></div>
+        <p class="pitch">A book you walk into.</p>
+        <div class="chips"><span class="chip">light, paper</span><span class="chip">tactile</span><span class="chip">three.js</span><span class="chip">alpha-cut layers + shadows</span></div>
         <dl>
-          <dt>Story</dt><dd>A pendulum-wave sculpture. Each project swings at its own period, and together they fall in and out of step, the way side projects come and go.</dd>
-          <dt>The 25</dt><dd>One bob per project, in brass, chrome or black glass. Hover for a name; tap anywhere to release the wave again.</dd>
-          <dt>Project 26</dt><dd>Periods are computed from the count, so a 26th bob re-tunes the whole wave.</dd>
-          <dt>Watch out</dt><dd>Bobs are small targets on a phone, so it needs a list beside it.</dd>
+          <dt>Story</dt><dd>A paper peep-show with accordion folds down the sides. Each project is a chamber: its name cut out of the frame, its object as a paper silhouette, a sunburst behind. Scrolling walks you through the next frame.</dd>
+          <dt>Any number</dt><dd>Chambers in a row; the book simply gets deeper.</dd>
+          <dt>Watch out</dt><dd>Gentle and crafty rather than dramatic.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/06-kinetic.html">Open concept →</a><span>hover a bob, click to restart</span></div>
+        <div class="open"><a href="r02-worlds/05-tunnel-book.html">Open →</a><span>scroll through</span></div>
       </div>
     </article>
 
     <article class="card">
-      <a class="shot" href="r01-concepts/07-atlas.html"><img src="r01-concepts/thumbs/07-atlas.jpg" alt="An antique sea chart of islands with contour lines, rhumb lines and a compass rose" loading="lazy"></a>
+      <a class="shot" href="r02-worlds/06-antique-shop.html"><img src="r02-worlds/thumbs/06-antique-shop.jpg" alt="Dark wooden shelves in an antique shop with objects and handwritten tags" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">07</span><h3>Atlas</h3></div>
-        <p class="pitch">A new and exact chart of the KiarashFa Archipelago.</p>
-        <div class="chips"><span class="chip">light museum</span><span class="chip">exploration</span><span class="chip">raw shader</span><span class="chip">SVG</span></div>
+        <div class="head"><span class="n">06</span><h3>Antique Shop</h3><span class="yours">your idea</span></div>
+        <p class="pitch">Always open. Nothing for sale.</p>
+        <div class="chips"><span class="chip">warm, dusk</span><span class="chip">three.js</span><span class="chip">procedural interior</span></div>
         <dl>
-          <dt>Story</dt><dd>An antique portolan chart. Every project is an island, and the red dotted line is the voyage: the order you made them in. It nods to PolymerAtlas.</dd>
-          <dt>The 25</dt><dd>Islands sized by tier, with procedural terrain, contour lines and engraved coastal ripples. Drag to sail.</dd>
-          <dt>Project 26</dt><dd>Every new project raises a new island.</dd>
-          <dt>Watch out</dt><dd>It can drift toward a fantasy-novel map if it is overdone.</dd>
+          <dt>Story</dt><dd>A curiosity shop at dusk: plank floor, damask walls, window light and dust. Every object sits on a shelf with a handwritten tag, and every tag's price reads "free", because your projects are.</dd>
+          <dt>Any number</dt><dd>More shelving along the walls, then another aisle.</dd>
+          <dt>Watch out</dt><dd>Cosy rather than sleek, and it can tip into clutter.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/07-atlas.html">Open concept →</a><span>drag the chart</span></div>
+        <div class="open"><a href="r02-worlds/06-antique-shop.html">Open →</a><span>scroll along the shelves</span></div>
       </div>
     </article>
 
     <article class="card">
-      <a class="shot" href="r01-concepts/08-lens.html"><img src="r01-concepts/thumbs/08-lens.jpg" alt="Huge serif project names with a glass loupe magnifying one of them" loading="lazy"></a>
+      <a class="shot" href="r02-worlds/07-trophy-shelf.html"><img src="r02-worlds/thumbs/07-trophy-shelf.jpg" alt="A black lacquer wall of lit niches holding objects on brass-plaqued plinths" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">08</span><h3>Lens</h3></div>
-        <p class="pitch">The index is the hero.</p>
-        <div class="chips"><span class="chip">dark editorial</span><span class="chip">typographic</span><span class="chip">raw shader</span><span class="chip">canvas type</span></div>
+        <div class="head"><span class="n">07</span><h3>Trophy Shelf</h3><span class="yours">your idea</span></div>
+        <p class="pitch">No one handed these out.</p>
+        <div class="chips"><span class="chip">dark luxury</span><span class="chip">three.js</span><span class="chip">mirrored floor</span></div>
         <dl>
-          <dt>Story</dt><dd>Editorial confidence: the list of names is the design, set huge. A glass loupe slides over it and shows what each name holds.</dd>
-          <dt>The 25</dt><dd>The loupe magnifies with chromatic fringing and reveals a preview (later a real screenshot or loop). On a phone the loupe stays still and the names scroll under it.</dd>
-          <dt>Project 26</dt><dd>One more line in the list. The simplest to maintain.</dd>
-          <dt>Watch out</dt><dd>The least metaphorical option. It depends on great preview media.</dd>
+          <dt>Story</dt><dd>A lacquer wall of backlit niches with brass edges, one section per family. Every object stands on a plinth with an engraved plaque, and empty niches wait with blank plates.</dd>
+          <dt>Any number</dt><dd>The wall grows sideways and you pan along it.</dd>
+          <dt>Watch out</dt><dd>A grid of niches can read as cards unless the camera and light keep it theatrical.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/08-lens.html">Open concept →</a><span>move the loupe, scroll</span></div>
+        <div class="open"><a href="r02-worlds/07-trophy-shelf.html">Open →</a><span>scroll sideways, hover a niche</span></div>
       </div>
     </article>
 
-    <article class="card">
-      <a class="shot" href="r01-concepts/09-pebbles.html"><img src="r01-concepts/thumbs/09-pebbles.jpg" alt="Coloured polished stones engraved with project names piled on a pale table" loading="lazy"></a>
+    <article class="card wide">
+      <a class="shot" href="r02-worlds/08-riso-boxes.html"><img src="r02-worlds/thumbs/08-riso-boxes.jpg" alt="A risograph-printed sheet of isometric rooms with crop marks and ink swatches" loading="lazy"></a>
       <div class="body">
-        <div class="head"><span class="n">09</span><h3>Pebbles</h3></div>
-        <p class="pitch">Pick one up.</p>
-        <div class="chips"><span class="chip">light</span><span class="chip">playful / tactile</span><span class="chip">matter.js physics</span><span class="chip">Canvas 2D</span></div>
+        <div class="head"><span class="n">08</span><h3>Riso Boxes</h3><span class="yours">your idea</span></div>
+        <p class="pitch">Everything Kia has made, printed on one sheet.</p>
+        <div class="chips"><span class="chip">light, printed</span><span class="chip">Canvas 2D only</span><span class="chip">one network request</span><span class="chip">simulated risograph</span></div>
         <dl>
-          <dt>Story</dt><dd>Each project is cut from its own stone and engraved with its name. You can pick them up and throw them: a table top of things you made.</dd>
-          <dt>The 25</dt><dd>One stone each, with the stone type standing for family (lapis, basalt, jade, travertine…). Tap one to open it.</dd>
-          <dt>Project 26</dt><dd>One more stone drops in.</dd>
-          <dt>Watch out</dt><dd>Playful can tip into toy-like. Stone-on-stone sound design is what would make it feel precious.</dd>
+          <dt>Story</dt><dd>Each project is a cut-away isometric dollhouse room with someone doing the project's thing: cooking, mixing a drink, reading an atlas, tapping Morse, pushing the button in the Swan. The sheet prints in, then tours room by room. Drag, scroll or pinch to explore; double-click a room to visit it.</dd>
+          <dt>Print</dt><dd>Four spot inks, each halftoned at its own screen angle with its own misregistration, overprinted with multiply. Dot jitter, solid dropout, knock-outs, stepped light pools, and tapered linework that boils at 3 Hz from three seeded bakes.</dd>
+          <dt>Any number</dt><dd>The poster gains a row.</dd>
+          <dt>Watch out</dt><dd>The people are a first pass: three-key pose loops, not yet walking paths. Faces need sharper re-baking at close zoom. Each room deserves its own illustration round.</dd>
         </dl>
-        <div class="open"><a href="r01-concepts/09-pebbles.html">Open concept →</a><span>grab and throw</span></div>
+        <div class="open"><a href="r02-worlds/08-riso-boxes.html">Open →</a><span>wait for it to print, then zoom</span></div>
       </div>
     </article>
   </main>
@@ -229,33 +242,39 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
     <div>
       <h2>What I need from you</h2>
       <ol>
-        <li>For each concept: <b>love</b>, <b>maybe</b> or <b>no</b>, with one line on why.</li>
-        <li>Your top three, ranked.</li>
-        <li>Anything to steal across concepts: a typeface, a material, an interaction, a sentence.</li>
+        <li>For each Round 02 mock: <b>love</b>, <b>maybe</b> or <b>no</b>, and why.</li>
+        <li>The objects (00): which are right, which to rethink.</li>
+        <li>Anything to combine, for example the Prism as the home hero and the Trophy Shelf as the full index.</li>
       </ol>
-      <pre>01 Monomer       love / maybe / no   why…
-02 Prism         …
-03 Cabinet       …
-04 Complications …
-05 Latent        …
-06 Kinetic       …
-07 Atlas         …
-08 Lens          …
-09 Pebbles       …
-Top 3: …   Steal: …</pre>
+      <pre>00 Objects       …
+01 Shadow Play   love / maybe / no   why…
+02 Mobile        …
+03 Prism II      …
+04 Quicksilver   …
+05 Tunnel Book   …
+06 Antique Shop  …
+07 Trophy Shelf  …
+08 Riso Boxes    …</pre>
     </div>
     <div>
-      <h2>These can combine</h2>
-      <p>Each concept is three separable layers: the world (metaphor), the design language (type, palette, material) and the engine. You asked for several views over one data set, and different worlds can serve different views. For example:</p>
-      <ul>
-        <li><b>Home:</b> Monomer, with the chain as the signature.</li>
-        <li><b>Chronology:</b> Atlas, where the voyage line is literally time.</li>
-        <li><b>Families:</b> Complications, with sub-dials per family.</li>
-        <li><b>Project pages:</b> Cabinet plates as each project's generative emblem.</li>
-      </ul>
-      <p>Next round narrows to two or three directions and goes deeper: typography, palette, a real project page, motion and sound.</p>
+      <h2>Kept for later</h2>
+      <p>Particles condensing into a project's object as you scroll, from Latent, is saved for the project-page round, as you suggested. The one-line dedications from your READMEs ("for those who find joy in every sip") are already working as a voice in several mocks.</p>
+      <p>The next round narrows the worlds you pick and designs the project page and the move between them.</p>
     </div>
   </section>
+
+  <div class="round"><h2>Round 01 · archived</h2><span>kept with your verdicts; nothing is deleted</span></div>
+  <div class="archive">
+    <a class="arc" href="r01-concepts/01-monomer.html"><img src="r01-concepts/thumbs/01-monomer.jpg" alt="" loading="lazy"><div><b>Monomer <span class="v maybe">maybe</span></b><p>Nice graphics.</p></div></a>
+    <a class="arc" href="r01-concepts/02-prism.html"><img src="r01-concepts/thumbs/02-prism.jpg" alt="" loading="lazy"><div><b>Prism <span class="v maybe">maybe</span></b><p>Curiosity in, projects out. Became Prism II.</p></div></a>
+    <a class="arc" href="r01-concepts/03-cabinet.html"><img src="r01-concepts/thumbs/03-cabinet.jpg" alt="" loading="lazy"><div><b>Cabinet <span class="v">no</span></b><p>Too generic: cards representing projects.</p></div></a>
+    <a class="arc" href="r01-concepts/04-complications.html"><img src="r01-concepts/thumbs/04-complications.jpg" alt="" loading="lazy"><div><b>Complications <span class="v maybe">maybe</span></b><p>Best execution, but PolymerAtlas already has a compass.</p></div></a>
+    <a class="arc" href="r01-concepts/05-latent.html"><img src="r01-concepts/thumbs/05-latent.jpg" alt="" loading="lazy"><div><b>Latent <span class="v maybe">maybe</span></b><p>Good idea, poor execution; saved for project pages.</p></div></a>
+    <a class="arc" href="r01-concepts/06-kinetic.html"><img src="r01-concepts/thumbs/06-kinetic.jpg" alt="" loading="lazy"><div><b>Kinetic <span class="v">no</span></b><p>Vertigo to look at.</p></div></a>
+    <a class="arc" href="r01-concepts/07-atlas.html"><img src="r01-concepts/thumbs/07-atlas.jpg" alt="" loading="lazy"><div><b>Atlas <span class="v maybe">maybe</span></b><p>Led to objects of different sizes, each with an emblem.</p></div></a>
+    <a class="arc" href="r01-concepts/08-lens.html"><img src="r01-concepts/thumbs/08-lens.jpg" alt="" loading="lazy"><div><b>Lens <span class="v">no</span></b><p>A big type list with a magnifier is too simple.</p></div></a>
+    <a class="arc" href="r01-concepts/09-pebbles.html"><img src="r01-concepts/thumbs/09-pebbles.jpg" alt="" loading="lazy"><div><b>Pebbles <span class="v">no</span></b><p>Too childish.</p></div></a>
+  </div>
 </div>
 </body>
 </html>

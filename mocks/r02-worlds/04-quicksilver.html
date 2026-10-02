@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quicksilver · Round 02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* Layout: one liquid object centre stage; two word labels ride the droplets; the fused name lands underneath. */
+:root{
+  --void:#060607; --fg:#EDEDEF; --dim:rgba(237,237,239,.45); --hair:rgba(237,237,239,.12);
+  --display:'Syne',ui-sans-serif,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--void);color:var(--fg);overflow:hidden;font-family:var(--mono)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(22px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:2;font-size:11px;letter-spacing:.08em}
+.mk{font-family:var(--display);font-weight:500;font-size:20px;letter-spacing:.02em}
+nav{display:flex;gap:24px;color:var(--dim)}
+.root{position:fixed;left:0;top:0;z-index:2;font-size:12px;letter-spacing:.18em;text-transform:lowercase;color:var(--fg);white-space:nowrap;transform:translate(-50%,-50%);transition:opacity .4s;pointer-events:none}
+.root::before{content:"";display:block;width:1px;height:26px;background:linear-gradient(transparent,var(--fg));margin:0 auto 6px;opacity:.6}
+.name{position:fixed;left:50%;bottom:clamp(70px,12vh,120px);transform:translateX(-50%);z-index:2;text-align:center;transition:opacity .5s, letter-spacing .8s;pointer-events:none;width:min(720px,calc(100vw - 32px))}
+.name h1{font-family:var(--display);font-weight:700;font-size:clamp(44px,7.4vw,118px);line-height:.9;margin:0;letter-spacing:-.03em}
+.name .eq{font-size:12px;letter-spacing:.18em;color:var(--dim);margin-bottom:12px;text-transform:lowercase}
+.name p{font-size:12px;line-height:1.7;color:var(--dim);margin:12px auto 0;max-width:46ch}
+.thesis{position:fixed;left:clamp(16px,3vw,44px);top:clamp(90px,15vh,150px);z-index:2;max-width:22ch;font-family:var(--display);font-size:clamp(20px,1.9vw,28px);line-height:1.15;color:var(--dim)}
+.thesis b{color:var(--fg);font-weight:500}
+.idx{position:fixed;right:clamp(16px,3vw,44px);top:50%;transform:translateY(-50%);z-index:2;display:grid;gap:8px;text-align:right;font-size:10.5px;letter-spacing:.1em}
+.idx button{all:unset;cursor:pointer;color:var(--dim)}
+.idx button.on{color:var(--fg)}
+.idx button:focus-visible{outline:1px solid var(--fg);outline-offset:3px}
+.hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.mockbar{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#8f8f95;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#eee;font-weight:500}
+@media (max-width:760px){ nav{display:none} .idx{display:none} .thesis{font-size:18px;top:calc(64px + env(safe-area-inset-top,0px))} .name{bottom:64px} .name p{display:none} .hint{display:none} }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="Liquid metal: two droplets fuse and become a project's object"></canvas>
+<header><span class="mk">KiarashFa</span><nav><span>Index</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<p class="thesis">Every name Kia gives is <b>two words, fused.</b> So is every project.</p>
+<div class="root" id="ra"></div><div class="root" id="rb"></div>
+<section class="name" id="name"><div class="eq" id="eq"></div><h1 id="nm"></h1><p id="ln"></p></section>
+<nav class="idx" id="idx" aria-label="Projects"></nav>
+<div class="hint">Scroll to pour the next one</div>
+<a class="mockbar" href="../">← concepts · <b>R02 · 04 Quicksilver</b> · raw WebGL raymarching · no library</a>
+
+<script type="module">
+import { PROJECTS } from './_data.js';
+// Curated sequence for the mock: the flagships, each modelled as a signed distance field.
+const ORDER = ['markey', 'armag', 'galerium', 'lalista', 'polymeratlas', 'exir', 'xefy', 'drxrates'];
+const SHAPE = { exir: 0, xefy: 1, markey: 2, armag: 3, polymeratlas: 4, galerium: 5, lalista: 6, drxrates: 7 };
+const SEQ = ORDER.map(s => PROJECTS.find(p => p.slug === s));
+
+const cv = document.getElementById('gl'), gl = cv.getContext('webgl2', { antialias: false });
+const VS = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }`;
+const FS = `#version 300 es
+precision highp float; out vec4 o;
+uniform vec2 uRes; uniform float uT, uMix, uSplit, uRot, uWob; uniform int uShape; uniform vec3 uTint; uniform vec2 uCam;
+#define PI 3.14159265
+mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+float smin(float a, float b, float k){ float h = clamp(.5 + .5*(b-a)/k, 0., 1.); return mix(b, a, h) - k*h*(1.-h); }
+float sdBox(vec3 p, vec3 b){ vec3 q = abs(p)-b; return length(max(q,0.)) + min(max(q.x,max(q.y,q.z)),0.); }
+float sdRBox(vec3 p, vec3 b, float r){ return sdBox(p, b - r) - r; }
+float sdCyl(vec3 p, float h, float r){ vec2 d = abs(vec2(length(p.xz), p.y)) - vec2(r, h); return min(max(d.x,d.y),0.) + length(max(d,0.)); }
+float sdCylZ(vec3 p, float h, float r){ return sdCyl(p.xzy, h, r); }
+float sdTorus(vec3 p, float R, float r){ return length(vec2(length(p.xz)-R, p.y)) - r; }
+float sdCap(vec3 p, vec3 a, vec3 b, float r){ vec3 pa = p-a, ba = b-a; float h = clamp(dot(pa,ba)/dot(ba,ba),0.,1.); return length(pa - ba*h) - r; }
+float sdCone(vec3 p, float h, float r1, float r2){ vec2 q = vec2(length(p.xz), p.y); vec2 k1 = vec2(r2,h), k2 = vec2(r2-r1, 2.*h);
+  vec2 ca = vec2(q.x - min(q.x, (q.y<0.)?r1:r2), abs(q.y)-h); vec2 cb = q - k1 + k2*clamp(dot(k1-q,k2)/dot(k2,k2),0.,1.);
+  float s = (cb.x<0. && ca.y<0.) ? -1. : 1.; return s*sqrt(min(dot(ca,ca),dot(cb,cb))); }
+float sdArc(vec3 p, vec2 sc, float ra, float rb){ p.x = abs(p.x); float k = (sc.y*p.x>sc.x*p.y) ? dot(p.xy,sc) : length(p.xy); return sqrt(dot(p,p) + ra*ra - 2.*ra*k) - rb; }
+
+float shape(vec3 p, int s){
+  if (s == 0) { // eXir: a coupe
+    vec3 q = p - vec3(0., .38, 0.); float bowl = max(abs(length(q*vec3(1., 1.7, 1.)) - .52) - .03, q.y);
+    float stem = sdCyl(p - vec3(0., -.12, 0.), .4, .035); float foot = sdCyl(p - vec3(0., -.54, 0.), .018, .3) - .01;
+    return smin(smin(bowl, stem, .06), foot, .05); }
+  if (s == 1) { // Xefy: a cloche lifting from its plate
+    float plate = sdCyl(p - vec3(0., -.55, 0.), .018, .66) - .012;
+    vec3 q = p - vec3(-.05, -.36, -.02); q.yz = rot(.38) * q.yz; q.xy = rot(-.12) * q.xy;
+    float dome = max(abs(length(q*vec3(1., 1.1, 1.)) - .48) - .022, -q.y); float knob = length(q - vec3(0., .5, 0.)) - .065;
+    return min(plate, smin(dome, knob, .05)); }
+  if (s == 2) { // Markey: a fastback coupe
+    vec3 q = p - vec3(0., -.32, 0.); float body = sdRBox(q, vec3(.78, .13, .3), .12);
+    float cab = sdRBox(q - vec3(.06, .19, 0.), vec3(.36, .11, .24), .11); float car = smin(body, cab, .16);
+    vec3 w = vec3(abs(q.x) - .48, q.y + .1, abs(q.z) - .28); float wheel = sdCylZ(w, .07, .17);
+    return min(max(car, -sdCylZ(w, .12, .2)), wheel); }
+  if (s == 3) { // ARMAG: a cartridge
+    float rim = sdCyl(p - vec3(0., -.74, 0.), .03, .17); float body = sdCyl(p - vec3(0., -.2, 0.), .5, .165) - .01;
+    float groove = sdTorus(p - vec3(0., -.68, 0.), .17, .025);
+    float shoulder = sdCone(p - vec3(0., .37, 0.), .07, .165, .105); float neck = sdCyl(p - vec3(0., .5, 0.), .08, .105);
+    vec3 b = p - vec3(0., .58, 0.); float bullet = sdCone(b - vec3(0., .14, 0.), .14, .102, .0) - .01;
+    return smin(smin(max(min(rim, body), -groove), smin(shoulder, neck, .03), .04), bullet, .02); }
+  if (s == 4) { // PolymerAtlas: an armillary globe on a stand
+    vec3 q = p - vec3(0., .12, 0.); q.xy = rot(.41) * q.xy;
+    float g = sdTorus(q, .48, .022); g = min(g, sdTorus(q.xzy, .48, .022)); vec3 m = q; m.xz = rot(1.05) * m.xz; g = min(g, sdTorus(m.yxz, .48, .022));
+    g = min(g, sdTorus(q - vec3(0., .25, 0.), .41, .018)); g = min(g, sdTorus(q + vec3(0., .25, 0.), .41, .018));
+    g = min(g, length(q) - .12);
+    float stand = sdCyl(p - vec3(0., -.5, 0.), .16, .025); float base = sdCyl(p - vec3(0., -.68, 0.), .03, .26) - .015;
+    return smin(min(g, base), stand, .04); }
+  if (s == 5) { // Galerium: an arch with open leaves
+    vec3 q = p - vec3(0., -.12, 0.); float frame = sdRBox(q, vec3(.44, .62, .08), .02);
+    float hole = min(sdBox(q - vec3(0., -.28, 0.), vec3(.28, .4, .2)), sdCylZ(q - vec3(0., .12, 0.), .2, .28));
+    float arch = max(frame, -hole); float base = sdRBox(p - vec3(0., -.78, 0.), vec3(.66, .04, .26), .015);
+    vec3 l = q - vec3(-.28, -.15, .0); l.xz = rot(-.85) * l.xz; float leafL = sdBox(l - vec3(.14, 0., 0.), vec3(.14, .52, .012));
+    vec3 r = q - vec3(.28, -.15, .0); r.xz = rot(.85) * r.xz; float leafR = sdBox(r - vec3(-.14, 0., 0.), vec3(.14, .52, .012));
+    return min(min(arch, base), min(leafL, leafR)); }
+  if (s == 6) { // LaLista: ¡ and ¿
+    float ex = min(length(p - vec3(-.26, .62, 0.)) - .085, sdCap(p, vec3(-.26, -.62, 0.), vec3(-.26, .36, 0.), .075));
+    float qd = length(p - vec3(.2, .62, 0.)) - .085; float stem = sdCap(p, vec3(.2, .43, 0.), vec3(.2, .2, 0.), .07);
+    vec3 a = p - vec3(.2, -.07, 0.); a.xy = rot(-2.4) * a.xy; float hook = sdArc(a, vec2(sin(2.3), cos(2.3)), .27, .07);
+    float base = sdRBox(p - vec3(-.02, -.78, 0.), vec3(.6, .04, .22), .015);
+    return min(min(ex, base), min(qd, smin(stem, hook, .05))); }
+  // 7, DrXRates: a film reel
+  vec3 q = p - vec3(0., .02, 0.); float disc = sdCylZ(q, .04, .62) - .01;
+  float holes = 1e3; for (int i = 0; i < 6; i++) { float a = float(i)/6.*2.*PI + .3; holes = min(holes, sdCylZ(q - vec3(cos(a)*.34, sin(a)*.34, 0.), .2, .14)); }
+  holes = min(holes, sdCylZ(q, .2, .05));
+  float reel = max(disc, -holes); float rimT = max(sdTorus(q.xzy, .6, .03), -1.);
+  float stand = sdRBox(p - vec3(0., -.74, 0.), vec3(.2, .07, .16), .02);
+  return min(min(reel, rimT), smin(stand, sdCyl(p - vec3(0., -.66, 0.), .1, .03), .03));
+}
+float drops(vec3 p){
+  float w = sin(p.x*5. + uT*1.3)*sin(p.y*6. - uT*1.1)*sin(p.z*5. + uT*.9) * .035 * uWob;
+  float a = length(p - vec3(-uSplit, sin(uT*.9)*.06, 0.)) - .34, b = length(p - vec3(uSplit, cos(uT*.8)*.06, 0.)) - .3;
+  return smin(a, b, .32) + w; }
+float map(vec3 p){
+  p.xz = rot(uRot) * p.xz;
+  float d = 1e3;
+  if (uMix < .999) d = drops(p);
+  if (uMix > .001) { float s = shape((p - vec3(0., .14, 0.)) / .8, uShape) * .8; d = mix(d > 999. ? s : d, s, uMix); }
+  return d; }
+vec3 nrm(vec3 p){ vec2 e = vec2(.0012, -.0012);
+  return normalize(e.xyy*map(p+e.xyy) + e.yyx*map(p+e.yyx) + e.yxy*map(p+e.yxy) + e.xxx*map(p+e.xxx)); }
+vec3 env(vec3 d){
+  float y = d.y; vec3 c = mix(vec3(.1,.1,.11), vec3(.38,.38,.4), smoothstep(-.4, .8, y));
+  c += vec3(1., .97, .93) * smoothstep(.55, .95, y) * 2.2;
+  c += vec3(.95,.97,1.) * smoothstep(.5, .9, d.z) * smoothstep(-.25,.45,y) * 1.7;
+  c += vec3(1.) * smoothstep(.97, .995, abs(sin(atan(d.z, d.x) * 3.))) * smoothstep(.0, .5, y) * .9;
+  float ang = atan(d.z, d.x);
+  c += vec3(.85,.92,1.) * smoothstep(.8, .97, -d.x) * smoothstep(-.4,.0,y) * smoothstep(.85,.25,y) * 1.5;
+  c += vec3(1.,.88,.74) * smoothstep(.86, .99, d.x) * smoothstep(-.3,.0,y) * smoothstep(.7,.2,y) * 1.1;
+  c += vec3(.9) * smoothstep(.93, .99, -d.z) * smoothstep(.0,.3,y) * .6;
+  c += vec3(.3,.27,.24) * exp(-abs(y + .02) * 22.);
+  return c; }
+float march(vec3 ro, vec3 rd, float maxd, out float steps){ float t = 0.; steps = 0.;
+  for (int i = 0; i < 110; i++) { vec3 p = ro + rd*t; float d = map(p); if (d < .0012 || t > maxd) break; t += d * .8; steps += 1.; }
+  return t; }
+vec3 metal(vec3 p, vec3 rd){ vec3 n = nrm(p); vec3 r = reflect(rd, n); float fr = pow(1. - max(dot(n, -rd), 0.), 5.);
+  vec3 col = env(r) * mix(vec3(.82), uTint, .22) * (.62 + .38*fr);
+  col += pow(max(dot(r, normalize(vec3(.4,.9,.3))), 0.), 60.) * .8;
+  return col; }
+void main(){
+  vec2 uv = (gl_FragCoord.xy - .5*uRes) / uRes.y;
+  vec3 ro = vec3(uCam.x*.6, .5 + uCam.y*.25, 4.7), ta = vec3(0., -.05, 0.);
+  vec3 f = normalize(ta - ro), r = normalize(cross(f, vec3(0.,1.,0.))), u = cross(r, f);
+  vec3 rd = normalize(uv.x*r + uv.y*u + 1.8*f);
+  float st; float t = march(ro, rd, 8., st);
+  vec3 col;
+  float floorY = -.82;
+  float tf = (floorY - ro.y) / rd.y;
+  if (t < 8. && (tf < 0. || t < tf)) col = metal(ro + rd*t, rd);
+  else if (tf > 0.) {
+    vec3 p = ro + rd*tf; vec3 rr = reflect(rd, vec3(0.,1.,0.));
+    float s2; float t2 = march(p + rr*.01, rr, 4., s2);
+    vec3 refl = t2 < 4. ? metal(p + rr*(t2 + .01), rr) : env(rr) * .4;
+    float fres = .18 + .6*pow(1. - abs(rd.y), 4.);
+    float sh = 1.; float k = .02; for (int i = 0; i < 24; i++) { float h = map(p + vec3(0.,1.,0.)*k); sh = min(sh, 9.*h/k); k += clamp(h, .02, .2); if (h < .001 || k > 2.) break; }
+    float ao = clamp(map(p + vec3(0., .25, 0.)) / .25, 0., 1.);
+    col = vec3(.014) + refl * fres * .7; col *= mix(.35, 1., clamp(sh, 0., 1.)) * mix(.4, 1., ao);
+    col = mix(col, vec3(.012,.012,.014), smoothstep(2.5, 7., tf));
+  } else col = mix(vec3(.012,.012,.014), vec3(.075,.074,.08), smoothstep(-.05, .45, rd.y));
+  col *= 1. - .35*dot(uv, uv);
+  col = col / (1. + col); col = pow(col, vec3(.85));
+  col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.98, 78.23)) + uT) * 43758.5) - .5) * .02;
+  o = vec4(col, 1.);
+}`;
+function sh(t, s){ const x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(x)); return x; }
+const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,3,-1,-1,3]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+const U = n => gl.getUniformLocation(pr, n);
+
+// UI
+const idx = document.getElementById('idx'), ra = document.getElementById('ra'), rb = document.getElementById('rb');
+const nm = document.getElementById('nm'), eq = document.getElementById('eq'), ln = document.getElementById('ln'), nameEl = document.getElementById('name');
+const btns = SEQ.map((p, i) => { const b = document.createElement('button'); b.textContent = p.name; b.onclick = () => { target = i + .45; idle = 0; }; idx.appendChild(b); return b; });
+let shownName = -1;
+function label(i){ if (i === shownName) return; shownName = i; const p = SEQ[i];
+  nm.textContent = p.name; eq.textContent = p.roots ? `${p.roots[0]} + ${p.roots[1]}` : ''; ln.textContent = p.line; btns.forEach((b, k) => b.classList.toggle('on', k === i));
+  ra.textContent = p.roots ? p.roots[0] : ''; rb.textContent = p.roots ? p.roots[1] : ''; }
+
+let target = .45, pos = .45, idle = 0;
+const hashStart = +(location.hash.slice(1)); if (hashStart >= 0 && location.hash) target = pos = hashStart;
+addEventListener('wheel', e => { target += e.deltaY * .0009; idle = 0; }, { passive: true });
+let ty = null; addEventListener('pointerdown', e => ty = e.clientY); addEventListener('pointerup', () => ty = null);
+let cam = [0, 0];
+addEventListener('pointermove', e => { cam = [e.clientX / innerWidth - .5, .5 - e.clientY / innerHeight]; if (ty !== null && e.pointerType !== 'mouse') { target -= (e.clientY - ty) * .003; ty = e.clientY; idle = 0; } });
+const ease = x => x * x * (3 - 2 * x), clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+let dpr = 1;
+function resize(){ dpr = Math.min(devicePixelRatio, innerWidth < 760 ? 1 : 1.5); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; }
+addEventListener('resize', resize); resize();
+// the same camera as the shader, so the word labels can ride the droplets
+function project(x, y, z){ const ro = [cam[0] * .6, .5 + cam[1] * .25, 4.7], ta = [0, -.05, 0];
+  const f = norm(sub(ta, ro)), r = norm(cross(f, [0, 1, 0])), u = cross(r, f), rel = sub([x, y, z], ro), d = dot(rel, f);
+  const sx = dot(rel, r) * 1.8 / d, sy = dot(rel, u) * 1.8 / d; return [sx * innerHeight + innerWidth / 2, innerHeight / 2 - sy * innerHeight]; }
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], norm = a => { const l = Math.hypot(...a); return a.map(x => x / l); };
+const hex = h => [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now(), rotA = 0;
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000; idle += dt;
+  if (idle > 3 && !reduce) target += dt * .085;
+  if (target > SEQ.length) { target -= SEQ.length; pos -= SEQ.length; }
+  pos += (target - pos) * .06;
+  const i = ((Math.floor(pos) % SEQ.length) + SEQ.length) % SEQ.length, f = pos - Math.floor(pos);
+  // phases: droplets meet (0–.2), pour into the object (.2–.4), hold (.4–.78), melt and split for the next (.78–1)
+  let split, mix;
+  if (f < .2) { split = .55 * (1 - ease(f / .2)); mix = 0; }
+  else if (f < .4) { split = 0; mix = ease((f - .2) / .2); }
+  else if (f < .78) { split = 0; mix = 1; }
+  else { mix = 1 - ease((f - .78) / .14 > 1 ? 1 : (f - .78) / .14); split = .55 * ease(clamp((f - .86) / .14, 0, 1)); }
+  label(f > .86 ? (i + 1) % SEQ.length : i);
+  const p = SEQ[i], next = SEQ[(i + 1) % SEQ.length];
+  rotA += dt * (mix > .5 ? .35 : .15);
+  const showRoots = (f < .22 || f > .9) ? 1 : 0, rootP = f > .86 ? next : p;
+  ra.style.opacity = rb.style.opacity = rootP.roots ? showRoots : 0;
+  const [ax, ay] = project(-split - .05, .42, 0), [bx, by] = project(split + .05, .42, 0);
+  ra.style.transform = `translate(${ax - (split < .05 ? 40 : 0)}px,${ay - 30}px) translate(-50%,-50%)`; rb.style.transform = `translate(${bx + (split < .05 ? 40 : 0)}px,${by - 30}px) translate(-50%,-50%)`;
+  nameEl.style.opacity = mix > .6 ? 1 : .0;
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.uniform2f(U('uRes'), cv.width, cv.height); gl.uniform1f(U('uT'), t); gl.uniform1f(U('uMix'), mix); gl.uniform1f(U('uSplit'), split);
+  gl.uniform1f(U('uRot'), rotA); gl.uniform1f(U('uWob'), 1 - mix); gl.uniform1i(U('uShape'), SHAPE[p.slug]); gl.uniform3fv(U('uTint'), hex(p.color)); gl.uniform2f(U('uCam'), cam[0], cam[1]);
+  gl.drawArrays(gl.TRIANGLES, 0, 3); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

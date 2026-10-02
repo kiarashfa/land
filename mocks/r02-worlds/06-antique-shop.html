@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Antique Shop · Round 02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Caveat:wght@500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* Layout: you stand in the shop. A gilded sign hangs top left; the shopkeeper's note card sits bottom left. */
+:root{
+  --dusk:#120D09; --cream:#F2E7D3; --dim:rgba(242,231,211,.55); --gilt:#D9B26A; --rule:rgba(242,231,211,.18);
+  --display:'Bodoni Moda',ui-serif,Didot,Georgia,serif; --hand:'Caveat',cursive; --body:'Lora',ui-serif,Georgia,serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--dusk);color:var(--cream);overflow:hidden;font-family:var(--body)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(10,6,3,.75) 100%);z-index:1}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:flex-start;padding:calc(20px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:2}
+.sign{font-family:var(--display);color:var(--gilt);line-height:1}
+.sign b{display:block;font-weight:500;font-size:clamp(24px,2.4vw,34px);letter-spacing:.06em}
+.sign i{font-size:13px;letter-spacing:.24em;text-transform:uppercase;font-style:normal;color:var(--dim)}
+nav{display:flex;gap:24px;font-size:13px;color:var(--dim);font-style:italic}
+.note{position:fixed;left:clamp(16px,3vw,44px);bottom:clamp(24px,5vh,52px);z-index:2;width:min(360px,calc(100vw - 32px));background:#efe3c9;color:#2a1f14;padding:16px 18px 14px;transform:rotate(-1.2deg);box-shadow:0 18px 30px -12px rgba(0,0,0,.6);transition:transform .4s}
+.note .k{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8a6a3c}
+.note .n{font-family:var(--display);font-size:34px;line-height:1.05;margin:4px 0}
+.note .l{font-size:14.5px;line-height:1.5}
+.note .p{font-family:var(--hand);font-size:26px;color:#9a3a24;margin-top:6px}
+.hint{position:fixed;right:clamp(16px,3vw,44px);bottom:clamp(24px,5vh,52px);z-index:2;font-family:var(--hand);font-size:24px;color:var(--dim);text-align:right;max-width:16ch;line-height:1.1}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#b9ab95;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#f0e6d2;font-weight:500}
+@media (max-width:760px){ nav{display:none} .hint{display:none} .note .n{font-size:28px} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} .note{bottom:40px} }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="An antique shop at dusk; every object on its shelves is one of Kia's projects"></canvas>
+<div class="vig"></div>
+<header><div class="sign"><b>KiarashFa &amp; Curiosities</b><i>Est. by Kia · Always open · Nothing for sale</i></div><nav><span>Index</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<aside class="note" id="note"><div class="k" id="nk"></div><div class="n" id="nn"></div><div class="l" id="nl"></div><div class="p">Price: free. No accounts.</div></aside>
+<p class="hint">Scroll to browse the shelves →</p>
+<a class="mockbar" href="../">← concepts · <b>R02 · 06 Antique Shop</b> · three.js · procedural interior</a>
+
+<script type="module">
+import * as T from '../vendor/three.bundle.min.js';
+import { PROJECTS, FAMILIES } from './_data.js';
+import { makeSculpture } from './_sculptures.js';
+
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFShadowMap;
+renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+const scene = new T.Scene(); scene.background = new T.Color(0x120d09); scene.fog = new T.Fog(0x1a120b, 9, 26);
+scene.environment = new T.PMREMGenerator(renderer).fromScene(new T.RoomEnvironment(), .04).texture; scene.environmentIntensity = .22;
+const camera = new T.PerspectiveCamera(40, 1, .05, 80);
+
+const tex = (w, h, draw, rep = [1, 1]) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+  const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; return t; };
+const noise = (g, w, h, a) => { const d = g.getImageData(0, 0, w, h); for (let i = 0; i < d.data.length; i += 4) { const n = (Math.random() - .5) * a; d.data[i] += n; d.data[i + 1] += n; d.data[i + 2] += n; } g.putImageData(d, 0, 0); };
+// floor planks, damask walls, wainscot, rug
+const planks = tex(1024, 1024, (g, w, h) => { for (let r = 0; r < 8; r++) { let x = -Math.random() * 300; while (x < w) { const L = 280 + Math.random() * 260, s = 36 + Math.random() * 20;
+  g.fillStyle = `rgb(${88 + s * .4},${56 + s * .3},${34 + s * .2})`; g.fillRect(x, r * 128, L - 3, 125); g.strokeStyle = 'rgba(30,18,10,.25)';
+  for (let k = 0; k < 9; k++) { g.beginPath(); g.moveTo(x, r * 128 + 10 + k * 13); g.bezierCurveTo(x + L * .3, r * 128 + 14 + k * 13, x + L * .6, r * 128 + 6 + k * 13, x + L, r * 128 + 11 + k * 13); g.stroke(); } x += L; } } noise(g, w, h, 16); }, [3, 2]);
+const damask = tex(512, 512, (g, w, h) => { g.fillStyle = '#23352b'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(214,190,130,.09)';
+  for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) { g.save(); g.translate(x * 256 + 128, y * 256 + 128); for (let k = 0; k < 8; k++) { g.rotate(Math.PI / 4); g.beginPath(); g.ellipse(0, 46, 16, 46, 0, 0, Math.PI * 2); g.fill(); } g.beginPath(); g.arc(0, 0, 18, 0, 7); g.fill(); g.restore(); } noise(g, w, h, 8); }, [6, 2]);
+const wainscot = tex(512, 256, (g, w, h) => { g.fillStyle = '#3a2416'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 6; for (let x = 0; x < w; x += 128) g.strokeRect(x + 14, 22, 100, h - 44); g.fillStyle = 'rgba(255,220,160,.06)'; g.fillRect(0, 0, w, 10); noise(g, w, h, 10); }, [6, 1]);
+const rugT = tex(1024, 640, (g, w, h) => { g.fillStyle = '#5a1c1a'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c99a4c'; g.lineWidth = 10; g.strokeRect(30, 30, w - 60, h - 60); g.strokeStyle = '#1e2a44'; g.lineWidth = 26; g.strokeRect(60, 60, w - 120, h - 120);
+  g.fillStyle = '#c99a4c'; for (let i = 0; i < 7; i++) for (let j = 0; j < 4; j++) { g.save(); g.translate(170 + i * 115, 160 + j * 105); g.rotate(Math.PI / 4); g.fillRect(-14, -14, 28, 28); g.restore(); }
+  g.strokeStyle = 'rgba(30,42,68,.8)'; g.lineWidth = 4; g.beginPath(); g.ellipse(w / 2, h / 2, 160, 110, 0, 0, 7); g.stroke(); noise(g, w, h, 18); });
+
+const W = 16, Dd = 8, H = 4.2;
+const mat = o => new T.MeshStandardMaterial(o);
+const floor = new T.Mesh(new T.PlaneGeometry(W, Dd), mat({ map: planks, roughness: .55, metalness: .05 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const back = new T.Mesh(new T.PlaneGeometry(W, H), mat({ map: damask, roughness: .9 })); back.position.set(0, H / 2, -Dd / 2); back.receiveShadow = true; scene.add(back);
+const wain = new T.Mesh(new T.PlaneGeometry(W, 1.1), mat({ map: wainscot, roughness: .6 })); wain.position.set(0, .55, -Dd / 2 + .01); scene.add(wain);
+const left = new T.Mesh(new T.PlaneGeometry(Dd, H), mat({ map: damask.clone(), roughness: .9 })); left.rotation.y = Math.PI / 2; left.position.set(-W / 2, H / 2, 0); scene.add(left);
+const ceil = new T.Mesh(new T.PlaneGeometry(W, Dd), mat({ color: 0x1a120c, roughness: 1 })); ceil.rotation.x = Math.PI / 2; ceil.position.y = H; scene.add(ceil);
+const rug = new T.Mesh(new T.PlaneGeometry(4.6, 2.9), mat({ map: rugT, roughness: 1 })); rug.rotation.x = -Math.PI / 2; rug.position.set(.3, .006, .6); rug.receiveShadow = true; scene.add(rug);
+
+// furniture
+const wood = mat({ color: 0x4a2c18, roughness: .45, metalness: .05 }), darkWood = mat({ color: 0x2c1a10, roughness: .4 });
+const brass = new T.MeshPhysicalMaterial({ color: 0xc59a52, metalness: 1, roughness: .3 });
+const glassM = new T.MeshPhysicalMaterial({ color: 0xffffff, transmission: 1, roughness: .04, thickness: .05, ior: 1.5, transparent: true, opacity: .25 });
+const box = (w, h, d, m, x, y, z) => { const b = new T.Mesh(new T.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = b.receiveShadow = true; scene.add(b); return b; };
+const slots = [];
+// tall shelving units along the back wall: they repeat for as long as there are things to show
+function shelving(x){ const w = 2.4, d = .5, z = -Dd / 2 + d / 2 + .02;
+  box(w, .08, d, wood, x, 3.6, z); [-w / 2, w / 2].forEach(s => box(.08, 3.6, d, darkWood, x + s, 1.8, z)); box(w, 3.6, .04, darkWood, x, 1.8, -Dd / 2 + .03);
+  [.9, 1.95, 2.95].forEach((y, k) => { box(w, .06, d, wood, x, y, z); box(w, .03, .03, brass, x, y + .03, z + d / 2);
+    if (k < 2) [-.55, .55].forEach(o => slots.push({ pos: new T.Vector3(x + o, y + .03, z), size: .85, shelf: true })); }); }
+[-5.6, -3.0, 2.8, 5.4].forEach(shelving);
+// a round table with a lace cloth and a glass cabinet
+const table = new T.Mesh(new T.CylinderGeometry(.9, .9, .06, 48), wood); table.position.set(-.6, .82, .6); table.castShadow = table.receiveShadow = true; scene.add(table);
+box(.1, .8, .1, darkWood, -.6, .4, .6); const cloth = new T.Mesh(new T.CylinderGeometry(.95, 1.02, .02, 48), mat({ color: 0xe9dfcc, roughness: .95 })); cloth.position.set(-.6, .86, .6); cloth.receiveShadow = true; scene.add(cloth);
+[[-.95, .55], [-.25, .95], [-.35, .2]].forEach(([x, z]) => slots.push({ pos: new T.Vector3(x, .87, z), size: .55 }));
+box(1.6, .9, .7, darkWood, 1.6, .45, .2); const vit = new T.Mesh(new T.BoxGeometry(1.5, .8, .6), glassM); vit.position.set(1.6, 1.3, .2); scene.add(vit);
+[[1.25, .2], [1.95, .2]].forEach(([x, z]) => slots.push({ pos: new T.Vector3(x, .9, z), size: .55 }));
+// the counter with a bell
+box(2.6, 1.0, .7, wood, 5.6, .5, 1.6); box(2.7, .06, .8, darkWood, 5.6, 1.03, 1.6);
+const bell = new T.Mesh(new T.SphereGeometry(.09, 24, 12, 0, 7, 0, Math.PI / 2), brass); bell.position.set(6.5, 1.06, 1.7); scene.add(bell);
+[[4.9, 1.6], [5.7, 1.5]].forEach(([x, z]) => slots.push({ pos: new T.Vector3(x, 1.06, z), size: .5 }));
+// the window: light shafts and dust
+const winLight = new T.SpotLight(0xffb36a, 120, 22, .55, .6, 1.4); winLight.position.set(-7.6, 3.6, 3.2); winLight.target.position.set(-1, 0, -1); winLight.castShadow = true; winLight.shadow.mapSize.set(2048, 2048); winLight.shadow.bias = -.0006; scene.add(winLight, winLight.target);
+const shaft = new T.ShaderMaterial({ transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide, uniforms: { uT: { value: 0 } },
+  vertexShader: `varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`,
+  fragmentShader: `varying vec2 vU; uniform float uT; void main(){ float a = smoothstep(0.,.25,vU.x)*smoothstep(1.,.6,vU.x)*smoothstep(0.,.5,vU.y)*(.55+.45*sin(vU.x*30.+uT*.3)); gl_FragColor = vec4(vec3(1.,.72,.42)*a*.11,1.); }` });
+for (let k = 0; k < 3; k++) { const s = new T.Mesh(new T.PlaneGeometry(9, 2.2), shaft); s.position.set(-3.6, 2.0 - k * .1, 1.4 + k * .8); s.rotation.set(0, -.25, -.42); scene.add(s); }
+const dustN = 700, dp = new Float32Array(dustN * 3); for (let i = 0; i < dustN; i++) { dp[i * 3] = -7 + Math.random() * 9; dp[i * 3 + 1] = Math.random() * 3.6; dp[i * 3 + 2] = -1 + Math.random() * 5; }
+const dg = new T.BufferGeometry(); dg.setAttribute('position', new T.BufferAttribute(dp, 3));
+scene.add(new T.Points(dg, new T.PointsMaterial({ color: 0xffd9a6, size: .012, transparent: true, opacity: .7, blending: T.AdditiveBlending, depthWrite: false })));
+// pendant lamps
+[[-3.5, -1.2], [1.2, .8], [5.2, 1.0]].forEach(([x, z]) => { const L = new T.PointLight(0xffc483, 6, 7, 1.6); L.position.set(x, 3.1, z); scene.add(L);
+  const shade = new T.Mesh(new T.ConeGeometry(.28, .25, 32, 1, true), new T.MeshStandardMaterial({ color: 0x2e4a3a, side: T.DoubleSide, roughness: .5, metalness: .4 })); shade.position.set(x, 3.25, z); scene.add(shade);
+  const bulb = new T.Mesh(new T.SphereGeometry(.06, 16, 12), new T.MeshBasicMaterial({ color: 0xffe2b0 })); bulb.position.set(x, 3.15, z); scene.add(bulb);
+  box(.01, .8, .01, darkWood, x, 3.75, z); });
+scene.add(new T.HemisphereLight(0x5a4630, 0x120a05, .55));
+
+// objects with handwritten tags
+const objects = [];
+function tagTex(p){ return tex(512, 256, (g, w, h) => { g.fillStyle = '#efe3c9'; g.beginPath(); g.moveTo(40, 0); g.lineTo(w, 0); g.lineTo(w, h); g.lineTo(40, h); g.lineTo(0, h / 2); g.fill();
+  g.fillStyle = '#120d09'; g.beginPath(); g.arc(46, h / 2, 12, 0, 7); g.fill(); g.fillStyle = '#2a1f14'; g.font = "600 76px Caveat, cursive"; g.fillText(p.name, 84, 112);
+  g.fillStyle = '#9a3a24'; g.font = "500 54px Caveat, cursive"; g.fillText('free', 84, 196); noise(g, w, h, 10); }); }
+document.fonts.ready.then(() => {
+  PROJECTS.forEach((p, i) => { const s = slots[i]; if (!s) return;
+    const o = makeSculpture(p); const b = new T.Box3().setFromObject(o), sz = b.getSize(new T.Vector3()); const sc = s.size / Math.max(sz.y, sz.x * .62, sz.z * .62) * (p.flagship ? 1.0 : .88);
+    o.scale.setScalar(sc); o.position.copy(s.pos); o.rotation.y = (i * 1.3) % 1.2 - .6; o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); scene.add(o);
+    const tag = new T.Mesh(new T.PlaneGeometry(.3, .15), new T.MeshStandardMaterial({ map: tagTex(p), transparent: true, side: T.DoubleSide, roughness: .9 }));
+    tag.position.copy(s.pos).add(new T.Vector3(sz.x * sc * .45 + .12, .12, s.shelf ? .2 : .25)); tag.rotation.set(-.15, -.3 + (i % 3) * .2, (i % 2 ? .25 : -.2)); scene.add(tag);
+    objects.push({ p, o, s, top: s.pos.y + sz.y * sc });
+  });
+  requestAnimationFrame(frame);
+});
+
+// a slow walk past every object
+let target = 0, pos = 0;
+addEventListener('wheel', e => { target += e.deltaY * .0012; }, { passive: true });
+let ty = null; addEventListener('pointerdown', e => ty = e.clientX); addEventListener('pointerup', () => ty = null);
+let mx = 0, my = 0; addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; if (ty !== null && e.pointerType !== 'mouse') { target -= (e.clientX - ty) * .006; ty = e.clientX; } });
+const start = +(location.hash.slice(1)); if (location.hash && start >= 0) target = pos = start;
+function resize(){ renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.fov = innerWidth < innerHeight ? 62 : 40; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+const nk = document.getElementById('nk'), nn = document.getElementById('nn'), nl = document.getElementById('nl'); let shown = -1;
+const camP = new T.Vector3(), look = new T.Vector3(), reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now){
+  const t = now / 1000; target = Math.max(0, Math.min(objects.length - 1, target)); pos += (target - pos) * (reduce ? 1 : .05);
+  const i = Math.min(objects.length - 1, Math.floor(pos)), f = pos - i, a = objects[i], b = objects[Math.min(objects.length - 1, i + 1)];
+  const e = f * f * (3 - 2 * f), fp = new T.Vector3().lerpVectors(a.s.pos, b.s.pos, e), top = a.top + (b.top - a.top) * e;
+  const portrait = innerWidth < innerHeight;
+  camP.set(fp.x + 1.1 + mx * .4, Math.max(1.4, top + .2) - my * .2, fp.z + (portrait ? 4.2 : 3.7)); camera.position.lerp(camP, .08);
+  look.set(fp.x + .2, (fp.y + top) / 2 + .05, fp.z - .2); camera.lookAt(look);
+  const k = Math.round(pos); if (k !== shown && objects[k]) { shown = k; const p = objects[k].p; nk.textContent = FAMILIES.find(x => x.id === p.family).name + (p.flagship ? ' · Flagship' : ''); nn.textContent = p.name; nl.textContent = p.line; }
+  objects.forEach(o => o.o.userData.tick(t)); shaft.uniforms.uT.value = t;
+  const dpos = dg.attributes.position; if (!reduce) { for (let j = 0; j < dustN; j++) { dpos.array[j * 3 + 1] += Math.sin(t * .5 + j) * .0008; dpos.array[j * 3] += .0006; if (dpos.array[j * 3] > 2) dpos.array[j * 3] = -7; } dpos.needsUpdate = true; }
+  renderer.render(scene, camera); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

@@ -21,7 +21,7 @@ header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-betwee
 .mk{font-family:var(--display);font-size:26px;letter-spacing:.04em}
 nav{display:flex;gap:26px;color:var(--muted);pointer-events:auto}
 .lede{position:fixed;left:clamp(16px,3vw,44px);top:calc(clamp(80px,13vh,130px) + env(safe-area-inset-top,0px));z-index:2;max-width:min(400px,calc(100vw - 32px));pointer-events:none}
-.lede h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,4.8vw,76px);line-height:1;margin:0;letter-spacing:.005em}
+.lede h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,4.2vw,64px);line-height:1;margin:0;letter-spacing:.005em}
 .lede p{margin:14px 0 0;font-size:14px;line-height:1.6;color:var(--muted);max-width:34ch}
 .card{position:fixed;right:clamp(16px,3vw,44px);bottom:clamp(28px,6vh,60px);z-index:2;width:min(300px,calc(100vw - 32px));border-top:1px solid var(--ink);padding-top:12px;transition:opacity .4s}
 .card .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
@@ -82,7 +82,7 @@ let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 214748364
 function build(node, depth){
   const g = new T.Group();
   if (node.leaf) {
-    const thread = .26 + rnd() * .3, s = node.p.flagship ? .78 : .6;
+    const thread = .22 + rnd() * .34, s = node.p.flagship ? .7 : .55;
     g.add(rod(new T.Vector3(0, 0, 0), new T.Vector3(0, -thread, 0), .004, threadMat));
     const obj = makeSculpture(node.p); obj.scale.setScalar(s);
     const box = new T.Box3().setFromObject(obj); obj.position.y = -thread - box.max.y; obj.rotation.y = rnd() * 6.28;
@@ -90,7 +90,7 @@ function build(node, depth){
     const spin = new T.Group(); spin.add(obj); g.add(spin); leaves.push({ obj, spin, p: node.p, w: .2 + rnd() * .3 });
     return g;
   }
-  const L = .55 + Math.pow(node.n, .58) * .5, dl = L * node.R.w / node.w, dr = L * node.L.w / node.w, drop = .3 + rnd() * .28;
+  const L = .8 + Math.pow(node.n, .58) * .5, dl = L * node.R.w / node.w, dr = L * node.L.w / node.w, drop = .44 + rnd() * .32;
   g.add(rod(new T.Vector3(0, 0, 0), new T.Vector3(0, -drop, 0), .004, threadMat));
   const arm = new T.Group(); arm.position.y = -drop; g.add(arm);
   // a gently bowed wire, thicker near the pivot, with curled ends like a Calder
@@ -114,8 +114,8 @@ const box = new T.Box3().setFromObject(mobile.children[1] || mobile); const bx =
 const centre = bx.getCenter(new T.Vector3()), size = bx.getSize(new T.Vector3());
 function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
   const tn = 2 * Math.tan(camera.fov * Math.PI / 360), portrait = w < h;
-  const d = portrait ? (size.x * .62) / tn / camera.aspect : Math.max(size.y * 1.05 / tn, size.x * 1.02 / tn / camera.aspect);
-  camera.position.set(centre.x + (portrait ? 0 : -size.x * .06), centre.y - size.y * .32, d + .6); camera.lookAt(centre.x + (portrait ? 0 : -size.x * .1), centre.y + (portrait ? size.y * .02 : -size.y * .05), 0); camera.updateProjectionMatrix(); }
+  const d = portrait ? (size.x * .66) / tn / camera.aspect : Math.max(size.y * 1.12 / tn, size.x * 1.5 / tn / camera.aspect);
+  camera.position.set(centre.x - (portrait ? 0 : size.x * .22), centre.y - size.y * .3, d + .8); camera.lookAt(centre.x - (portrait ? 0 : size.x * .3), centre.y + (portrait ? size.y * .02 : -size.y * .06), 0); camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 
 // family labels and interaction

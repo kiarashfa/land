@@ -5,7 +5,7 @@ Rounds are conversations. Each round ends with something Kia can look at, a set 
 | Round | Focus | Output | Status |
 | --- | --- | --- | --- |
 | R01 | Brief, research, world concepts | Docs, concept mocks, gallery artifact | done; none chosen |
-| R02 | New 3D worlds after R01 feedback | A sculpture per project, plus new world mocks that hold any number of projects | in progress |
+| R02 | New 3D worlds after R01 feedback | A sculpture per project, plus new world mocks that hold any number of projects | done, awaiting feedback |
 | R02b | Narrow to two or three directions | Deeper mocks: home on desktop and phone, the transition into a project page, first sound sketch | next |
 | R03 | Design language | Typography pairs, palettes, material and texture studies, motion principles (3–5 options each) | |
 | R04 | Identity marks | Wordmark, KFA monogram, favicon (about 10 options), OG image template | |

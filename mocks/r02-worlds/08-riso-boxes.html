@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Riso Boxes · Round 02</title>
+<style>
+/* Layout: one printed sheet fills the screen; the only text is the chapter card, set in system font stacks. */
+:root{ --paper:#F3EBD8; --ink:#2E3F6B; --muted:#6A6458; color-scheme:light; }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#E9E1CD;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.drag{cursor:grabbing}
+.card{position:fixed;left:clamp(12px,2.4vw,32px);bottom:calc(clamp(12px,2.4vw,32px) + env(safe-area-inset-bottom,0px));z-index:2;width:min(330px,calc(100vw - 24px));background:var(--paper);border:1.5px solid var(--ink);padding:12px 14px 13px;font-family:ui-serif,'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;color:var(--ink);box-shadow:3px 3px 0 rgba(241,80,96,.55);transition:opacity .4s}
+.card .k{font:600 10px/1.2 ui-monospace,'SF Mono',Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:#C2403E}
+.card .n{font-size:26px;line-height:1.05;margin:5px 0 4px}
+.card .l{font-size:14px;line-height:1.4;color:var(--muted)}
+.mockbar{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#e9e1cd;background:rgba(46,63,107,.9);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#fff;font-weight:500}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="A risograph-printed sheet of isometric rooms, one for each project"></canvas>
+<aside class="card" id="card" aria-live="polite"><div class="k" id="ck">KiarashFa</div><div class="n" id="cn">Everything Kia has made, printed on one sheet.</div><div class="l" id="cl">Drag, scroll or pinch to look closer. Double-click a room to visit it.</div></aside>
+<a class="mockbar" href="../">← concepts · <b>R02 · 08 Riso Boxes</b> · Canvas 2D only · one request</a>
+
+<script>
+// Everything below is drawn in code: no images, fonts, libraries or extra requests.
+// The real site would read projects from its content collection; the mock keeps them inline.
+const PROJECTS = [
+  ['polymeratlas', 'PolymerAtlas', 'Encyclopedias', 'The polymers that made the modern world, each told inside the year it was first made.'],
+  ['xefy', 'Xefy', 'Encyclopedias', 'Recipes where every quantity, nutrition figure and timing is computed, never typed.'],
+  ['markey', 'Markey', 'Encyclopedias', 'Production cars, sourced or computed, with a real wind tunnel on your GPU.'],
+  ['exir', 'eXir', 'Encyclopedias', 'Drinks where every measure, dilution and strength is computed.'],
+  ['armag', 'ARMAG', 'Encyclopedias', 'Firearms and cartridges, laid out like a magazine, with real ballistics.'],
+  ['perceptense', 'Perceptense', 'Learning', 'Bite-sized interactive modules for an intuition about everything.'],
+  ['galerium', 'Galerium', 'Learning', 'A museum of art history with a walkable gallery for every artist.'],
+  ['lalista', 'LaLista', 'Learning', 'Spanish as it is spoken in Spain, one word and one rule at a time.'],
+  ['morcypher', 'MorCypher', 'Learning', 'A virtual telegraph key for sending, decoding and learning Morse code.'],
+  ['kalculator', 'Kalculator', 'Tools', 'A calculator that writes natural math, solves, graphs and converts.'],
+  ['audioptix', 'AudiOptix', 'Tools', 'A music player and evolving visualizer for your own files.'],
+  ['lostimer', 'LOSTimer', 'Screen tributes', 'The Swan Station countdown from LOST, as a working timer.'],
+  ['pseudoku', 'Pseudoku', 'Screen tributes', "Sudoku inside Lumon's MDR terminal."],
+  ['constyx', 'ConStyx', 'Screen tributes', 'A focus terminal disguised as a digital rain cascade.'],
+  ['drxrates', 'DrXRates', 'Film', 'The Cinema Ledger: a personal film archive with a ten-part rating.'],
+  ['website', 'Personal site', 'Personal', "Kia's own site, with features built just for it."],
+];
+
+// ---------- inks, paper, seeded randomness ----------
+const INKS = [ // spot inks: colour, screen angle, misregistration (px)
+  { rgb: [61, 85, 136], ang: 15, off: [.9, -.6] },   // federal blue: linework and darks
+  { rgb: [241, 80, 96], ang: 75, off: [-1.0, .5] },  // bright red
+  { rgb: [255, 226, 0], ang: 0, off: [.5, 1.1] },    // yellow
+  { rgb: [0, 131, 138], ang: 45, off: [-.6, -1.0] }, // teal
+];
+const PAPER = [243, 235, 216];
+function hash3(a, b, c){ let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263) ^ Math.imul(c | 0, 1274126177); h = Math.imul(h ^ (h >>> 13), 1103515245); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function rng(seed){ let s = seed >>> 0 || 1; return () => (s = Math.imul(s ^ (s >>> 15), 2246822519) + 0x9e3779b9 >>> 0, ((s ^ (s >>> 13)) >>> 0) / 4294967296); }
+
+// ---------- the painter: four coverage plates, knock-outs, boiling linework ----------
+const CELL = 560, ROOM = 7.2, WH = 4.6, S = 36;
+const T = (b = 0, r = 0, y = 0, t = 0) => [b, r, y, t];
+class Painter {
+  constructor(N, q, seed){ this.N = N; this.q = q; this.seed = seed; const r = rng(seed * 7919 + 13); this.ph = [r() * 9, r() * 9, r() * 9, r() * 9];
+    this.L = [0, 1, 2, 3, 4].map(() => { const c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'); g.scale(q, q); g.lineJoin = 'round'; return g; }); }
+  wob(p){ const [x, y] = p, a = .55, ph = this.ph;
+    return [x + a * (Math.sin(x * .19 + y * .13 + ph[0]) + Math.sin(x * .061 - y * .11 + ph[1])) * .5, y + a * (Math.sin(x * .15 - y * .17 + ph[2]) + Math.sin(-x * .09 + y * .07 + ph[3])) * .5]; }
+  path(pts){ const p = new Path2D(); pts.forEach((v, i) => i ? p.lineTo(v[0], v[1]) : p.moveTo(v[0], v[1])); p.closePath(); return p; }
+  fill(pts, tone, knock = true){ const p = this.path(pts);
+    this.L.forEach((g, k) => { if (knock) { g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000'; g.fill(p); }
+      if (k < 4 && tone[k] > 0) { g.globalCompositeOperation = 'source-over'; g.fillStyle = `rgba(0,0,0,${Math.min(1, tone[k])})`; g.fill(p); } }); }
+  overlay(pts, tone){ this.fill(pts, tone, false); }
+  // a tapered, hand-inked stroke along a polyline
+  stroke(pts, w = 1.5, k = 0){ if (pts.length < 2) return; const n = pts.length, L = [], R = [];
+    for (let i = 0; i < n; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)]; let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+      const t = i / (n - 1), wi = w * (.28 + .72 * Math.pow(Math.sin(Math.PI * t), .6)); L.push([pts[i][0] - dy * wi * .5, pts[i][1] + dx * wi * .5]); R.push([pts[i][0] + dy * wi * .5, pts[i][1] - dx * wi * .5]); }
+    const g = this.L[k === 0 ? 4 : k]; g.globalCompositeOperation = 'source-over'; g.fillStyle = '#000'; g.fill(this.path(L.concat(R.reverse()))); }
+  outline(pts, closed = true, w){ const ring = closed ? pts.concat([pts[0]]) : pts; const dens = [];
+    for (let i = 0; i < ring.length - 1; i++) { const a = ring[i], b = ring[i + 1], steps = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 6)); for (let s = 0; s < steps; s++) dens.push([a[0] + (b[0] - a[0]) * s / steps, a[1] + (b[1] - a[1]) * s / steps]); }
+    dens.push(ring[ring.length - 1]); const chunk = 14; for (let i = 0; i < dens.length - 1; i += chunk - 2) this.stroke(dens.slice(i, i + chunk).map(p => this.wob(p)), w); }
+  shape(pts, tone, o = {}){ const d = densify(pts, 7).map(p => this.wob(p)); this.fill(d, tone, o.knock !== false); if (o.line !== false) this.outline(pts, true, o.w); }
+}
+function densify(pts, step){ const out = []; for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / step)); for (let s = 0; s < n; s++) out.push([a[0] + (b[0] - a[0]) * s / n, a[1] + (b[1] - a[1]) * s / n]); } return out; }
+
+// ---------- halftone and overprint: every colour is a dot screen of one spot ink ----------
+function press(P){
+  const N = P.N, q = P.q, cov = P.L.map(g => g.getImageData(0, 0, N, N).data), img = new ImageData(N, N), d = img.data, sp = 3.7 * q;
+  const ink = INKS.map(k => ({ c: Math.cos(k.ang * Math.PI / 180), s: Math.sin(k.ang * Math.PI / 180), ox: k.off[0] * q, oy: k.off[1] * q, r: k.rgb[0] / 255, g: k.rgb[1] / 255, b: k.rgb[2] / 255 }));
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const o = (y * N + x) * 4, pn = .985 + .03 * hash3(x >> 1, y >> 1, 77) - (hash3(x, y >> 3, 5) < .02 ? .03 : 0);
+    let R = PAPER[0] / 255 * pn, G = PAPER[1] / 255 * pn, B = PAPER[2] / 255 * pn;
+    for (let k = 0; k < 4; k++) {
+      const I = ink[k], A = cov[k], px = x - I.ox, py = y - I.oy, ix = px | 0, iy = py | 0;
+      if (ix < 0 || iy < 0 || ix >= N || iy >= N) continue;
+      const pc = A[(iy * N + ix) * 4 + 3] / 255; if (pc < .03) continue;
+      let a;
+      if (pc > .93) { a = hash3(x >> 2, y >> 2, k * 31 + 7) < .045 ? .3 : .97; }
+      else { const u = px * I.c + py * I.s, v = -px * I.s + py * I.c, cu = Math.floor(u / sp), cv = Math.floor(v / sp), uc = (cu + .5) * sp, vc = (cv + .5) * sp;
+        const xc = (uc * I.c - vc * I.s) | 0, yc = (uc * I.s + vc * I.c) | 0, cc = (xc >= 0 && yc >= 0 && xc < N && yc < N) ? A[(yc * N + xc) * 4 + 3] / 255 : pc;
+        const h = hash3(cu, cv, k), r = sp * .71 * Math.sqrt(cc) * (.9 + .2 * h), du = u - uc - (h - .5) * .7 * q, dv = v - vc - (hash3(cv, cu, k + 9) - .5) * .7 * q;
+        a = Math.max(0, Math.min(1, r - Math.sqrt(du * du + dv * dv) + .5)) * .95; }
+      R *= 1 - a * (1 - I.r); G *= 1 - a * (1 - I.g); B *= 1 - a * (1 - I.b);
+    }
+    { const I0 = ink[0], lx = (x - I0.ox) | 0, ly = (y - I0.oy) | 0; if (lx >= 0 && ly >= 0 && lx < N && ly < N) { const lc = cov[4][(ly * N + lx) * 4 + 3] / 255;
+      if (lc > .28) { const a = hash3(x >> 1, y >> 1, 99) < .05 ? .35 : .96; R *= 1 - a * (1 - I0.r); G *= 1 - a * (1 - I0.g); B *= 1 - a * (1 - I0.b); } } }
+    d[o] = R * 255; d[o + 1] = G * 255; d[o + 2] = B * 255; d[o + 3] = 255;
+  }
+  const c = document.createElement('canvas'); c.width = c.height = N; c.getContext('2d').putImageData(img, 0, 0); return c;
+}
+
+// ---------- isometric dollhouse ----------
+const CX = CELL / 2, CY = 230, C30 = Math.cos(Math.PI / 6);
+const I = (x, y, z = 0) => [CX + (x - y) * C30 * S, CY + (x + y) * .5 * S - z * S];
+const add = (a, b) => a.map((v, i) => Math.min(1, v + b[i]));
+const darker = (t, f) => [Math.min(1, t[0] + f), t[1] * (1 + f * .3), t[2] * (1 + f * .2), t[3] * (1 + f * .3)];
+function room(P, o){ const W = ROOM, H = WH, th = .35;
+  P.shape([I(0, 0, 0), I(0, W, 0), I(0, W, H), I(0, 0, H)], o.wallL);
+  P.shape([I(0, 0, 0), I(W, 0, 0), I(W, 0, H), I(0, 0, H)], o.wallR);
+  P.shape([I(0, 0, H), I(0, W, H), I(-th, W, H), I(-th, -th, H), I(W, -th, H), I(W, 0, H)], T(.1, .05, .1));
+  P.shape([I(0, 0, 0), I(W, 0, 0), I(W, W, 0), I(0, W, 0)], o.floor);
+  P.shape([I(0, W, 0), I(W, W, 0), I(W, W, -th), I(0, W, -th)], darker(o.floor, .35));
+  P.shape([I(W, 0, 0), I(W, W, 0), I(W, W, -th), I(W, 0, -th)], darker(o.floor, .55));
+  if (o.planks) for (let k = 1; k < 9; k++) P.outline([I(0, k * W / 9, 0), I(W, k * W / 9, 0)], false, .7);
+  if (o.tiles) for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) if ((i + j) % 2) P.shape([I(i * W / 6, j * W / 6), I((i + 1) * W / 6, j * W / 6), I((i + 1) * W / 6, (j + 1) * W / 6), I(i * W / 6, (j + 1) * W / 6)], o.tiles, { line: false });
+  P.outline([I(0, W, .25), I(0, 0, .25), I(W, 0, .25)], false, .8);
+}
+function cub(P, x, y, z, w, d, h, t, o = {}){
+  P.shape([I(x, y + d, z), I(x + w, y + d, z), I(x + w, y + d, z + h), I(x, y + d, z + h)], darker(t, .18), o);
+  P.shape([I(x + w, y, z), I(x + w, y + d, z), I(x + w, y + d, z + h), I(x + w, y, z + h)], darker(t, .38), o);
+  P.shape([I(x, y, z + h), I(x + w, y, z + h), I(x + w, y + d, z + h), I(x, y + d, z + h)], t, o); }
+const ell = (cx, cy, rx, ry, n = 28, a0 = 0, a1 = Math.PI * 2) => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return [cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]; });
+function cyl(P, x, y, z, r, h, t){ const [bx, by] = I(x, y, z), [tx, ty] = I(x, y, z + h), rx = r * 1.2247 * S, ry = r * .7071 * S;
+  P.shape(ell(bx, by, rx, ry, 20, 0, Math.PI).concat(ell(tx, ty, rx, ry, 20, Math.PI, 0)), darker(t, .25)); P.shape(ell(tx, ty, rx, ry, 28), t); }
+const wallR = (P, x0, x1, z0, z1, t, o) => P.shape([I(x0, .02, z0), I(x1, .02, z0), I(x1, .02, z1), I(x0, .02, z1)], t, o);
+const wallL = (P, y0, y1, z0, z1, t, o) => P.shape([I(.02, y0, z0), I(.02, y1, z0), I(.02, y1, z1), I(.02, y0, z1)], t, o);
+// light is ink: stepped halftone rings, never a smooth gradient
+function pool(P, x, y, r, z = 0){ const [cx, cy] = I(x, y, z); [1, .75, .5, .28].forEach((f, i) => P.overlay(ell(cx, cy, r * f * 1.2247 * S, r * f * .7071 * S, 36), T(0, .04 * i, .14 + i * .07))); }
+function glowR(P, x, z, r){ const [cx, cy] = I(x, .03, z); [1, .7, .45].forEach((f, i) => P.overlay(ell(cx, cy, r * f * S * .9, r * f * S * .9, 30), T(0, 0, .14 + i * .1))); }
+function books(P, x, y, z, w, d, h, seed){ const r = rng(seed); let bx = x; const cols = [T(.1, .7, .2), T(.6, .1, 0, .2), T(0, .2, .8), T(.15, 0, .3, .6), T(.5, .45, .1)];
+  while (bx < x + w - .12) { const bw = .1 + r() * .14, bh = h * (.7 + r() * .3); cub(P, bx, y, z, bw, d, bh, cols[Math.floor(r() * cols.length)], { w: .7 }); bx += bw; } }
+function pendant(P, x, y, z){ const [a, b] = I(x, y, WH), [c, d] = I(x, y, z + .4); P.stroke([[a, b], [c, d]], .9); const [sx, sy] = I(x, y, z);
+  P.shape([[sx - 14, sy + 2], [sx - 5, sy - 12], [sx + 5, sy - 12], [sx + 14, sy + 2]], T(.15, .1, 0, .7)); pool(P, x, y, 1.5); }
+function plant(P, x, y){ cyl(P, x, y, 0, .28, .5, T(.05, .5, .55)); const [cx, cy] = I(x, y, .5);
+  for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * .38, L = 22 + (k % 3) * 6; P.shape(ell(cx + Math.cos(a) * L * .5, cy + Math.sin(a) * L * .5, 5, L * .5, 12).map(([px, py]) => { const dx = px - cx - Math.cos(a) * L * .5, dy = py - cy - Math.sin(a) * L * .5, ca = Math.cos(a + Math.PI / 2), sa = Math.sin(a + Math.PI / 2); return [cx + Math.cos(a) * L * .5 + dx * ca - dy * sa, cy + Math.sin(a) * L * .5 + dx * sa + dy * ca]; }), T(.15, 0, .35, .7), { w: .7 }); } }
+
+// ---------- people: one skeleton, tapering volumes, clothing, faces ----------
+function capsule(a, b, ra, rb, n = 7){ const dx = b[0] - a[0], dy = b[1] - a[1], ang = Math.atan2(dy, dx), pts = [];
+  for (let i = 0; i <= n; i++) { const t = ang - Math.PI / 2 + Math.PI * i / n; pts.push([b[0] + Math.cos(t) * rb, b[1] + Math.sin(t) * rb]); }
+  for (let i = 0; i <= n; i++) { const t = ang + Math.PI / 2 + Math.PI * i / n; pts.push([a[0] + Math.cos(t) * ra, a[1] + Math.sin(t) * ra]); } return pts; }
+const POSES = { // angles from straight down; positive swings forward. Three keys per clip (drawn on twos).
+  stand: [{ lean: .02, sh: [.05, -.08], el: [.15, .2], hip: [.02, -.02], kn: [0, 0] }],
+  work: [{ lean: .14, sh: [.7, .9], el: [.6, .5], hip: [.05, -.04], kn: [0, 0] }, { lean: .15, sh: [.78, .95], el: [.45, .6], hip: [.05, -.04], kn: [0, 0] }, { lean: .13, sh: [.66, .85], el: [.7, .45], hip: [.05, -.04], kn: [0, 0] }],
+  stir: [{ lean: .1, sh: [.3, 1.0], el: [.4, .7], hip: [.04, -.03], kn: [0, 0] }, { lean: .1, sh: [.3, .85], el: [.4, .95], hip: [.04, -.03], kn: [0, 0] }, { lean: .1, sh: [.3, 1.1], el: [.4, .55], hip: [.04, -.03], kn: [0, 0] }],
+  shake: [{ lean: -.02, sh: [.4, 2.3], el: [.9, .5], hip: [.02, -.02], kn: [0, 0] }, { lean: -.02, sh: [.4, 2.6], el: [.9, .2], hip: [.02, -.02], kn: [0, 0] }, { lean: -.02, sh: [.4, 2.1], el: [.9, .8], hip: [.02, -.02], kn: [0, 0] }],
+  point: [{ lean: .04, sh: [.05, 1.9], el: [.2, .1], hip: [.08, -.06], kn: [0, 0] }, { lean: .04, sh: [.05, 2.0], el: [.2, .05], hip: [.08, -.06], kn: [0, 0] }, { lean: .04, sh: [.05, 1.85], el: [.2, .2], hip: [.08, -.06], kn: [0, 0] }],
+  look: [{ lean: -.03, sh: [-.25, -.3], el: [.9, .9], hip: [.03, -.03], kn: [0, 0] }],
+  sit: [{ lean: .08, sh: [.55, .7], el: [.8, .7], hip: [1.45, 1.4], kn: [-1.45, -1.3], seat: true }, { lean: .1, sh: [.6, .75], el: [.75, .65], hip: [1.45, 1.4], kn: [-1.45, -1.3], seat: true }, { lean: .08, sh: [.55, .72], el: [.85, .7], hip: [1.45, 1.4], kn: [-1.45, -1.3], seat: true }],
+  read: [{ lean: .12, sh: [.85, .95], el: [1.2, 1.1], hip: [1.45, 1.4], kn: [-1.45, -1.3], seat: true }],
+  think: [{ lean: .1, sh: [.5, .3], el: [.8, 2.2], hip: [1.45, 1.4], kn: [-1.45, -1.3], seat: true }],
+  dance: [{ lean: -.04, sh: [2.5, 2.7], el: [.4, .5], hip: [.2, -.25], kn: [-.3, .1] }, { lean: .04, sh: [2.2, 2.9], el: [.6, .3], hip: [-.1, .15], kn: [.05, -.35] }, { lean: -.02, sh: [2.7, 2.4], el: [.3, .6], hip: [.15, -.1], kn: [-.2, -.05] }],
+};
+function person(P, x, y, o, v){ // feet (or seat) at iso floor point x,y
+  const pose = (POSES[o.pose] || POSES.stand)[v % (POSES[o.pose] || POSES.stand).length], f = o.face || 1, H = (o.h || 1.78) * 1.38 * S;
+  const dir = a => [f * Math.sin(a), Math.cos(a)], up = a => [f * Math.sin(a), -Math.cos(a)], add2 = (p, d, l) => [p[0] + d[0] * l, p[1] + d[1] * l];
+  const [fx, fy] = I(x, y, o.z || 0), thigh = .245 * H, shin = .24 * H, torso = .3 * H, uarm = .18 * H, farm = .155 * H;
+  const hip = pose.seat ? [fx, fy - (o.seatH || .5) * S] : [fx, fy - (thigh + shin) * .99 - .035 * H];
+  const chest = add2(hip, up(pose.lean), torso), neckTop = add2(chest, up(pose.lean * 1.2), .055 * H), head = add2(neckTop, up(pose.lean * .8), .068 * H);
+  const sk = o.skin || T(0, .2, .26), cloth = o.shirt || T(.1, .5, .1), pants = o.pants || T(.62, .1, 0, .15), shoe = T(.8, .3, 0, .2), shade = t => darker(t, .3);
+  const legs = [], arms = [];
+  [0, 1].forEach(s => { const off = s ? f * .012 * H : -f * .025 * H, h0 = [hip[0] + off, hip[1]], knee = add2(h0, dir(pose.hip[s]), thigh), ankle = add2(knee, dir(pose.hip[s] + pose.kn[s]), shin);
+    legs.push({ h0, knee, ankle, toe: [ankle[0] + f * .1 * H, ankle[1] + .01 * H] });
+    const sh = [chest[0] + (s ? f * .03 * H : -f * .05 * H), chest[1] + .015 * H], el = add2(sh, dir(pose.sh[s]), uarm), wr = add2(el, dir(pose.sh[s] + pose.el[s]), farm);
+    arms.push({ sh, el, wr, hand: add2(wr, dir(pose.sh[s] + pose.el[s]), .045 * H) }); });
+  const drawLeg = (L, far) => { const pt = far ? shade(pants) : pants;
+    P.shape(capsule(L.h0, L.knee, .062 * H, .046 * H), pt, { w: .8 }); P.shape(capsule(L.knee, L.ankle, .046 * H, .03 * H), pt, { w: .8 });
+    P.shape(capsule([L.ankle[0] - f * .015 * H, L.ankle[1]], L.toe, .028 * H, .022 * H, 5), shoe, { w: .7 }); };
+  const drawArm = (A, far) => { const ct = far ? shade(cloth) : cloth;
+    P.shape(capsule(A.sh, A.el, .045 * H, .036 * H), ct, { w: .8 }); P.shape(capsule(A.el, A.wr, .034 * H, .026 * H), o.sleeves === 'short' ? (far ? shade(sk) : sk) : ct, { w: .8 });
+    P.shape(ell(A.hand[0], A.hand[1], .026 * H, .032 * H, 10), far ? shade(sk) : sk, { w: .6 }); };
+  drawArm(arms[0], true); drawLeg(legs[0], true);
+  // torso volume: shoulders, waist, hips, cut as clothing
+  const perp = [-up(pose.lean)[1], up(pose.lean)[0]], wS = .13 * H, wW = .095 * H, wH = .105 * H, mid = add2(hip, up(pose.lean), torso * .5);
+  const torsoPts = [add2(chest, perp, wS * .9), add2(chest, perp, -wS), add2(mid, perp, -wW), add2(hip, perp, -wH), add2(add2(hip, up(pose.lean), -.06 * H), perp, 0), add2(hip, perp, wH), add2(mid, perp, wW)];
+  P.shape(torsoPts, cloth, { w: 1 });
+  if (o.apron) P.shape([add2(mid, perp, -wW * .7), add2(mid, perp, wW * .7), add2(add2(hip, up(pose.lean), -.2 * H), perp, wH * .9), add2(add2(hip, up(pose.lean), -.2 * H), perp, -wH * .9)], T(0, 0, 0, 0), { w: .8 });
+  P.outline([add2(mid, perp, -wW * .6), add2(mid, perp, -wW * .1)], false, .6); // a fold at the waist
+  drawLeg(legs[1], false);
+  P.shape(capsule(chest, neckTop, .035 * H, .03 * H, 5), sk, { w: .6 });
+  // head: skull, jaw, ear, hair, brow, eye, nose, mouth
+  const hx = head[0], hy = head[1], hr = .062 * H;
+  P.shape(ell(hx, hy, hr * .92, hr * 1.12, 22), sk, { w: .85 });
+  P.shape(ell(hx - f * hr * .25, hy + hr * .05, hr * .2, hr * .28, 10), darker(sk, .2), { w: .5 });
+  P.shape([[hx - f * hr * 1.0, hy + hr * .1], [hx - f * hr * .95, hy - hr * .8], [hx - f * hr * .2, hy - hr * 1.25], [hx + f * hr * .75, hy - hr * .95], [hx + f * hr * .9, hy - hr * .45], [hx + f * hr * .3, hy - hr * .55], [hx - f * hr * .5, hy - hr * .25]], o.hair || T(.75, .25, 0, 0), { w: .7 });
+  P.stroke([[hx + f * hr * .28, hy - hr * .32], [hx + f * hr * .72, hy - hr * .38]], .9);
+  P.fill(ell(hx + f * hr * .55, hy - hr * .12, hr * .09, hr * .09, 8), T(1));
+  P.stroke([[hx + f * hr * .82, hy - hr * .2], [hx + f * hr * 1.08, hy + hr * .22], [hx + f * hr * .85, hy + hr * .3]], .8);
+  P.stroke([[hx + f * hr * .5, hy + hr * .58], [hx + f * hr * .8, hy + hr * .55]], .7);
+  if (o.beard) P.shape([[hx - f * hr * .2, hy + hr * .25], [hx + f * hr * .85, hy + hr * .35], [hx + f * hr * .6, hy + hr * 1.15], [hx, hy + hr * 1.05]], o.hair || T(.75, .25), { w: .6 });
+  if (o.headphones) { P.stroke(ell(hx, hy - hr * .1, hr * 1.05, hr * 1.1, 14, Math.PI * 1.05, Math.PI * 1.95), 2.2); P.shape(ell(hx - f * hr * .1, hy + hr * .05, hr * .3, hr * .4, 10), T(.2, .8, .1), { w: .6 }); }
+  drawArm(arms[1], false);
+  return { hand: arms[1].hand, head };
+}
+
+// ---------- one scene per project ----------
+const WALL = { cream: T(0, .06, .16), blue: T(.38, 0, .05, .1), teal: T(.05, 0, .1, .42), pink: T(0, .26, .08), sand: T(.04, .14, .32), night: T(.75, .1, 0, .35), green: T(.1, 0, .25, .3) };
+const WOOD = T(.08, .26, .42), DARKWOOD = T(.45, .4, .45);
+const SCENES = {
+  polymeratlas(P, v){ room(P, { wallL: WALL.blue, wallR: WALL.cream, floor: WOOD, planks: true });
+    cub(P, .05, .4, 0, .55, 3.2, 3.6, DARKWOOD); for (let s = 0; s < 4; s++) books(P, .1, .5 + 0, .3 + s * .85, .45, 3.0, .6, s + 1);
+    wallR(P, 3.6, 5.6, 1.6, 3.6, T(.55, 0, 0, .25)); [[4.2, 3.0], [5.0, 2.3]].forEach(([x, z]) => P.overlay(ell(...I(x, .03, z), 2.5, 2.5, 8), T(0, 0, .9)));
+    cub(P, 2.6, 2.6, 0, 2.2, 1.3, 1.25, WOOD); cub(P, 3.0, 2.85, 1.25, 1.2, .8, .05, T(0, .1, .1)); cub(P, 3.5, 2.85, 1.25, .05, .8, .12, T(.1, .7, .3));
+    cyl(P, 5.4, 1.5, 0, .1, 1.5, DARKWOOD); const [gx, gy] = I(5.4, 1.5, 1.95); P.shape(ell(gx, gy, 15, 15, 24), T(.15, 0, .2, .55)); P.outline(ell(gx, gy, 15, 5, 20), true, .7); P.outline(ell(gx, gy, 5, 15, 20), true, .7);
+    pendant(P, 3.7, 3.0, 2.8); cub(P, 3.2, 4.2, 0, .9, .9, .95, T(.1, .55, .3));
+    person(P, 3.6, 4.4, { pose: 'read', face: -1, seatH: .95, shirt: T(.2, .55, .1), pants: T(.6, .1, 0, .2), hair: T(.8, .3), beard: true }, v); },
+  xefy(P, v){ room(P, { wallL: WALL.cream, wallR: WALL.sand, floor: T(0, .05, .1), tiles: T(.35, .05, 0, .15) });
+    for (let i = 0; i < 9; i++) for (let j = 0; j < 4; j++) wallR(P, .3 + i * .7, .95 + i * .7, 1.9 + j * .55, 2.4 + j * .55, T(0, .02, .02, .12), { w: .5 });
+    cub(P, .3, .1, 0, 6.6, 1.1, 1.3, T(.08, .5, .35)); cub(P, 2.0, .2, 1.3, 1.6, .9, .06, T(.75, .1, 0, .1));
+    cyl(P, 2.8, .65, 1.36, .38, .5, T(.4, .1, 0, .2)); for (let k = 0; k < 3; k++) { const [sx, sy] = I(2.6 + k * .2, .65, 2.0 + k * .1); P.stroke(Array.from({ length: 9 }, (_, i) => [sx + Math.sin(i * .9 + v * 1.4 + k) * 4, sy - i * 5]), 1.0); }
+    [[.6, 3.2], [1.4, 3.4], [5.0, 3.0]].forEach(([x, z]) => { P.shape(ell(...I(x, .03, z), 12, 12, 18), T(.5, .2, 0, .15)); const [a, b] = I(x, .03, z + .5); P.stroke([[a, b - 4], [a, b + 8]], .8); });
+    pendant(P, 4.5, 2.5, 3.0); person(P, 3.3, 2.0, { pose: 'stir', face: -1, shirt: T(0, 0, .04), pants: T(.6, 0, 0, .1), apron: true, hair: T(.7, .3, .1) }, v);
+    plant(P, 6.4, 5.8); },
+  markey(P, v){ room(P, { wallL: WALL.green, wallR: WALL.cream, floor: T(.22, .08, .1), planks: false });
+    wallR(P, .5, 4.5, 1.2, 3.4, T(.18, .28, .45)); for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) P.fill(ell(...I(.9 + i * .8, .03, 1.6 + j * .7), 1.4, 1.4, 6), T(.7));
+    [[1.2, 2.6], [2.2, 2.1], [3.3, 2.8]].forEach(([x, z]) => P.stroke([I(x, .03, z), I(x + .5, .03, z - .6)], 2.2));
+    const car = (x, y) => { cub(P, x, y, .35, 3.6, 1.6, .55, T(.05, .85, .25)); P.shape([I(x + .8, y + .15, .9), I(x + 2.4, y + .15, .9), I(x + 2.1, y + .15, 1.45), I(x + 1.1, y + .15, 1.45)], T(.05, .85, .25));
+      cub(P, x + 1.1, y + .15, .9, 1.0, 1.3, .55, T(.45, 0, 0, .4)); [[x + .7, y + 1.6], [x + 2.9, y + 1.6]].forEach(([wx, wy]) => { const [a, b] = I(wx, wy, .35); P.shape(ell(a, b, 14, 14, 18), T(.85, .2, 0, .2)); P.shape(ell(a, b, 6, 6, 12), T(0, 0, .3)); }); pool(P, x + 1.8, y + .8, 1.4, 0); };
+    car(1.6, 2.6); cyl(P, 6.2, .9, 0, .55, 1.4, T(.1, .7, .4)); pendant(P, 3.4, 3.4, 3.2);
+    person(P, 5.9, 4.9, { pose: 'point', face: -1, shirt: T(.55, 0, .05, .2), pants: T(.7, 0, 0, .1), sleeves: 'short', hair: T(.8, .2) }, v); },
+  exir(P, v){ room(P, { wallL: WALL.night, wallR: WALL.pink, floor: DARKWOOD, planks: true });
+    cub(P, .2, .1, 1.2, 6.4, .5, .08, WOOD); cub(P, .2, .1, 2.2, 6.4, .5, .08, WOOD);
+    const r = rng(9); for (let i = 0; i < 16; i++) { const x = .4 + i * .38, col = [T(0, .2, .7), T(0, .1, 0, .6), T(.1, .7, .2), T(.05, 0, .1, .2)][i % 4]; cyl(P, x, .35, 1.28 + (i % 2) * 1.0, .1, .5 + r() * .25, col); }
+    cub(P, 1.0, 2.2, 0, 4.6, 1.0, 1.4, T(.3, .55, .35)); cub(P, .95, 2.15, 1.4, 4.7, 1.1, .07, T(.6, .3, .2));
+    [[1.6, 4.2], [3.0, 4.2], [4.4, 4.2]].forEach(([x, y]) => { cyl(P, x, y, 0, .06, .9, T(.6, .1)); cyl(P, x, y, .9, .32, .1, T(.05, .6, .3)); });
+    pendant(P, 2.0, 2.6, 2.9); pendant(P, 4.4, 2.6, 2.9);
+    person(P, 3.3, 1.55, { pose: 'shake', face: 1, shirt: T(0, 0, .02), pants: T(.85, .1, 0, .2), hair: T(.85, .2) }, v); const [sx, sy] = I(3.3, 1.55, 0); },
+  armag(P, v){ room(P, { wallL: WALL.cream, wallR: WALL.teal, floor: T(.15, .5, .25), planks: false });
+    for (let k = 0; k < 3; k++) wallR(P, 1 + k * 1.6, 2.2 + k * 1.6, 2.0, 3.6, [T(0, .7, .3), T(.4, .1, .4), T(0, .2, .8)][k]);
+    cub(P, 4.3, .5, 0, 2.2, 1.0, .9, DARKWOOD); cub(P, 4.35, .55, .9, 2.1, .9, .7, T(0, 0, .04, .08), { w: .7 });
+    for (let k = 0; k < 6; k++) cyl(P, 4.6 + k * .32, 1.0, .9, .06, .45, T(.05, .35, .9));
+    cub(P, .8, 3.4, 0, 1.6, 1.6, .55, T(.15, .8, .3)); cub(P, .8, 3.4, .55, .45, 1.6, 1.2, T(.15, .8, .3)); cub(P, .8, 3.4, .55, 1.6, .35, .5, T(.2, .85, .35));
+    pool(P, 2.4, 4.2, 1.6); pendant(P, 2.4, 4.2, 3.1);
+    person(P, 1.75, 4.3, { pose: 'read', face: 1, seatH: 1.0, shirt: T(.6, .05, .1, .2), pants: T(.3, .35, .4), hair: T(.2, .6, .5), beard: true }, v); },
+  perceptense(P, v){ room(P, { wallL: WALL.sand, wallR: WALL.cream, floor: WOOD, planks: true });
+    wallR(P, .6, 5.6, 1.4, 3.8, T(.35, 0, .1, .75)); const [a, b] = I(1.5, .03, 2.9); P.stroke(ell(a, b, 24, 24, 20), 1.2, 0);
+    P.stroke([I(2.6, .03, 2.0), I(3.4, .03, 3.3), I(4.2, .03, 2.4), I(5.0, .03, 3.4)], 1.4); [[1.0, 2.0], [1.4, 2.1], [1.8, 2.0]].forEach(([x, z]) => P.fill(ell(...I(x, .03, z), 3, 3, 8), T(0, 0, .9)));
+    for (let r0 = 0; r0 < 2; r0++) for (let c0 = 0; c0 < 2; c0++) cub(P, 2.2 + c0 * 2.2, 3.4 + r0 * 1.8, 0, 1.4, .8, .9, T(.05, .35, .6));
+    person(P, 6.0, 1.8, { pose: 'point', face: -1, shirt: T(0, .75, .2), pants: T(.6, 0, 0, .3), hair: T(.25, .7, .55) }, v); plant(P, 6.5, 6.4); },
+  galerium(P, v){ room(P, { wallL: WALL.cream, wallR: WALL.cream, floor: DARKWOOD, planks: true });
+    [[.6, 2.4, 1.6, 3.6, T(0, .6, .7)], [3.0, 4.2, 1.8, 3.4, T(.5, .1, .5)], [4.8, 6.6, 1.5, 3.8, T(.1, .2, .1, .7)]].forEach(([x0, x1, z0, z1, t]) => { wallR(P, x0 - .1, x1 + .1, z0 - .1, z1 + .1, T(.3, .4, .9)); wallR(P, x0, x1, z0, z1, t); glowR(P, (x0 + x1) / 2, z1 + .3, .6); });
+    wallL(P, 1.2, 3.4, 1.6, 3.4, T(.2, .7, .1)); wallL(P, 1.1, 3.5, 1.5, 1.6, T(.3, .4, .9));
+    cub(P, 2.4, 3.2, 0, 2.6, .7, .45, T(.6, .3, .2)); person(P, 3.5, 1.9, { pose: 'look', face: -1, shirt: T(.4, .5, .3, 0), pants: T(.7, .1), hair: T(.1, .6, .9) }, v);
+    person(P, 5.8, 4.6, { pose: 'stand', face: -1, shirt: T(0, .8, .9), pants: T(.6, .1, 0, .2), hair: T(.8, .2), h: 1.62 }, v); },
+  lalista(P, v){ room(P, { wallL: WALL.pink, wallR: WALL.sand, floor: T(0, .15, .2), tiles: T(.0, .55, .45) });
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) { wallR(P, .6 + i * 1.5, 1.7 + i * 1.5, 2.0 + j * 1.1, 2.8 + j * 1.1, T(0, 0, .02)); P.stroke([I(.8 + i * 1.5, .03, 2.4 + j * 1.1), I(1.4 + i * 1.5, .03, 2.4 + j * 1.1)], 1.6, 1); }
+    [[2.6, 3.2], [5.0, 4.6]].forEach(([x, y]) => { cyl(P, x, y, 0, .07, 1.05, T(.7, .2)); cyl(P, x, y, 1.05, .7, .08, T(0, .1, .05, .55)); });
+    cub(P, 1.4, 4.0, 0, .7, .7, .65, T(.1, .7, .55)); plant(P, .7, 6.3);
+    person(P, 1.8, 4.3, { pose: 'sit', face: 1, seatH: .65, shirt: T(0, .85, .6), pants: T(.4, 0, .1, .4), hair: T(.6, .6, .1) }, v); },
+  morcypher(P, v){ room(P, { wallL: WALL.sand, wallR: WALL.blue, floor: WOOD, planks: true });
+    for (let k = 0; k < 5; k++) P.stroke([I(.6 + k * 1.2, .03, 3.9), I(.9 + k * 1.2, .03, 2.2 + (k % 2) * .4), I(1.4 + k * 1.2, .03, 3.9)], 1.0);
+    wallR(P, 3.6, 5.2, 1.8, 2.9, T(0, .1, .3)); cub(P, 1.4, 1.4, 0, 3.4, 1.4, 1.2, DARKWOOD); cub(P, 2.5, 1.7, 1.2, 1.0, .6, .12, T(.05, .45, .9)); cub(P, 2.6, 1.8, 1.32, .8, .18, .08, T(.05, .4, .9));
+    const [tx, ty] = I(4.2, 2.0, 1.22); P.shape([[tx, ty], [tx + 40, ty + 10], [tx + 44, ty + 18], [tx + 4, ty + 8]], T(0, 0, .04), { w: .6 }); for (let k = 0; k < 5; k++) P.fill(ell(tx + 8 + k * 7, ty + 6 + k * 1.8, k % 2 ? 2 : 3.5, 1.5, 6), T(0, .9));
+    pool(P, 3.1, 2.1, 1.5, 1.2); pendant(P, 3.1, 2.1, 2.9);
+    person(P, 3.2, 3.3, { pose: 'sit', face: -1, seatH: .95, shirt: T(0, .05, .55), pants: T(.6, .2), hair: T(.8, .3), beard: true }, v); },
+  kalculator(P, v){ room(P, { wallL: WALL.teal, wallR: WALL.cream, floor: T(.05, .45, .1), planks: false });
+    P.stroke([I(1.0, .03, 3.4), I(2.2, .03, 3.4)], 1.4); P.stroke([I(1.0, .03, 3.1), I(2.2, .03, 3.1)], 1.4); P.stroke([I(3.0, .03, 3.8), I(3.6, .03, 2.6), I(4.2, .03, 3.6), I(4.8, .03, 2.4)], 1.2);
+    cub(P, 2.0, 2.0, 0, 3.2, 1.6, 1.15, T(.5, .1, .4)); for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) cub(P, 2.3 + i * .55, 2.15 + j * .45, 1.15, .45, .35, .18, (i === 3 && j === 1) ? T(0, .9, .1) : T(0, .1, .05), { w: .6 });
+    pool(P, 3.6, 2.8, 1.6, 1.15); pendant(P, 3.6, 2.8, 2.9); cub(P, 3.0, 4.1, 0, .8, .8, .6, T(.6, .1));
+    person(P, 3.4, 4.4, { pose: 'think', face: -1, seatH: .6, shirt: T(.05, .4, 0, .6), pants: T(.7, .1), hair: T(.3, .7, .2) }, v); },
+  audioptix(P, v){ room(P, { wallL: WALL.night, wallR: WALL.night, floor: T(.5, .1, .05, .3), planks: false });
+    for (let i = 0; i < 12; i++) { const h = .4 + Math.abs(Math.sin(i * .9 + v * 2.1)) * 2.0; wallR(P, .6 + i * .5, .9 + i * .5, 1.2, 1.2 + h, i % 3 === 0 ? T(0, .9, .2) : T(0, .05, .9), { w: .6 }); }
+    [[.5, 1.2], [5.8, .6]].forEach(([x, y]) => { cub(P, x, y, 0, .8, .7, 2.2, T(.85, .15, 0, .2)); [[.6, 1.6], [.6, .8]].forEach(([dy, z]) => { const [a, b] = I(x + .4, y + .7, z); P.shape(ell(a, b, 9, 9, 14), T(.2, 0, .7)); }); });
+    cub(P, 2.8, 3.4, 0, 1.6, 1.0, .8, WOOD); const [rx, ry] = I(3.6, 3.9, .82); P.shape(ell(rx, ry, 22, 12, 24), T(1, .2, 0, .3)); P.shape(ell(rx, ry, 7, 4, 12), T(0, .8, .3));
+    pool(P, 3.6, 5.0, 2.0); person(P, 3.0, 5.4, { pose: 'dance', face: 1, shirt: T(0, .1, .9), pants: T(.7, .1), hair: T(.1, .8, .2), headphones: true, sleeves: 'short' }, v); },
+  lostimer(P, v){ room(P, { wallL: T(.12, .1, .3), wallR: T(.12, .08, .25), floor: T(.3, .05, .15, .2), planks: false });
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) { const x0 = .3 + i * 1.1, z0 = 1.4 + j * 1.3; P.outline([I(x0, .03, z0), I(x0 + .55, .03, z0 + 1.1), I(x0 + 1.1, .03, z0)], true, .9); }
+    cub(P, 2.0, .6, 0, 2.8, 1.2, 1.1, T(.4, .05, .25)); cub(P, 2.6, .7, 1.1, 1.3, 1.0, 1.0, T(.1, .25, .55)); wallR(P, 2.75, 3.75, 1.4, 1.95, T(.6, 0, .1, .9));
+    for (let k = 0; k < 3; k++) wallL(P, 1.2 + k * .55, 1.65 + k * .55, 2.8, 3.5, T(.95, 0, 0, .1));
+    cub(P, 2.7, 1.9, 1.1, 1.1, .4, .1, T(.6, .1, 0, .1)); pool(P, 3.3, 2.0, 1.8, 0);
+    person(P, 3.5, 2.95, { pose: 'work', face: -1, shirt: T(.1, .35, .65), pants: T(.4, .2, .5), hair: T(.6, .5, .1), beard: true }, v); },
+  pseudoku(P, v){ room(P, { wallL: WALL.cream, wallR: WALL.cream, floor: T(.05, 0, .35, .55), planks: false });
+    cub(P, .8, 2.2, 0, 5.6, .15, 1.6, T(.05, 0, .25, .35)); cub(P, 3.2, .4, 0, .15, 3.6, 1.6, T(.05, 0, .25, .35));
+    cub(P, 1.0, .5, 0, 2.0, 1.4, 1.0, T(0, .05, .1)); cub(P, 1.5, .7, 1.0, 1.0, .9, .9, T(0, .04, .12)); wallR(P, 1.65, 2.35, 1.25, 1.8, T(.3, 0, .05, .6));
+    cub(P, 4.0, .5, 0, 2.0, 1.4, 1.0, T(0, .05, .1)); cub(P, 4.5, .7, 1.0, 1.0, .9, .9, T(0, .04, .12)); wallR(P, 4.65, 5.35, 1.25, 1.8, T(.3, 0, .05, .6));
+    cub(P, 1.6, 2.4, 0, .7, .5, .55, T(.7, .1)); person(P, 1.9, 2.0, { pose: 'sit', face: -1, seatH: .55, shirt: T(.75, .05, .05, .1), pants: T(.75, .1), hair: T(.7, .4) }, v);
+    person(P, 5.6, 4.9, { pose: 'stand', face: -1, shirt: T(.55, 0, .05, .2), pants: T(.6, .1), hair: T(.2, .6, .7), beard: true }, v); },
+  constyx(P, v){ room(P, { wallL: WALL.night, wallR: T(.9, 0, 0, .55), floor: T(.8, .1, 0, .4), planks: false });
+    const r = rng(41 + v); for (let i = 0; i < 18; i++) { const x = .4 + i * .36, z0 = 1.0 + r() * 1.5, L = .6 + r() * 1.4; for (let s = 0; s < 6; s++) { const z = z0 + s * L / 6; if (z > WH - .2) break; wallR(P, x, x + .09, z, z + .12, T(0, 0, .2 + s * .12, .1), { line: false }); } }
+    cub(P, 2.6, 3.2, 0, 1.2, 1.2, .7, T(.9, .3)); cub(P, 2.6, 4.1, .7, 1.2, .3, 1.3, T(.9, .3));
+    person(P, 3.2, 3.6, { pose: 'sit', face: -1, seatH: .7, shirt: T(.95, .3, 0, .2), pants: T(.95, .2), hair: T(.95, .3) }, v); },
+  drxrates(P, v){ room(P, { wallL: WALL.night, wallR: T(.6, .3, 0, .1), floor: T(.4, .7, .2), planks: false });
+    wallR(P, .8, 5.8, 1.4, 3.8, T(0, .05, .12)); wallR(P, 1.2, 3.0, 1.8, 3.2, T(0, .5, .8)); wallR(P, 3.0, 5.4, 1.8, 3.4, T(.3, 0, .2, .4));
+    const [bx, by] = I(6.6, 6.6, 2.6); P.overlay([[bx, by], I(.8, .05, 3.8), I(5.8, .05, 1.4)], T(0, 0, .14)); P.overlay([[bx, by], I(1.6, .05, 3.4), I(5.0, .05, 1.9)], T(0, 0, .14));
+    for (let k = 0; k < 2; k++) { cub(P, 1.2 + k * 2.6, 3.8, 0, 1.8, 1.2, .6, T(.1, .9, .4)); cub(P, 1.2 + k * 2.6, 4.7, .6, 1.8, .3, .9, T(.1, .9, .4)); }
+    person(P, 2.2, 4.3, { pose: 'sit', face: -1, seatH: .6, shirt: T(0, .05, .7), pants: T(.6, .2), hair: T(.8, .2) }, v);
+    cub(P, 6.0, 5.9, 2.2, .7, .6, .45, T(.7, .2)); },
+  website(P, v){ room(P, { wallL: WALL.cream, wallR: WALL.teal, floor: WOOD, planks: true });
+    const [mx, my] = I(2.6, .03, 2.7); P.shape(ell(mx, my, 34, 40, 30), T(.2, 0, .15, .5)); P.shape(ell(mx, my, 28, 34, 30), T(0, 0, .04, .08)); P.overlay(ell(mx - 8, my - 10, 8, 12, 12), T(0, 0, 0, 0));
+    cub(P, 3.8, .4, 0, 2.4, 1.0, 1.15, WOOD); cub(P, 4.4, .5, 1.15, 1.1, .7, .06, T(.6, .1)); wallR(P, 4.45, 5.45, 1.21, 1.85, T(.2, .1, .3, .4));
+    wallL(P, 1.4, 3.0, 2.0, 3.4, T(0, .5, .2)); plant(P, .7, 5.6); pool(P, 4.6, 2.4, 1.6); pendant(P, 4.6, 2.4, 3.0);
+    person(P, 2.5, 1.9, { pose: 'stand', face: -1, shirt: T(.05, .6, .7), pants: T(.55, .1), hair: T(.8, .3), beard: true }, v); },
+};
+
+// ---------- the sheet: boxes packed like a poster, with printer's marks ----------
+const mobile = innerWidth < 760, Q = mobile ? 1 : 1.4, GUT = 26, MAR = 170;
+const n = PROJECTS.length, cols = Math.max(2, Math.round(Math.sqrt(n * 1.1))), rows = Math.ceil(n / cols);
+const SW = cols * CELL + (cols - 1) * GUT + MAR * 2, SH = rows * CELL + (rows - 1) * GUT + MAR * 2;
+const boxes = PROJECTS.map((p, i) => ({ p, x: MAR + (i % cols) * (CELL + GUT), y: MAR + Math.floor(i / cols) * (CELL + GUT), v: [], born: 0 }));
+const sheet = document.createElement('canvas'); sheet.width = Math.ceil(SW / 2); sheet.height = Math.ceil(SH / 2);
+(() => { const g = sheet.getContext('2d'), img = g.createImageData(sheet.width, sheet.height);
+  for (let i = 0; i < img.data.length; i += 4) { const k = .985 + .03 * Math.random(); img.data[i] = PAPER[0] * k; img.data[i + 1] = PAPER[1] * k; img.data[i + 2] = PAPER[2] * k; img.data[i + 3] = 255; } g.putImageData(img, 0, 0);
+  g.scale(.5, .5); const blue = 'rgb(61,85,136)', bx0 = MAR - 30, by0 = MAR - 30, bx1 = SW - MAR + 30, by1 = SH - MAR + 30;
+  g.strokeStyle = blue; g.lineWidth = 2;
+  [[bx0, by0, -1, -1], [bx1, by0, 1, -1], [bx0, by1, -1, 1], [bx1, by1, 1, 1]].forEach(([x, y, sx, sy]) => { g.beginPath(); g.moveTo(x + sx * 20, y); g.lineTo(x + sx * 90, y); g.moveTo(x, y + sy * 20); g.lineTo(x, y + sy * 90); g.stroke(); });
+  const target = (x, y) => { g.beginPath(); g.arc(x, y, 22, 0, 7); g.moveTo(x - 36, y); g.lineTo(x + 36, y); g.moveTo(x, y - 36); g.lineTo(x, y + 36); g.stroke(); g.beginPath(); g.arc(x, y, 9, 0, 7); g.fillStyle = blue; g.fill(); };
+  target(SW / 2, MAR / 2); target(SW / 2, SH - MAR / 2); target(MAR / 2, SH / 2); target(SW - MAR / 2, SH / 2);
+  INKS.forEach((k, i) => [1, .7, .4, .2].forEach((a, j) => { g.fillStyle = `rgba(${k.rgb.join(',')},${a})`; g.fillRect(SW - MAR - 4 * 4 * 46 + (i * 4 + j) * 46, SH - MAR + 70, 40, 40); }));
+  g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgba(241,80,96,.9)'; g.fillRect(MAR, SH - MAR + 70, 120, 40); g.fillStyle = 'rgba(255,226,0,.9)'; g.fillRect(MAR + 60, SH - MAR + 70, 120, 40); g.fillStyle = 'rgba(0,131,138,.8)'; g.fillRect(MAR + 120, SH - MAR + 70, 120, 40);
+})();
+
+// bake progressively: the first pass prints the sheet, the two later passes give the line its boil
+const order = boxes.map((_, i) => i);
+let bakeQueue = [0, 1, 2].flatMap(v => order.map(i => [i, v])), baked = 0;
+function bakeNext(){ const job = bakeQueue.shift(); if (!job) return; const [i, v] = job, b = boxes[i];
+  const P = new Painter(Math.round(CELL * Q), Q, i * 101 + v * 17 + 3); (SCENES[b.p[0]] || (() => room(P, { wallL: WALL.cream, wallR: WALL.cream, floor: WOOD })))(P, v);
+  b.v[v] = press(P); if (v === 0) b.born = performance.now(); baked++; setTimeout(bakeNext, 0); }
+setTimeout(bakeNext, 30);
+
+// ---------- view: fit, pan with inertia, zoom on the cursor, tour ----------
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+let W, H, dpr, view = { x: SW / 2, y: SH / 2, z: .2 }, vel = [0, 0], drag = null, lastInput = -1e9, anim = null, tourI = -1, tourT = 0;
+const fitZ = () => Math.min(W / SW, H / SH) * .96;
+function resize(){ dpr = Math.min(devicePixelRatio, 2); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; if (!anim && tourI < 0) view = { x: SW / 2, y: SH / 2, z: fitZ() }; }
+addEventListener('resize', resize); resize();
+const now = () => performance.now(), touch = () => { lastInput = now(); anim = null; };
+function flyTo(x, y, z, ms = 1600){ anim = { from: { ...view }, to: { x, y, z }, t0: now(), ms }; }
+const boxZ = () => Math.min(W, H) / CELL * .86;
+cv.addEventListener('pointerdown', e => { touch(); drag = { x: e.clientX, y: e.clientY, id: e.pointerId }; cv.classList.add('drag'); cv.setPointerCapture(e.pointerId); vel = [0, 0]; });
+cv.addEventListener('pointermove', e => { if (!drag || pinch.size > 1) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; view.x -= dx / view.z; view.y -= dy / view.z; vel = [dx, dy]; drag.x = e.clientX; drag.y = e.clientY; });
+addEventListener('pointerup', () => { drag = null; cv.classList.remove('drag'); });
+const zoomAt = (sx, sy, f) => { const wx = view.x + (sx - W / 2) / view.z, wy = view.y + (sy - H / 2) / view.z; view.z = Math.max(fitZ() * .6, Math.min(6, view.z * f)); view.x = wx - (sx - W / 2) / view.z; view.y = wy - (sy - H / 2) / view.z; };
+cv.addEventListener('wheel', e => { e.preventDefault(); touch(); zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * .0015)); }, { passive: false });
+const pinch = new Map(); let pinchD = 0;
+cv.addEventListener('pointerdown', e => { pinch.set(e.pointerId, [e.clientX, e.clientY]); });
+cv.addEventListener('pointermove', e => { if (!pinch.has(e.pointerId)) return; pinch.set(e.pointerId, [e.clientX, e.clientY]); if (pinch.size === 2) { const [a, b] = [...pinch.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinchD) zoomAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, d / pinchD); pinchD = d; touch(); } });
+addEventListener('pointerup', e => { pinch.delete(e.pointerId); pinchD = 0; });
+cv.addEventListener('dblclick', e => { touch(); const wx = view.x + (e.clientX - W / 2) / view.z, wy = view.y + (e.clientY - H / 2) / view.z; const b = boxes.find(b => wx > b.x && wx < b.x + CELL && wy > b.y && wy < b.y + CELL); if (b) flyTo(b.x + CELL / 2, b.y + CELL / 2, boxZ(), 1200); });
+addEventListener('keydown', e => { touch(); const step = 120 / view.z; if (e.key === 'ArrowLeft') view.x -= step; if (e.key === 'ArrowRight') view.x += step; if (e.key === 'ArrowUp') view.y -= step; if (e.key === 'ArrowDown') view.y += step;
+  if (e.key === '+' || e.key === '=') zoomAt(W / 2, H / 2, 1.25); if (e.key === '-') zoomAt(W / 2, H / 2, .8); if (e.key === '0') flyTo(SW / 2, SH / 2, fitZ(), 900); });
+
+const ck = document.getElementById('ck'), cn = document.getElementById('cn'), cl = document.getElementById('cl'); let cardFor = -2;
+function card(i){ if (i === cardFor) return; cardFor = i; if (i < 0) { ck.textContent = 'KiarashFa'; cn.textContent = 'Everything Kia has made, printed on one sheet.'; cl.textContent = 'Drag, scroll or pinch to look closer. Double-click a room to visit it.'; return; }
+  const p = PROJECTS[i]; ck.textContent = p[2]; cn.textContent = p[1]; cl.textContent = p[3]; }
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const startAt = location.hash ? +(location.hash.slice(1)) : -1;
+function frame(){
+  const t = now();
+  if (anim) { const k = Math.min(1, (t - anim.t0) / anim.ms), e = ease(k); view = { x: anim.from.x + (anim.to.x - anim.from.x) * e, y: anim.from.y + (anim.to.y - anim.from.y) * e, z: anim.from.z * Math.pow(anim.to.z / anim.from.z, e) }; if (k >= 1) anim = null; }
+  else if (!drag) { view.x -= vel[0] / view.z; view.y -= vel[1] / view.z; vel = [vel[0] * .92, vel[1] * .92]; }
+  // tour: after the sheet has printed, visit each room in order; any input pauses it
+  const printed = baked >= boxes.length;
+  if (startAt >= 0 && printed && tourI < 0) { tourI = startAt; view = { x: boxes[startAt].x + CELL / 2, y: boxes[startAt].y + CELL / 2, z: boxZ() }; tourT = t; }
+  if (printed && !reduce && t - lastInput > 7000 && !anim && (tourI < 0 ? t - boxes[boxes.length - 1].born > 2500 : t - tourT > 5200)) { tourI = (tourI + 1) % boxes.length; const b = boxes[tourI]; flyTo(b.x + CELL / 2, b.y + CELL / 2, boxZ(), 2200); tourT = t + 2200; }
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#e9e1cd'; g.fillRect(0, 0, W, H);
+  g.setTransform(view.z * dpr, 0, 0, view.z * dpr, (W / 2 - view.x * view.z) * dpr, (H / 2 - view.y * view.z) * dpr);
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.shadowColor = 'rgba(60,50,30,.18)'; g.shadowBlur = 40; g.drawImage(sheet, 0, 0, SW, SH); g.shadowBlur = 0;
+  const boil = reduce ? 0 : Math.floor(t / 333) % 3;
+  boxes.forEach(b => { const img = b.v[boil] || b.v[0]; if (!img) return; const k = Math.min(1, (t - b.born) / 700);
+    g.save(); g.beginPath(); g.rect(b.x, b.y, CELL, CELL * ease(k)); g.clip(); g.drawImage(img, b.x, b.y, CELL, CELL); g.restore(); });
+  // the chapter card follows whichever room fills the view
+  if (view.z > fitZ() * 1.8) { const b = boxes.findIndex(b => view.x > b.x - GUT / 2 && view.x < b.x + CELL + GUT / 2 && view.y > b.y - GUT / 2 && view.y < b.y + CELL + GUT / 2); card(b); } else card(-1);
+  window.__frames = (window.__frames || 0) + 1; window.__baked = baked;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
