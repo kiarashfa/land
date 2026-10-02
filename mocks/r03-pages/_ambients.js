@@ -70,7 +70,7 @@ async function atelier(ctx) {
   const dg = new T.BufferGeometry(); dg.setAttribute('position', new T.BufferAttribute(p, 3));
   const dust = new T.Points(dg, new T.PointsMaterial({ color: 0xffe4c4, size: .012, transparent: true, opacity: .55, blending: T.AdditiveBlending, depthWrite: false })); g.add(dust);
   scene.add(g);
-  return { group: g, bloom: [.22, .5, .92], exposure: .9, hdrMix: .55, hdrGain: 1.4, envGain: 1.5, cam: { y: 1.3, look: .98 },
+  return { group: g, plinth: pl, bloom: [.22, .5, .92], exposure: .9, hdrMix: .55, hdrGain: 1.4, envGain: 1.5, cam: { y: 1.3, look: .98 },
     update(t) { const a = dg.attributes.position.array; for (let i = 0; i < N; i++) { a[i * 3 + 1] += .0012; if (a[i * 3 + 1] > 6) a[i * 3 + 1] = 0; a[i * 3] += Math.sin(t * .3 + i) * .0004; } dg.attributes.position.needsUpdate = true; } };
 }
 
@@ -99,7 +99,7 @@ async function dusk(ctx) {
   g.add(new T.HemisphereLight(0x6a7fa8, 0x05070a, .45));
   const rim = new T.DirectionalLight(0x8fb0ff, .8); rim.position.set(3, 4, 6); g.add(rim);
   scene.add(g);
-  return { group: g, bloom: [.22, .45, .95], exposure: .42, envGain: 1.0, cam: { y: 1.25, look: 1.0 },
+  return { group: g, plinth: pl, bloom: [.22, .45, .95], exposure: .42, envGain: 1.0, cam: { y: 1.25, look: 1.0 },
     update(t) { water.material.uniforms.time.value = t * .35; } };
 }
 
@@ -136,7 +136,7 @@ async function travertine(ctx) {
   // plinth: a travertine block with a chamfer
   const pl = new T.Mesh(new T.RoundedBoxGeometry(1.15, PLINTH_TOP, 1.15, 4, .03), new T.MeshStandardMaterial({ map: trav([1, 1], 14), roughness: .7 })); pl.position.y = PLINTH_TOP / 2; g.add(shadowy(pl));
   scene.add(g);
-  return { group: g, bloom: [.14, .4, .95], exposure: .95, hdrMix: .35, hdrGain: 1.2, envGain: 1.15, cam: { y: 1.35, look: 1.0 }, update() {} };
+  return { group: g, plinth: pl, bloom: [.14, .4, .95], exposure: .95, hdrMix: .35, hdrGain: 1.2, envGain: 1.15, cam: { y: 1.35, look: 1.0 }, update() {} };
 }
 
 const BUILDERS = { atelier, dusk, travertine };

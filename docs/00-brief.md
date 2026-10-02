@@ -71,6 +71,9 @@ Families as Kia groups them. Flagships are marked ★; they are spread across fa
 - Visual quality matters more than speed scores. Lighthouse is not a goal; it still has to work on phones.
 - Sound: ambient + UI sound, **off by default**, behind a toggle.
 - Language: English now, **i18n-ready** structure.
+- Round 02 verdicts: Quicksilver is the home ("neat, clean and original", since many project names fuse two words), but it felt like it floated in a void. Trophy Shelf becomes the chronology, as a super-luxury auction where each item takes the stage. The Riso boxes become the families, as realistic glass boxes with living people inside. Kia loved the Riso recreation of Severance's office with its split desks. Rejected: the Objects page (cards again), Shadow Play (the shadows did not read), Mobile ("for babies"), Prism II (ugly), Tunnel Book (a disaster, so check every mock visually). The Antique Shop and the first Trophy Shelf were called ugly.
+- Reference for the families: glass-box dioramas by Ryan Sael (a data centre, a river lab, an apartment cut-away), made with Claude: dense props, soft real light, tilt-shift depth of field, a glass case on a dark base with small labels.
+- Kalculator's colour is its site's purple (#B06CF0).
 
 ## Working agreement
 

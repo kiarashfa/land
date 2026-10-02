@@ -47,10 +47,14 @@ The production Astro app does not exist yet; it arrives in the architecture roun
 
 - Mock rounds live in `mocks/rNN-<topic>/` with files `NN-<name>.html`, thumbnails in `thumbs/NN-<name>.jpg`, and shared data in `_data.js`. From R02 on, `_data.js` holds the real project list (families, flagships, colours) and `_sculptures.js` the per-project 3D objects.
 - Project icons and preview images copied from each repo live in `mocks/assets/projects/<slug>/` for mock use only. The real site should load icons from each project's own Pages site.
-- Mock pages are standalone HTML. Third-party code is vendored in `mocks/vendor/` (CDNs are blocked in the sandbox, and the artifact viewer only allows a few CDNs). `three.bundle.min.js` is three.js r186 plus the addons used, built with esbuild.
+- Mock pages are standalone HTML. Third-party code is vendored in `mocks/vendor/` (CDNs are blocked in the sandbox, and the artifact viewer only allows a few CDNs). `three.bundle.min.js` is three.js r186 plus the addons used, built with esbuild (R01–R02). `three.r03.min.js` (R03 on) adds GTAO, Bokeh, Reflector, Water, Sky, GLTF/EXR loaders, SkeletonUtils, RectAreaLight and three-mesh-bvh. Keep old bundles; older rounds depend on them.
+- `mocks/vendor/hdri/` holds CC0 HDRIs; `mocks/vendor/models/` holds rigged figures for mocks only (see its README for licences).
 - Every mock has a small `.mockbar` link back to the gallery naming the concept and its tech.
 - `08-riso-boxes.html` is deliberately self-contained (inline data, system fonts, Canvas 2D, one request), following `docs/references/riso-boxes-spec.md`.
-- `_dev-*` files are scratch pages (git-ignored), e.g. `r02-worlds/_dev-sheet.html` renders every sculpture in one contact sheet.
+- `_dev-*` files are scratch pages (git-ignored), e.g. `r02-worlds/_dev-sheet.html` renders every sculpture in one contact sheet, and `r03-pages/_dev-vitrine.html?room=<slug>` renders one glass case.
+- Round 03 shared modules in `mocks/r03-pages/`: `_qs.js` (liquid-metal engine, SDF bake, molten dissolve), `_ambients.js` (Atelier, Dusk, Travertine; each returns its `plinth`), `_home.js` (word fusions), `_rig.js` (aim-based posing for Mixamo skeletons), `_figures.js` (painted figures and living loops), `_vitrine.js` (glass case, modelling kit, light rescaling, gallery environment), `_rooms.js` (one miniature room per project, built in real metres).
+- A new family room = a builder in `_rooms.js` keyed by the project slug, plus a line in `SCENE_NOTES`. Model in metres with people 1.75 m tall; `rescaleLights` fixes light intensities after the room is shrunk into a case.
+- Heavy pages take `?still` (a settled frame) and `?i=` / `?lot=` / `?at=` to pick a state, so screenshots and thumbnails are reproducible.
 - The gallery is authored in `mocks/_gallery-body.html` (the Artifact page source, no `<html>` wrapper). `mocks/index.html` is generated from it for GitHub Pages / local viewing. Edit the body file, then regenerate.
 - Respect `prefers-reduced-motion` in every mock and page.
 - Future project pages live under a URL prefix (`/p/<slug>/`), never at a top-level path that could match a project repo name (risk R-02).
@@ -62,9 +66,10 @@ cd mocks && python3 -m http.server 8765 --bind 127.0.0.1 &   # serve
 cd tools/screenshots && npm install                           # once
 node shot.mjs r01-concepts/01-monomer.html /tmp/x 3000 both   # desktop + phone PNGs and console errors
 node thumbs.mjs r01-concepts 01-monomer:6000                  # gallery thumbnail
+FRAMES=2 node thumbs.mjs r03-pages "04-auction:3000:?lot=8&still"   # heavy page: query string, wait for frames
 ```
 
-Headless Chromium uses SwiftShader, so WebGL works but slowly; `window.__frames` counts rendered frames. Google Fonts sometimes fail through the proxy, and `thumbs.mjs` retries.
+Headless Chromium uses SwiftShader, so WebGL works but slowly (the Round 03 pages take 5–15 s per frame); `window.__frames` counts rendered frames. The server's background task stops after two hours; restart it when needed. Google Fonts sometimes fail through the proxy, and `thumbs.mjs` retries.
 
 ## Published artifacts
 
