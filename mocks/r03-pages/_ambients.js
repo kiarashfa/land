@@ -10,11 +10,21 @@ export const AMBIENTS = [
   { id: 'travertine', name: 'Travertine', line: 'A light stone hall with arched niches; sun through a mullioned window.' },
 ];
 
+// HDRIs ship as split-range PNGs (`vendor/hdri/<name>.hdr.png`), so any static host can serve them:
+// the top half is the colour clamped to 1 (gamma 2.2), the bottom half is log2(1 + colour) / 12.
+// Converted from the CC0 EXRs beside them by tools/assets/exr2png.mjs.
 const hdrCache = {};
-async function hdri(name) {
-  if (!hdrCache[name]) hdrCache[name] = new T.EXRLoader().loadAsync(`../vendor/hdri/${name}.exr`).then(t => { t.mapping = T.EquirectangularReflectionMapping; return t; });
+export function loadHDR(name) {
+  if (!hdrCache[name]) hdrCache[name] = new T.ImageLoader().loadAsync(`../vendor/hdri/${name}.hdr.png`).then(img => {
+    const w = img.width, h = img.height / 2, c = document.createElement('canvas'); c.width = w; c.height = h * 2;
+    const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, w, h * 2).data, out = new Uint16Array(w * h * 4), one = T.DataUtils.toHalfFloat(1);
+    for (let i = 0; i < w * h; i++) { for (let k = 0; k < 3; k++) { const lo = d[i * 4 + k], hi = d[(i + w * h) * 4 + k];
+      out[i * 4 + k] = T.DataUtils.toHalfFloat(lo < 250 ? Math.pow(lo / 255, 2.2) : Math.pow(2, hi / 255 * 12) - 1); } out[i * 4 + 3] = one; }
+    const t = new T.DataTexture(out, w, h, T.RGBAFormat, T.HalfFloatType); t.mapping = T.EquirectangularReflectionMapping; t.colorSpace = T.LinearSRGBColorSpace;
+    t.minFilter = t.magFilter = T.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; });
   return hdrCache[name];
 }
+const hdri = loadHDR;
 function canvasTex(w, h, draw, repeat = [1, 1], srgb = true) {
   const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
   const t = new T.CanvasTexture(c); if (srgb) t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(...repeat); t.anisotropy = 8; return t;

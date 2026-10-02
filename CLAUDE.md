@@ -22,6 +22,7 @@ The future `kiarashfa.github.io`: a landing site that gathers all of Kia's side 
 | `docs/references/` | Reference material from Kia (e.g. the risograph "live boxes" spec). |
 | `mocks/` | Design mocks, one folder per round. `mocks/index.html` is the gallery. |
 | `tools/screenshots/` | Headless screenshot and thumbnail scripts for checking mocks. |
+| `tools/assets/` | Converters that turn EXR and GLB into files any static host serves. |
 
 The production Astro app does not exist yet; it arrives in the architecture round (R06).
 
@@ -48,7 +49,7 @@ The production Astro app does not exist yet; it arrives in the architecture roun
 - Mock rounds live in `mocks/rNN-<topic>/` with files `NN-<name>.html`, thumbnails in `thumbs/NN-<name>.jpg`, and shared data in `_data.js`. From R02 on, `_data.js` holds the real project list (families, flagships, colours) and `_sculptures.js` the per-project 3D objects.
 - Project icons and preview images copied from each repo live in `mocks/assets/projects/<slug>/` for mock use only. The real site should load icons from each project's own Pages site.
 - Mock pages are standalone HTML. Third-party code is vendored in `mocks/vendor/` (CDNs are blocked in the sandbox, and the artifact viewer only allows a few CDNs). `three.bundle.min.js` is three.js r186 plus the addons used, built with esbuild (R01–R02). `three.r03.min.js` (R03 on) adds GTAO, Bokeh, Reflector, Water, Sky, GLTF/EXR loaders, SkeletonUtils, RectAreaLight and three-mesh-bvh. Keep old bundles; older rounds depend on them.
-- `mocks/vendor/hdri/` holds CC0 HDRIs; `mocks/vendor/models/` holds rigged figures for mocks only (see its README for licences).
+- `mocks/vendor/hdri/` holds CC0 HDRIs; `mocks/vendor/models/` holds rigged figures for mocks only (see its README for licences). The artifact host refuses `.exr` and `.glb`, so pages load `<name>.hdr.png` (via `loadHDR` in `_ambients.js`) and `Xbot.gltf.json`; convert new assets with `tools/assets/` (`exr2png.mjs`, `glb2json.mjs`).
 - Every mock has a small `.mockbar` link back to the gallery naming the concept and its tech.
 - `08-riso-boxes.html` is deliberately self-contained (inline data, system fonts, Canvas 2D, one request), following `docs/references/riso-boxes-spec.md`.
 - `_dev-*` files are scratch pages (git-ignored), e.g. `r02-worlds/_dev-sheet.html` renders every sculpture in one contact sheet, and `r03-pages/_dev-vitrine.html?room=<slug>` renders one glass case.

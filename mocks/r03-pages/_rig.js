@@ -53,9 +53,9 @@ export const blend = (...ps) => { const out = {}; ps.forEach(([p, w]) => Object.
 export const over = (base, top) => ({ ...base, ...top });
 
 // load a character once, clone it many times (skinned meshes need SkeletonUtils.clone)
-const cache = {};
+const cache = {}, FILE = { Xbot: 'Xbot.gltf.json' }; // glTF JSON with embedded buffers: served by any static host
 export async function loadCharacter(name){
-  if (!cache[name]) cache[name] = new T.GLTFLoader().loadAsync(`../vendor/models/${name}.glb`);
+  if (!cache[name]) cache[name] = new T.GLTFLoader().loadAsync(`../vendor/models/${FILE[name] || name + '.glb'}`);
   const g = await cache[name]; const m = T.SkeletonUtils.clone(g.scene);
   m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material) o.material = o.material.clone(); } });
   m.updateMatrixWorld(true); const box = new T.Box3().setFromObject(m, true); const h = box.max.y - box.min.y; m.scale.multiplyScalar(1.75 / h); m.userData.clips = g.animations;

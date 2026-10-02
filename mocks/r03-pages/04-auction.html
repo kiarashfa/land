@@ -72,6 +72,7 @@ import * as T from '../vendor/three.r03.min.js';
 import { byDate, FAMILIES, MONTHS, asset } from './_data.js';
 import { makeSculpture } from './_sculptures.js';
 import { makeDissolvable } from './_qs.js';
+import { loadHDR } from './_ambients.js';
 import { makeRig, loadCharacter, POSES, over, blend } from './_rig.js';
 
 const LOTS = byDate(), $ = id => document.getElementById(id);
@@ -79,7 +80,7 @@ const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true, powerPrefere
 renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 760 ? 1.5 : 1.75)); renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFShadowMap;
 const scene = new T.Scene(); scene.background = new T.Color(0x050404); scene.fog = new T.FogExp2(0x050404, .028);
-const hdr = await new T.EXRLoader().loadAsync('../vendor/hdri/studio.exr'); hdr.mapping = T.EquirectangularReflectionMapping; scene.environment = hdr; scene.environmentIntensity = .22;
+const hdr = await loadHDR('studio'); scene.environment = hdr; scene.environmentIntensity = .22;
 const camera = new T.PerspectiveCamera(34, 1, .05, 100);
 const tex = (w, h, draw, rep = [1, 1]) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; return t; };
 const noise = (g, w, h, a) => { const d = g.getImageData(0, 0, w, h); for (let i = 0; i < d.data.length; i += 4) { const n = (Math.random() - .5) * a; d.data[i] += n; d.data[i + 1] += n; d.data[i + 2] += n; } g.putImageData(d, 0, 0); };
