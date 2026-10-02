@@ -39,8 +39,10 @@ Things that can go wrong, and what we will do about them. Each risk has an ID so
 | R-16 | Future chats lose context. | `CLAUDE.md` plus these docs are the memory. Keep the decision log and the "add a project" playbook current. |
 | R-17 | Project icons and screenshots drift as projects change. | Icons are loaded from each project's own Pages site (same origin after the move, so no CORS problems even inside WebGL). Screenshots get a capture date and are refreshed in that project's round. |
 | R-18 | Fonts with restrictive licences. | Google Fonts / Fontsource (OFL) only, unless Kia buys a licence for a commercial face. |
-| R-19 | Name spelling. | Confirm "Farajzadehahary" before any footer or OG image is generated. |
-| R-20 | Licence of this site's own code. | Ask whether the KFA Source-Available License 1.0 applies here too. |
+| R-19 | Name spelling. | Resolved: "Farajzadehahary". |
+| R-20 | Licence of this site's own code. | Deferred: Kia will add a licence later. |
+| R-21 | **Repeating Kia's own work.** Kia has built a compass dial (PolymerAtlas) and a walkable 3D museum (Galerium); concepts that echo them are rejected. | Before proposing a world, check it against every project in the brief, read its README, and say so if it overlaps. |
+| R-22 | **Counting creeps back in.** Fixed-size compositions (a ring of N, a prism of N lines) silently assume a count. | Every world states how it holds 16 and 100 projects. Fixed-size devices only for curated sets. |
 
 ## Environment notes (for Claude sessions)
 

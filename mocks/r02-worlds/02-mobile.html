@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mobile · Round 02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: a pale studio wall. The mobile hangs from the top edge and casts its shadow; words keep to the margins. */
+:root{
+  --wall:#ECE7DF; --ink:#1C1A17; --muted:#7A746B; --rule:rgba(28,26,23,.16); --brass:#9A7438;
+  --display:'Italiana',ui-serif,Didot,Georgia,serif; --sans:'Hanken Grotesk',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--wall);color:var(--ink);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(22px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:2;font-size:13px;pointer-events:none}
+.mk{font-family:var(--display);font-size:26px;letter-spacing:.04em}
+nav{display:flex;gap:26px;color:var(--muted);pointer-events:auto}
+.lede{position:fixed;left:clamp(16px,3vw,44px);top:calc(clamp(80px,13vh,130px) + env(safe-area-inset-top,0px));z-index:2;max-width:min(400px,calc(100vw - 32px));pointer-events:none}
+.lede h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,4.8vw,76px);line-height:1;margin:0;letter-spacing:.005em}
+.lede p{margin:14px 0 0;font-size:14px;line-height:1.6;color:var(--muted);max-width:34ch}
+.card{position:fixed;right:clamp(16px,3vw,44px);bottom:clamp(28px,6vh,60px);z-index:2;width:min(300px,calc(100vw - 32px));border-top:1px solid var(--ink);padding-top:12px;transition:opacity .4s}
+.card .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.card .n{font-family:var(--display);font-size:36px;line-height:1.05;margin:6px 0}
+.card .l{font-size:13.5px;line-height:1.55;color:var(--muted)}
+.card a{display:inline-block;margin-top:10px;font-size:12px;font-weight:500;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--brass)}
+.fam{position:fixed;left:0;top:0;z-index:1;pointer-events:none;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);white-space:nowrap;transform:translate(-50%,-140%)}
+.tag{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .25s;font-family:var(--display);font-size:22px;white-space:nowrap;transform:translate(-50%,-50%)}
+.tag.on{opacity:1}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#ddd6ca;background:rgba(28,26,23,.86);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#fff;font-weight:500}
+@media (max-width:760px){ nav{display:none} .lede{bottom:auto;top:calc(64px + env(safe-area-inset-top,0px))} .lede h1{font-size:34px} .lede p{display:none} .card{bottom:24px} .card .n{font-size:28px} .fam{display:none} .mockbar{top:auto;bottom:calc(6px + env(safe-area-inset-bottom,0px))} }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="A hanging mobile; each piece is a project's object"></canvas>
+<header><span class="mk">KiarashFa</span><nav><span>Index</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<section class="lede"><h1>A mobile is never finished.</h1><p>Every new project is one more piece. Hang it, and the whole thing finds its balance again. Move across it to make a little wind; tap a piece to hold it still.</p></section>
+<aside class="card" id="card"><div class="k" id="ck">Encyclopedias · Flagship</div><div class="n" id="cn">eXir</div><div class="l" id="cl">Drinks where every measure, dilution and strength is computed.</div><a href="#">Open the project →</a></aside>
+<div id="labels"></div>
+<div class="tag" id="tag"></div>
+<a class="mockbar" href="../">← concepts · <b>R02 · 02 Mobile</b> · three.js · balanced tree + soft shadows</a>
+
+<script type="module">
+import * as T from '../vendor/three.bundle.min.js';
+import { PROJECTS, FAMILIES } from './_data.js';
+import { makeSculpture } from './_sculptures.js';
+
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.VSMShadowMap;
+renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+const scene = new T.Scene(); scene.background = new T.Color(0xece7df);
+scene.environment = new T.PMREMGenerator(renderer).fromScene(new T.RoomEnvironment(), .04).texture; scene.environmentIntensity = .7;
+const camera = new T.PerspectiveCamera(32, 1, .1, 100);
+scene.add(new T.HemisphereLight(0xffffff, 0xd8cfc2, 1.4));
+const sun = new T.DirectionalLight(0xfff4e6, 2.6); sun.position.set(-4, 7, 9); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 30 }); sun.shadow.radius = 3.5; sun.shadow.blurSamples = 12; sun.shadow.bias = -.0005;
+scene.add(sun);
+const wall = new T.Mesh(new T.PlaneGeometry(60, 40), new T.MeshStandardMaterial({ color: 0xece7df, roughness: 1 })); wall.position.z = -1.6; wall.receiveShadow = true; scene.add(wall);
+
+const wireMat = new T.MeshStandardMaterial({ color: 0x141312, roughness: .45, metalness: .3 });
+const threadMat = new T.MeshStandardMaterial({ color: 0x2a2724, roughness: .8 });
+const brass = new T.MeshPhysicalMaterial({ color: 0xc59a52, metalness: 1, roughness: .3 });
+const rod = (a, b, r, m) => { const d = new T.Vector3().subVectors(b, a), L = d.length(); const c = new T.Mesh(new T.CylinderGeometry(r, r, L, 8), m);
+  c.position.copy(a).addScaledVector(d, .5); c.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); c.castShadow = true; return c; };
+
+// Build a balanced binary tree: families first, then projects inside each family.
+const leaf = p => ({ leaf: true, p, w: p.flagship ? 1.7 : 1, n: 1 });
+function combine(items){ if (items.length === 1) return items[0];
+  const sorted = [...items]; let best = 1, diff = Infinity; const tot = sorted.reduce((s, x) => s + x.w, 0); let acc = 0;
+  for (let k = 1; k < sorted.length; k++) { acc += sorted[k - 1].w; const d = Math.abs(tot - 2 * acc); if (d < diff) { diff = d; best = k; } }
+  const L = combine(sorted.slice(0, best)), R = combine(sorted.slice(best)); return { L, R, w: L.w + R.w, n: L.n + R.n }; }
+const famTrees = FAMILIES.map(f => { const t = combine(PROJECTS.filter(p => p.family === f.id).map(leaf)); t.family = f; return t; }).filter(t => t.n);
+const root = combine(famTrees);
+
+const nodes = [], leaves = [], famAnchors = [];
+let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function build(node, depth){
+  const g = new T.Group();
+  if (node.leaf) {
+    const thread = .26 + rnd() * .3, s = node.p.flagship ? .78 : .6;
+    g.add(rod(new T.Vector3(0, 0, 0), new T.Vector3(0, -thread, 0), .004, threadMat));
+    const obj = makeSculpture(node.p); obj.scale.setScalar(s);
+    const box = new T.Box3().setFromObject(obj); obj.position.y = -thread - box.max.y; obj.rotation.y = rnd() * 6.28;
+    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.leaf = node.p; } });
+    const spin = new T.Group(); spin.add(obj); g.add(spin); leaves.push({ obj, spin, p: node.p, w: .2 + rnd() * .3 });
+    return g;
+  }
+  const L = .55 + Math.pow(node.n, .58) * .5, dl = L * node.R.w / node.w, dr = L * node.L.w / node.w, drop = .3 + rnd() * .28;
+  g.add(rod(new T.Vector3(0, 0, 0), new T.Vector3(0, -drop, 0), .004, threadMat));
+  const arm = new T.Group(); arm.position.y = -drop; g.add(arm);
+  // a gently bowed wire, thicker near the pivot, with curled ends like a Calder
+  const pts = []; const bow = .05 + rnd() * .08, lift = (rnd() - .5) * .12; for (let i = 0; i <= 24; i++) { const t = i / 24, x = -dl + t * (dl + dr); pts.push(new T.Vector3(x, -Math.abs(x) * bow + x * lift + .02, Math.sin(t * Math.PI) * .04)); }
+  const wire = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 60, .011 - depth * .0007, 8), wireMat); wire.castShadow = true; arm.add(wire);
+  const knot = new T.Mesh(new T.SphereGeometry(.022, 16, 12), brass); arm.add(knot);
+  const left = build(node.L, depth + 1); left.position.copy(pts[0]); arm.add(left);
+  const right = build(node.R, depth + 1); right.position.copy(pts[24]); arm.add(right);
+  const st = { arm, th: 0, w: 0, k: .3 + rnd() * .3, ph: rnd() * 6.28, depth, rest: depth === 0 ? .35 : (rnd() - .5) * 2.6 };
+  st.th = st.rest;
+  arm.rotation.y = st.th; nodes.push(st);
+  if (node.family) famAnchors.push({ node: knot, name: node.family.name });
+  return g;
+}
+const mobile = build(root, 0); scene.add(mobile);
+const ceiling = new T.Mesh(new T.CylinderGeometry(.004, .004, 6, 6), threadMat); ceiling.position.y = 3; mobile.add(ceiling);
+
+// fit the camera to the whole mobile at rest
+mobile.updateMatrixWorld(true);
+const box = new T.Box3().setFromObject(mobile.children[1] || mobile); const bx = new T.Box3(); mobile.traverse(o => { if (o.isMesh && o !== ceiling) bx.expandByObject(o); });
+const centre = bx.getCenter(new T.Vector3()), size = bx.getSize(new T.Vector3());
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
+  const tn = 2 * Math.tan(camera.fov * Math.PI / 360), portrait = w < h;
+  const d = portrait ? (size.x * .62) / tn / camera.aspect : Math.max(size.y * 1.05 / tn, size.x * 1.02 / tn / camera.aspect);
+  camera.position.set(centre.x + (portrait ? 0 : -size.x * .06), centre.y - size.y * .32, d + .6); camera.lookAt(centre.x + (portrait ? 0 : -size.x * .1), centre.y + (portrait ? size.y * .02 : -size.y * .05), 0); camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+// family labels and interaction
+const labels = famAnchors.map(a => { const el = document.createElement('div'); el.className = 'fam'; el.textContent = a.name; document.getElementById('labels').appendChild(el); return el; });
+const ray = new T.Raycaster(), mouse = new T.Vector2(9, 9), tag = document.getElementById('tag'), v = new T.Vector3();
+let gust = 0, lastX = null, held = null, hover = null;
+addEventListener('pointermove', e => { mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); if (lastX !== null) gust += (e.clientX - lastX) * .0009; lastX = e.clientX; });
+gl.addEventListener('click', () => { held = hover; if (held) showCard(held); });
+function showCard(p){ const f = FAMILIES.find(x => x.id === p.family).name; ck.textContent = f + (p.flagship ? ' · Flagship' : ''); cn.textContent = p.name; cl.textContent = p.line; }
+showCard(PROJECTS.find(p => p.slug === 'exir'));
+const meshes = []; mobile.traverse(o => { if (o.isMesh && o.userData.leaf) meshes.push(o); });
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  gust *= .96;
+  for (const n of nodes) {
+    const wind = reduce ? 0 : Math.sin(t * .23 + n.ph) * .05 + Math.sin(t * .11 + n.ph * 2) * .04 + gust / (1 + n.depth * .4);
+    const acc = -n.k * (n.arm.rotation.y - n.rest) - .35 * n.w + wind; n.w += acc * dt; n.arm.rotation.y += n.w * dt;
+    n.arm.rotation.z = reduce ? 0 : Math.sin(t * .5 + n.ph) * .015;
+  }
+  for (const l of leaves) { if (!reduce && l.p !== held) l.spin.rotation.y += dt * l.w * .5; l.obj.userData.tick(t); }
+  ray.setFromCamera(mouse, camera); const h = ray.intersectObjects(meshes, false)[0]; const nh = h ? h.object.userData.leaf : null;
+  if (nh !== hover) { hover = nh; tag.classList.toggle('on', !!hover); if (hover) { tag.textContent = hover.name; showCard(hover); } }
+  if (hover && h) { v.copy(h.point).project(camera); tag.style.transform = `translate(${(v.x * .5 + .5) * innerWidth}px,${(-v.y * .5 + .5) * innerHeight - 40}px) translate(-50%,-50%)`; }
+  famAnchors.forEach((a, i) => { a.node.getWorldPosition(v); v.project(camera); labels[i].style.transform = `translate(${(v.x * .5 + .5) * innerWidth}px,${(-v.y * .5 + .5) * innerHeight}px) translate(-50%,-140%)`; });
+  renderer.render(scene, camera); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Objects · Sculpture study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* Layout: an atelier's object sheet. Flagships take a double cell; every object turns slowly on its own stage. */
+:root{
+  --bg:#0E0E0F; --cell:#141415; --fg:#ECE6DA; --dim:rgba(236,230,218,.5); --hair:rgba(236,230,218,.1); --gold:#D4B072;
+  --serif:'Instrument Serif',ui-serif,Georgia,serif; --mono:'Geist Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);padding-inline:clamp(16px,3vw,44px);padding-block:0 64px}
+#gl{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+header{display:flex;justify-content:space-between;align-items:baseline;padding-block:calc(22px + env(safe-area-inset-top,0px)) 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+header b{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:0;text-transform:none;color:var(--fg)}
+.intro{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(20px,4vw,60px);align-items:end;padding-block:clamp(36px,6vw,80px) clamp(28px,4vw,48px);border-bottom:1px solid var(--hair);margin-bottom:clamp(18px,2.4vw,28px)}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(48px,7.6vw,120px);line-height:.92;margin:0;letter-spacing:-.01em}
+h1 i{color:var(--gold)}
+.intro p{font-size:12.5px;line-height:1.75;color:var(--dim);margin:0;max-width:52ch}
+.fam{display:flex;justify-content:space-between;align-items:baseline;margin:clamp(26px,4vw,44px) 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+.fam span:last-child{color:var(--dim)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(8px,1vw,14px);grid-auto-flow:dense}
+.cell{position:relative;background:radial-gradient(90% 70% at 50% 42%,#1d1d1f 0%,var(--cell) 70%);border:1px solid var(--hair);display:flex;flex-direction:column;min-width:0}
+.cell.big{grid-column:span 2;grid-row:span 2}
+.stage{flex:1;min-height:clamp(200px,22vw,300px)}
+.cap{position:relative;z-index:2;padding:12px 14px 14px;border-top:1px solid var(--hair);display:grid;gap:4px}
+.cap .n{font-family:var(--serif);font-size:24px;line-height:1;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cap .n small{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.cap .w{font-size:11px;line-height:1.6;color:var(--dim)}
+.big .cap .n{font-size:32px}
+.mockbar{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#9a9286;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#e8e1d4;font-weight:500}
+@media (max-width:900px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} .intro{grid-template-columns:1fr} }
+@media (max-width:520px){ .cell.big{grid-row:span 1} .stage{min-height:240px} }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<header><b>KiarashFa</b><span>Round 02 · Object study</span></header>
+<section class="intro">
+  <h1>An object<br>for <i>every</i> project.</h1>
+  <p>Each project gets a sculpture made for it, not a copy of its icon. These are first drafts, modelled entirely in code so they can be restyled in gold, chrome, paper or lacquer by whichever world they live in. Each project's own round will refine its piece. Flagships are drawn larger.</p>
+</section>
+<main id="list"></main>
+<a class="mockbar" href="../">← concepts · <b>R02 · 00 Objects</b> · three.js · procedural sculpture</a>
+
+<script type="module">
+import * as T from '../vendor/three.bundle.min.js';
+import { PROJECTS, FAMILIES } from './_data.js';
+import { makeSculpture, WHY } from './_sculptures.js';
+
+const list = document.getElementById('list');
+const cells = [];
+FAMILIES.forEach(f => {
+  const items = PROJECTS.filter(p => p.family === f.id); if (!items.length) return;
+  const head = document.createElement('div'); head.className = 'fam'; head.innerHTML = `<span>${f.name}</span><span>${items.map(p => p.name).join(' · ')}</span>`; list.appendChild(head);
+  const grid = document.createElement('div'); grid.className = 'grid'; list.appendChild(grid);
+  items.forEach(p => {
+    const el = document.createElement('article'); el.className = 'cell' + (p.flagship ? ' big' : '');
+    el.innerHTML = `<div class="stage"></div><div class="cap"><div class="n">${p.name}${p.flagship ? '<small>Flagship</small>' : ''}</div><div class="w">${WHY[p.slug]}</div></div>`;
+    grid.appendChild(el); cells.push({ p, el, stage: el.querySelector('.stage') });
+  });
+});
+
+const canvas = document.getElementById('gl');
+const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
+renderer.setScissorTest(true);
+const env = new T.PMREMGenerator(renderer).fromScene(new T.RoomEnvironment(), .04).texture;
+// soft contact shadow under each object
+const shadowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(0,0,0,.75)'); gr.addColorStop(.5, 'rgba(0,0,0,.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return new T.CanvasTexture(c); })();
+cells.forEach(c => {
+  const scene = new T.Scene(); scene.environment = env; scene.environmentIntensity = .75;
+  const key = new T.DirectionalLight(0xfff0dc, 2.2); key.position.set(2.5, 4, 3); scene.add(key);
+  const rim = new T.DirectionalLight(0xbcd0ff, 1.4); rim.position.set(-3, 2, -3); scene.add(rim);
+  const sh = new T.Mesh(new T.PlaneGeometry(1.5, 1.5), new T.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = .002; scene.add(sh);
+  const obj = makeSculpture(c.p); scene.add(obj);
+  const box = new T.Box3().setFromObject(obj), size = box.getSize(new T.Vector3()), mid = box.getCenter(new T.Vector3());
+  const cam = new T.PerspectiveCamera(28, 1, .05, 50);
+  const dist = Math.max(size.y, size.x * .9, size.z * .9) * 2.7 + .4;
+  cam.position.set(0, mid.y + dist * .28, dist); cam.lookAt(0, mid.y * .95, 0);
+  Object.assign(c, { scene, obj, cam, spin: (c.p.slug.length * .7) % 6.28, speed: .25 });
+  c.el.addEventListener('pointerenter', () => c.speed = .9); c.el.addEventListener('pointerleave', () => c.speed = .25);
+});
+
+function resize(){ renderer.setSize(innerWidth, innerHeight, false); }
+addEventListener('resize', resize); resize();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  renderer.setScissor(0, 0, innerWidth, innerHeight); renderer.setClearColor(0x000000, 0); renderer.clear();
+  for (const c of cells) {
+    const r = c.stage.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight || r.width < 2) continue;
+    const y = innerHeight - r.bottom;
+    renderer.setViewport(r.left, y, r.width, r.height); renderer.setScissor(r.left, y, r.width, r.height);
+    c.cam.aspect = r.width / r.height; c.cam.updateProjectionMatrix();
+    if (!reduce) c.spin += dt * c.speed; c.obj.rotation.y = c.spin; c.obj.userData.tick(t);
+    renderer.render(c.scene, c.cam);
+  }
+  window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

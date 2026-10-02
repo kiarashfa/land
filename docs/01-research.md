@@ -17,24 +17,18 @@ What each one teaches us, not what to copy.
 
 Sources: [Awwwards Sites of the Year](https://www.awwwards.com/websites/sites_of_the_year/), [Igloo Inc case study](https://www.awwwards.com/igloo-inc-case-study.html), [Igloo Inc techniques](https://www.webgpu.com/showcase/igloo-inc-procedural-crystals/), [Messenger](https://www.awwwards.com/messenger.html), [Lusion v3](https://www.awwwards.com/sites/lusion-v3), [Active Theory](https://www.webgpu.com/showcase/active-theory-portfolio/), [Best three.js sites 2026](https://www.utsubo.com/blog/best-threejs-websites-2026).
 
-## Kia's own body of work (public, partial)
+## Kia's own body of work
 
-Found through public search before the full list arrives. Descriptions come from each repo's GitHub tagline.
+Read from each repo's README in Round 02. The full list with families and flagships is in `00-brief.md`.
 
-| Project | What it is | Pattern |
-| --- | --- | --- |
-| PolymerAtlas | History-narrated encyclopedia of the polymers that shaped the modern world | Encyclopedia, cited data |
-| Xefy | Recipe encyclopedia; every quantity and nutrition figure computed from structured data | Encyclopedia, computed |
-| eXir | Drinks encyclopedia; dilution, strength, sugar and timing computed | Encyclopedia, computed |
-| Markey | Production-car encyclopedia with a GPU wind-tunnel solve | Encyclopedia, simulation |
-| ARMAG | Sourced firearm and cartridge reference with lineage graphs and ballistics | Reference, physics |
-| Kalculator | Calculator that renders natural math, solves, graphs, converts | Tool |
-| Perceptense | Self-directed course of bite-sized interactive modules for intuition | Learning |
-| LaLista | Spanish as spoken in Spain: flashcards with real audio, interactive grammar | Learning, language |
-| Elysium | A solitude experience on Mars | Experience |
-| Pseudoku | Lumon / Macrodata Refinement-themed puzzle | Game |
+Things the work has in common, useful for design:
 
-Threads that run through the work: free, no ads, no accounts, no trackers; numbers computed from structured data rather than typed by hand; a scientist's habit of sourcing and citing. That ethos is part of the identity, so the landing site should have no trackers either.
+- **Every name fuses two words.** Markey = marque + key; ARMAG = arm + magazine; Perceptense = perception + sense; MorCypher = Morse + cypher; Kalculator = Kia + calculator; AudiOptix = audio + optics; LOSTimer = LOST + timer; Pseudoku = pseudo + sudoku; ConStyx = Construct + Styx; Galerium = gallery + museum; LaLista = "the list" and "the clever one". The fusion of two things into one is Kia's naming signature, and a strong motif for the site.
+- **A shared closing line.** Each README ends "Made with ❤️ for …": "those who find joy in every bite / sip / mile", "those who respect every round", "curious minds", "people who read every placard", "everyone who counts", "the LOST fandom". A ready-made voice for the site.
+- **A shared ethic.** Free, no ads, no accounts, nothing to subscribe to; data stays in your browser; numbers are sourced or computed, never typed.
+- **Screen tributes** (LOST's Swan Station, Severance's Lumon MDR terminal, the Matrix's digital rain) show a love of retro-futurist terminals and fandom detail.
+- **Already built by Kia, so not to be repeated:** a compass dial (PolymerAtlas home), a walkable 3D museum with doors, spotlights and gilded frames (Galerium), a music visualizer (AudiOptix), Matrix rain (ConStyx).
+- **Each project has a strong icon and colour:** PolymerAtlas compass rose (gold on black), Xefy chef's toque (brick red on cream), Markey flaming wheel (ink), eXir cocktail glass (amber), ARMAG magazine mark (ice blue on black), Perceptense eye (teal), Galerium golden doors (navy and gold), LaLista ¡¿ (teal and orange), MorCypher signal arc (orange), Kalculator K= (pink to violet), AudiOptix note (gold on black), LOSTimer Dharma mark (white on black, green), Pseudoku Lumon globe (cyan on navy), ConStyx 0 (matrix green), DrXRates play disc (gold), website KF (teal).
 
 ## Technology landscape (October 2026)
 

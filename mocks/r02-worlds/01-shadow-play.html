@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shadow Play · Round 02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: a dark room, one light, one wall. Words sit low on the left like a programme note. */
+:root{
+  --room:#0B0A09; --plaster:#D9CDB8; --fg:#EFE7DA; --dim:rgba(239,231,218,.5); --hair:rgba(239,231,218,.14); --brass:#C9A15F;
+  --serif:'Cormorant Garamond',ui-serif,Georgia,serif; --sans:'Manrope',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--room);color:var(--fg);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(22px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:2;font-size:12px;letter-spacing:.06em}
+.mk{font-family:var(--serif);font-size:24px;letter-spacing:.02em}
+nav{display:flex;gap:26px;color:var(--dim)}
+.note{position:fixed;left:clamp(16px,3vw,44px);bottom:clamp(30px,6vh,64px);z-index:2;width:min(440px,calc(100vw - 32px))}
+.note .k{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--brass)}
+.note h1{font-family:var(--serif);font-weight:300;font-size:clamp(46px,6.4vw,104px);line-height:.92;margin:10px 0 12px;letter-spacing:-.01em}
+.note h1 i{font-weight:300}
+.note p{font-size:14px;line-height:1.6;color:var(--dim);margin:0;max-width:38ch}
+.note .for{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--fg);margin-top:14px}
+.note a{display:inline-block;margin-top:16px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg);text-decoration:none;border-bottom:1px solid var(--brass);padding-bottom:3px}
+.fade{transition:opacity .45s ease, transform .45s ease}
+.fade.out{opacity:0;transform:translateY(8px)}
+.idx{position:fixed;right:clamp(16px,3vw,44px);top:50%;transform:translateY(-50%);z-index:2;display:grid;gap:7px;text-align:right;font-size:11px;letter-spacing:.06em}
+.idx button{all:unset;cursor:pointer;color:var(--dim);transition:color .3s}
+.idx button.on{color:var(--fg)}
+.idx button.on::after{content:"";display:inline-block;width:16px;height:1px;background:var(--brass);vertical-align:middle;margin-left:8px}
+.idx button:focus-visible{outline:1px solid var(--brass);outline-offset:3px}
+.hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:2;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.intro{position:fixed;left:clamp(16px,3vw,44px);top:clamp(80px,13vh,130px);z-index:2;font-family:var(--serif);font-style:italic;font-size:clamp(20px,2vw,28px);color:var(--dim);max-width:22ch;line-height:1.2}
+.mockbar{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#9a9286;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#e8e1d4;font-weight:500}
+@media (max-width:760px){ nav{display:none} .idx{display:none} .note{bottom:54px} .note h1{font-size:44px;margin:4px 0 6px} .note p{font-size:13px} .intro{display:none} .hint{display:none} }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="A tangle of brass rods whose shadow becomes each project's object"></canvas>
+<header><span class="mk">KiarashFa</span><nav><span>Index</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<p class="intro">Every project is a tangle until you see it from the right angle.</p>
+<section class="note fade" id="note"><div class="k" id="nk"></div><h1 id="nn"></h1><p id="nl"></p><div class="for" id="nf"></div><a href="#">Open the project →</a></section>
+<nav class="idx" id="idx" aria-label="Projects"></nav>
+<div class="hint">Scroll to turn the light</div>
+<a class="mockbar" href="../">← concepts · <b>R02 · 01 Shadow Play</b> · three.js · shadow mapping</a>
+
+<script type="module">
+import * as T from '../vendor/three.bundle.min.js';
+import { PROJECTS, FAMILIES } from './_data.js';
+import { silhouette } from './_silhouette.js';
+
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFShadowMap;
+renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+const scene = new T.Scene(); scene.background = new T.Color(0x0b0a09); scene.fog = new T.Fog(0x0b0a09, 9, 22);
+const camera = new T.PerspectiveCamera(34, 1, .1, 60);
+
+// the wall, lit as a pool of light by a plaster texture with soft falloff
+const wallTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 1024; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(512, 512, 40, 512, 512, 512); gr.addColorStop(0, '#e9dcc6'); gr.addColorStop(.55, '#a8987f'); gr.addColorStop(1, '#1a1612'); g.fillStyle = gr; g.fillRect(0, 0, 1024, 1024);
+  const d = g.getImageData(0, 0, 1024, 1024); for (let i = 0; i < d.data.length; i += 4) { const n = (Math.random() - .5) * 14; d.data[i] += n; d.data[i + 1] += n; d.data[i + 2] += n; } g.putImageData(d, 0, 0);
+  const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; return t; })();
+const wall = new T.Mesh(new T.PlaneGeometry(9, 9), new T.MeshStandardMaterial({ map: wallTex, roughness: 1 })); wall.position.z = -2.8; wall.receiveShadow = true; scene.add(wall);
+const floor = new T.Mesh(new T.PlaneGeometry(40, 40), new T.MeshStandardMaterial({ color: 0x15120f, roughness: .6, metalness: .2 })); floor.rotation.x = -Math.PI / 2; floor.position.y = -2.2; floor.receiveShadow = true; scene.add(floor);
+const sun = new T.DirectionalLight(0xfff0d8, 3.2); sun.position.set(0, 0, 9); sun.target.position.set(0, 0, -3); scene.add(sun, sun.target);
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -3.4, right: 3.4, top: 3.4, bottom: -3.4, near: 1, far: 16 }); sun.shadow.bias = -.0006; sun.shadow.radius = 2;
+scene.add(new T.HemisphereLight(0x3a3028, 0x050403, .6));
+const rim = new T.DirectionalLight(0xffd9a0, 1.2); rim.position.set(-4, 3, -1); scene.add(rim);
+
+// rods: one instanced tangle, re-cut for every project
+const COUNT = 1700, SCALE = 1.55;
+const rodGeo = new T.CylinderGeometry(1, 1, 1, 6, 1); rodGeo.rotateX(Math.PI / 2);
+const rods = new T.InstancedMesh(rodGeo, new T.MeshStandardMaterial({ color: 0xc9a15f, metalness: .85, roughness: .32 }), COUNT);
+rods.castShadow = true; rods.instanceMatrix.setUsage(T.DynamicDrawUsage); scene.add(rods);
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function layout(p){
+  const sil = silhouette(renderer, p, 256), L = [];
+  for (let k = 0; k < COUNT; k++) {
+    let tries = 0, ok = false, u, v, z, dx, dy, dz, len;
+    do { u = rnd() * 2 - 1; v = rnd() * 2 - 1; } while (!sil.inside(u, v));
+    while (!ok && tries++ < 40) {
+      const a = rnd() * Math.PI * 2, tilt = rnd() < .5 ? rnd() * .25 : rnd() * 1.2;
+      dx = Math.cos(a) * Math.sin(tilt); dy = Math.sin(a) * Math.sin(tilt); dz = Math.cos(tilt); len = .18 + rnd() * .95; z = (rnd() * 2 - 1) * .85;
+      ok = true; for (let s = -1; s <= 1.001; s += .25) if (!sil.inside(u + dx * len * s * .5 / SCALE, v + dy * len * s * .5 / SCALE)) { ok = false; break; }
+    }
+    if (!ok) { dx = 0; dy = 0; dz = 1; len = .2 + rnd() * .6; z = (rnd() * 2 - 1) * .85; }
+    const c = new T.Vector3(u * SCALE, v * SCALE + .1, z), q = new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 0, 1), new T.Vector3(dx, dy, dz).normalize());
+    L.push({ c, q, len, r: .005 + rnd() * .008, d: rnd() });
+  }
+  return L;
+}
+const layouts = new Map(); const get = i => { if (!layouts.has(i)) layouts.set(i, layout(PROJECTS[i])); return layouts.get(i); };
+
+// text and index
+const idx = document.getElementById('idx'), note = document.getElementById('note');
+const btns = PROJECTS.map((p, i) => { const b = document.createElement('button'); b.textContent = p.name; b.onclick = () => target = i + .5; idx.appendChild(b); return b; });
+let shown = -1;
+function show(i){ if (i === shown) return; shown = i; note.classList.add('out');
+  setTimeout(() => { const p = PROJECTS[i], fam = FAMILIES.find(f => f.id === p.family).name;
+    nk.textContent = fam + (p.flagship ? ' · Flagship' : ''); nn.innerHTML = p.roots ? `${p.name}` : p.name; nl.textContent = p.line;
+    nf.textContent = p.for ? `Made for ${p.for}.` : ''; note.classList.remove('out'); btns.forEach((b, k) => b.classList.toggle('on', k === i)); }, 260); }
+
+// virtual scroll: one project per unit
+let target = .5, pos = .5;
+addEventListener('wheel', e => { target += e.deltaY * .0011; }, { passive: true });
+let ty = null; addEventListener('pointerdown', e => ty = e.clientY); addEventListener('pointerup', () => ty = null);
+addEventListener('pointermove', e => { if (ty !== null && e.pointerType !== 'mouse') { target -= (e.clientY - ty) * .004; ty = e.clientY; } });
+addEventListener('keydown', e => { if (e.key === 'ArrowDown') target += .5; if (e.key === 'ArrowUp') target -= .5; });
+const ease = t => t * t * (3 - 2 * t), clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+// rotation in turns: settle aligned in the middle of each project's span
+const turns = f => f < .35 ? -.35 * (1 - ease(f / .35)) : f < .65 ? 0 : .65 * ease((f - .65) / .35);
+
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
+  if (w < h) { camera.fov = 50; camera.position.set(1.6, -.6, 8.6); } else { camera.fov = 34; camera.position.set(5.6, .6, 6.4); }
+  camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+const m4 = new T.Matrix4(), s3 = new T.Vector3(), cv = new T.Vector3(), qv = new T.Quaternion(), qr = new T.Quaternion(), Y = new T.Vector3(0, 1, 0);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let mx = 0; addEventListener('pointermove', e => mx = e.clientX / innerWidth - .5);
+const start = +(location.hash.slice(1)) || 0; if (start) { target = pos = start + .5; }
+function frame(){
+  target = clamp(target, .05, PROJECTS.length - .05); pos += (target - pos) * (reduce ? 1 : .07);
+  const i = Math.floor(pos), f = pos - i; show(i);
+  const A = get(i), B = get(Math.min(PROJECTS.length - 1, i + 1)), m = i + 1 < PROJECTS.length ? ease(clamp((f - .7) / .3, 0, 1)) : 0;
+  const rotY = turns(f) * Math.PI * 2; qr.setFromAxisAngle(Y, rotY);
+  for (let k = 0; k < COUNT; k++) {
+    const a = A[k], b = B[k], mk = ease(clamp(m * 1.7 - a.d * .7, 0, 1));
+    cv.lerpVectors(a.c, b.c, mk); qv.slerpQuaternions(a.q, b.q, mk); const len = a.len + (b.len - a.len) * mk, r = a.r;
+    cv.applyQuaternion(qr); qv.premultiply(qr);
+    m4.compose(cv, qv, s3.set(r, r, len)); rods.setMatrixAt(k, m4);
+  }
+  rods.instanceMatrix.needsUpdate = true;
+  camera.position.x += ((innerWidth < innerHeight ? 1.6 : 5.6) + mx * .8 - camera.position.x) * .04;
+  camera.lookAt(innerWidth < innerHeight ? .1 : -1.0, innerWidth < innerHeight ? -1.3 : -.15, innerWidth < innerHeight ? -1.4 : -2.0);
+  renderer.render(scene, camera); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

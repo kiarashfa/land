@@ -4,8 +4,9 @@ Rounds are conversations. Each round ends with something Kia can look at, a set 
 
 | Round | Focus | Output | Status |
 | --- | --- | --- | --- |
-| R01 | Brief, research, world concepts | Docs, nine concept mocks, gallery artifact | done, awaiting feedback |
-| R02 | Narrow to two or three directions | Deeper mocks: home on desktop and phone, the transition into a project page, first sound sketch | next |
+| R01 | Brief, research, world concepts | Docs, concept mocks, gallery artifact | done; none chosen |
+| R02 | New 3D worlds after R01 feedback | A sculpture per project, plus new world mocks that hold any number of projects | in progress |
+| R02b | Narrow to two or three directions | Deeper mocks: home on desktop and phone, the transition into a project page, first sound sketch | next |
 | R03 | Design language | Typography pairs, palettes, material and texture studies, motion principles (3–5 options each) | |
 | R04 | Identity marks | Wordmark, KFA monogram, favicon (about 10 options), OG image template | |
 | R05 | Project page template | Layout for idea / story / challenges / link, media treatment, per-project accent system | |
@@ -17,7 +18,7 @@ Rounds are conversations. Each round ends with something Kia can look at, a set 
 
 ## Inputs needed from Kia
 
-- The full project list (about 25): name, repo, live URL, tier (flagship or small), family, year, and a sentence or two on why it exists. Rough notes are fine.
-- Confirmation of the surname spelling for footers.
+- Stories and challenges for each project (Kia will send them later).
+- Year of each project, for the chronological view.
 - Contact links for About (email, GitHub, others).
-- Feedback on Round 01 (see the gallery page).
+- Feedback on Round 02 (see the gallery page).

@@ -33,9 +33,19 @@ The production Astro app does not exist yet; it arrives in the architecture roun
 - Use "Kia" in copy and docs. Do not assume pronouns for Kia; write around them.
 - No analytics or trackers (matches the ethos of Kia's projects).
 
+## Hard rules from Kia (do not break)
+
+1. **Never count the projects** in copy or titles ("25 projects", "five encyclopedias"). Every main world must work for any number of projects. Fixed-size devices (a prism, a ring) only hold curated sets: flagships, or one family.
+2. **Nothing academic.** No PhD, research, ML or polymer framing. This is the maker / developer / designer side.
+3. **Do not repeat Kia's own projects.** No museums (Galerium is one), no compass dials (PolymerAtlas). Read the project READMEs before proposing a world.
+4. **Each project gets a bespoke sculpture** (see `mocks/r02-worlds/_sculptures.js`), not an extruded icon.
+5. **Never delete a mock.** Revise by adding `NN-name-v2.html`; keep the old file and its thumbnail.
+6. Kia's bar: very 3D, creative, out of the box, luxurious. Rejected in R01: cards in a grid, chaotic motion, a big type list with a magnifier, childish physics toys.
+
 ## Conventions
 
-- Mock rounds live in `mocks/rNN-<topic>/` with files `NN-<name>.html`, thumbnails in `thumbs/NN-<name>.jpg`, and shared placeholder data in `_data.js`.
+- Mock rounds live in `mocks/rNN-<topic>/` with files `NN-<name>.html`, thumbnails in `thumbs/NN-<name>.jpg`, and shared data in `_data.js`. From R02 on, `_data.js` holds the real project list (families, flagships, colours) and `_sculptures.js` the per-project 3D objects.
+- Project icons and preview images copied from each repo live in `mocks/assets/projects/<slug>/` for mock use only. The real site should load icons from each project's own Pages site.
 - Mock pages are standalone HTML. Third-party code is vendored in `mocks/vendor/` (CDNs are blocked in the sandbox, and the artifact viewer only allows a few CDNs). `three.bundle.min.js` is three.js r186 plus the addons used, built with esbuild.
 - Every mock has a small `.mockbar` link back to the gallery naming the concept and its tech.
 - The gallery is authored in `mocks/_gallery-body.html` (the Artifact page source, no `<html>` wrapper). `mocks/index.html` is generated from it for GitHub Pages / local viewing. Edit the body file, then regenerate.
@@ -55,4 +65,4 @@ Headless Chromium uses SwiftShader, so WebGL works but slowly; `window.__frames`
 
 ## Published artifacts
 
-- Round 01 gallery: https://claude.ai/artifact/5vmR8Qnvnu34VbqrQZ4nFZ (republish from `mocks/_gallery-body.html` with `root: mocks` and the round's files).
+- Concept gallery (all rounds): https://claude.ai/artifact/5vmR8Qnvnu34VbqrQZ4nFZ (republish from `mocks/_gallery-body.html` with `root: mocks` and the round's files).
