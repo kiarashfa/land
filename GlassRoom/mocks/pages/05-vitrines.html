@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The Vitrines · Families</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* A family is a row of glass cases in a dark gallery; each project lives in its own small room. */
+:root{
+  --fg:#EFE8DC; --dim:rgba(239,232,220,.56); --hair:rgba(239,232,220,.16); --brass:#D2AE6C;
+  --display:'Bodoni Moda',ui-serif,Didot,Georgia,serif; --italic:'Cormorant Garamond',ui-serif,Georgia,serif; --sans:'Manrope',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#070707;color:var(--fg);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.55) 100%),linear-gradient(0deg,rgba(0,0,0,.7) 0,transparent 30%)}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:3;font-size:12.5px;letter-spacing:.04em}
+.mk{font-family:var(--display);font-size:22px}
+.mk i{font-family:var(--italic);font-weight:300}
+nav{display:flex;gap:26px;color:var(--dim)}
+nav b{color:var(--fg);font-weight:500}
+.fams{position:fixed;top:calc(74px + env(safe-area-inset-top,0px));left:0;right:0;z-index:3;display:flex;justify-content:center;gap:22px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(239,232,220,.32);overflow-x:auto;padding:0 16px;scrollbar-width:none}
+.fams span{white-space:nowrap;padding-bottom:6px}
+.fams b{color:var(--fg);font-weight:500;border-bottom:1px solid var(--brass)}
+.cap{position:fixed;left:clamp(16px,3vw,44px);bottom:calc(34px + env(safe-area-inset-bottom,0px));z-index:2;width:min(440px,calc(100vw - 32px))}
+.cap .k{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--brass)}
+.cap h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,4.4vw,66px);line-height:1;margin:10px 0 6px}
+.cap .sc{font-family:var(--italic);font-style:italic;font-size:19px;color:var(--dim)}
+.cap p{font-size:13.5px;line-height:1.55;margin:14px 0 0;max-width:38ch}
+.cap a{display:inline-block;margin-top:16px;color:var(--fg);text-decoration:none;font-size:12px;letter-spacing:.2em;text-transform:uppercase;border-bottom:1px solid var(--brass);padding-bottom:3px}
+.fade{transition:opacity .45s,transform .55s}
+.fade.out{opacity:0;transform:translateY(8px)}
+.arrows{position:fixed;right:clamp(16px,3vw,44px);bottom:calc(38px + env(safe-area-inset-bottom,0px));z-index:3;display:flex;gap:10px;align-items:center}
+.arrows button{width:44px;height:44px;border-radius:50%;border:1px solid var(--hair);background:rgba(0,0,0,.35);color:var(--fg);font:16px var(--sans);cursor:pointer}
+.arrows .z{width:auto;border-radius:22px;padding:0 18px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;margin-right:10px}
+.arrows button:focus-visible{outline:1px solid var(--brass);outline-offset:3px}
+.dots{display:flex;gap:7px;margin-right:8px}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--hair)}
+.dots i.on{background:var(--fg)}
+.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:5;font-family:var(--italic);font-style:italic;font-size:22px;color:#cfc8bc;background:#070707;transition:opacity .8s}
+.loading.done{opacity:0;pointer-events:none}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#a7a39b;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#efeae2;font-weight:500}
+@media (max-width:760px){ nav{display:none} .fams{justify-content:flex-start;top:calc(64px + env(safe-area-inset-top,0px))} .cap{bottom:calc(96px + env(safe-area-inset-bottom,0px))} .cap p{display:none} .cap h1{font-size:38px}
+  .arrows{left:16px;right:16px;justify-content:space-between;bottom:calc(30px + env(safe-area-inset-bottom,0px))} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} }
+@media (prefers-reduced-motion:reduce){ .fade{transition:none} }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">Lighting the cases…</div>
+<canvas id="gl" aria-label="A dark gallery with glass cases; each holds a small living room for one project"></canvas>
+<div class="scrim"></div>
+<header><span class="mk">Kiarash<i>Fa</i></span><nav><span>Home</span><span>Chronology</span><b>Families</b><span>About</span></nav></header>
+<div class="fams" id="fams"></div>
+<section class="cap fade" id="cap">
+  <div class="k" id="k"></div>
+  <h1 id="nm"></h1>
+  <div class="sc" id="sc"></div>
+  <p id="ln"></p>
+  <a href="#">Open the project →</a>
+</section>
+<div class="arrows"><button id="zoom" class="z" aria-pressed="false">Look closer</button><div class="dots" id="dots"></div><button id="prev" aria-label="Previous case">←</button><button id="next" aria-label="Next case">→</button></div>
+<a class="mockbar" href="../">← concepts · <b>R03 · Families · The Vitrines</b> · three.js · rigged figures + GTAO + DOF</a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { FAMILIES, byFamily } from './_data.js';
+import { vitrine, rescaleLights, galleryEnv, MATS } from './_vitrine.js';
+import { ROOMS, SCENE_NOTES } from './_rooms.js';
+
+const Q = new URLSearchParams(location.search), STILL = Q.has('still'), $ = id => document.getElementById(id);
+const FAM = 'tributes', LIST = byFamily(FAM).filter(p => ROOMS[p.slug]);
+$('fams').innerHTML = FAMILIES.map(f => f.id === FAM ? `<b>${f.name}</b>` : `<span title="Rooms for this family come in a later round">${f.name}</span>`).join('');
+
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFShadowMap;
+T.RectAreaLightUniformsLib.init();
+const scene = new T.Scene(); scene.background = new T.Color(0x070707); scene.fog = new T.Fog(0x070707, 9, 22);
+scene.environment = galleryEnv(renderer); scene.environmentIntensity = .9;
+const camera = new T.PerspectiveCamera(30, 1, .05, 60);
+
+// the gallery: polished black floor, a dark wall with the family's name in brass
+const floor = new T.Mesh(new T.PlaneGeometry(60, 30), new T.MeshPhysicalMaterial({ color: 0x0b0b0c, roughness: .22, clearcoat: 1, clearcoatRoughness: .12 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const GAP = 2.9, span = (LIST.length - 1) * GAP;
+const wall = new T.Mesh(new T.PlaneGeometry(span + 24, 9), new T.MeshStandardMaterial({ color: 0x141312, roughness: .9 })); wall.position.set(span / 2, 4.5, -3.2); scene.add(wall);
+const title = (() => { const c = document.createElement('canvas'); c.width = 2048; c.height = 160; const g = c.getContext('2d'); g.fillStyle = '#cfa968'; g.font = '84px "Bodoni Moda", Didot, Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(FAMILIES.find(f => f.id === FAM).name.toUpperCase().split('').join(' '), 1024, 84); const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; return t; })();
+const plate = new T.Mesh(new T.PlaneGeometry(6.4, .5), new T.MeshPhysicalMaterial({ map: title, transparent: true, metalness: .8, roughness: .3, color: 0xffffff })); plate.position.set(span / 2, 3.1, -3.18); scene.add(plate);
+
+// the cases, each with its room, a spot from above and a soft wash on the wall behind
+const cases = [];
+for (let i = 0; i < LIST.length; i++) {
+  const p = LIST[i], v = vitrine({ label: p.name }); v.group.position.x = i * GAP; scene.add(v.group);
+  const room = await ROOMS[p.slug](), sc = v.inner.w * .985 / room.size[0]; room.group.scale.setScalar(sc); rescaleLights(room.group, sc); v.stage.add(room.group);
+  const s = new T.SpotLight(0xfff0dc, 26, 9, .3, .8, 1.6); s.position.set(i * GAP + .4, 5.2, 1.6); s.target = v.group; scene.add(s);
+  const w = new T.SpotLight(0xffe0b0, 14, 8, .45, 1, 1.4); w.position.set(i * GAP, 5.5, -1.6); w.target.position.set(i * GAP, 1.5, -3.2); scene.add(w, w.target);
+  cases.push({ p, v, room });
+}
+
+const composer = new T.EffectComposer(renderer); composer.addPass(new T.RenderPass(scene, camera));
+const gtao = new T.GTAOPass(scene, camera, 1, 1); gtao.updateGtaoMaterial({ radius: .06, distanceExponent: 1.4, thickness: .04, scale: 1.1, samples: 16 }); composer.addPass(gtao);
+const bokeh = new T.BokehPass(scene, camera, { focus: 3.6, aperture: .006, maxblur: .006 }); composer.addPass(bokeh);
+composer.addPass(new T.UnrealBloomPass(new T.Vector2(1, 1), .14, .4, 1.3)); composer.addPass(new T.OutputPass());
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); composer.setSize(w, h); camera.aspect = w / h; camera.fov = w < h ? 44 : 30; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+// navigation: arrows, keys, wheel, swipe
+let cur = Math.max(0, Math.min(LIST.length - 1, parseInt(Q.get('i')) || 0)), camX = cur * GAP;
+$('dots').innerHTML = LIST.map(() => '<i></i>').join('');
+function show(i){ cur = (i + LIST.length) % LIST.length; const p = LIST[cur]; $('cap').classList.add('out');
+  setTimeout(() => { $('k').textContent = FAMILIES.find(f => f.id === FAM).name + (p.flagship ? ' · a flagship' : ''); $('nm').textContent = p.name; $('sc').textContent = SCENE_NOTES[p.slug] || '';
+    $('ln').textContent = p.line; $('cap').classList.remove('out'); }, STILL ? 0 : 300);
+  [...$('dots').children].forEach((d, k) => d.classList.toggle('on', k === cur)); }
+$('prev').onclick = () => show(cur - 1); $('next').onclick = () => show(cur + 1);
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') show(cur + 1); if (e.key === 'ArrowLeft') show(cur - 1); });
+let wheelLock = 0; addEventListener('wheel', e => { const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX; if (Math.abs(d) < 12 || performance.now() < wheelLock) return; wheelLock = performance.now() + 700; show(cur + (d > 0 ? 1 : -1)); }, { passive: true });
+let zoom = Q.has('zoom') ? 1 : 0, zk = zoom; const setZoom = z => { zoom = z; $('zoom').textContent = z ? 'Step back' : 'Look closer'; $('zoom').setAttribute('aria-pressed', z ? 'true' : 'false'); };
+$('zoom').onclick = () => setZoom(zoom ? 0 : 1); setZoom(zoom);
+let sx = null; gl.addEventListener('pointerdown', e => sx = e.clientX); gl.addEventListener('pointerup', e => { if (sx === null) return; const d = e.clientX - sx; sx = null; if (Math.abs(d) > 40) show(cur + (d < 0 ? 1 : -1)); else setZoom(zoom ? 0 : 1); });
+let mx = 0, my = 0; addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+show(cur);
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now(), t = 3;
+function frame(now){
+  const dt = STILL ? 0 : Math.min(.05, (now - last) / 1000); last = now; t += dt;
+  cases.forEach(c => c.room.update(t, dt || 1e-4));
+  camX += (cur * GAP - camX) * (STILL || reduce ? 1 : 1 - Math.exp(-dt * 3));
+  zk += (zoom - zk) * (STILL || reduce ? 1 : 1 - Math.exp(-dt * 2.5));
+  const portrait = innerWidth < innerHeight, L = (a, b) => a + (b - a) * zk;
+  const look = new T.Vector3(camX - (portrait ? L(-.05, 0) : L(.55, .12)), portrait ? L(.78, .86) : L(.98, 1.0), L(0, -.08));
+  camera.position.set(camX + (portrait ? L(.55, .25) : L(1.25, .62)) + mx * L(.35, .12), (portrait ? L(3.05, 2.4) : L(2.5, 1.85)) - my * .15, portrait ? L(5.9, 3.4) : L(4.45, 2.1)); camera.lookAt(look);
+  bokeh.uniforms.focus.value = camera.position.distanceTo(new T.Vector3(cur * GAP, 1.05, 0));
+  composer.render(); window.__frames = (window.__frames || 0) + 1; requestAnimationFrame(frame);
+}
+cases.forEach(c => c.room.update(t, .5));
+requestAnimationFrame(n => { $('loading').classList.add('done'); last = n; frame(n); });
+</script>
+</body>
+</html>

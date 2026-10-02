@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The Glass House · Families</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* A family is one glass house standing in still water at dusk; each project is a floor. More projects, more floors. */
+:root{
+  --fg:#EFE8DC; --dim:rgba(239,232,220,.56); --hair:rgba(239,232,220,.16); --brass:#D2AE6C;
+  --display:'Bodoni Moda',ui-serif,Didot,Georgia,serif; --italic:'Cormorant Garamond',ui-serif,Georgia,serif; --sans:'Manrope',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#070707;color:var(--fg);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,rgba(4,6,10,.62) 0,transparent 40%),linear-gradient(0deg,rgba(4,6,10,.6) 0,transparent 26%)}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:3;font-size:12.5px;letter-spacing:.04em}
+.mk{font-family:var(--display);font-size:22px}
+.mk i{font-family:var(--italic);font-weight:300}
+nav{display:flex;gap:26px;color:var(--dim)}
+nav b{color:var(--fg);font-weight:500}
+.fams{position:fixed;top:calc(74px + env(safe-area-inset-top,0px));left:0;right:0;z-index:3;display:flex;justify-content:center;gap:22px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(239,232,220,.32);overflow-x:auto;padding:0 16px;scrollbar-width:none}
+.fams span{white-space:nowrap;padding-bottom:6px}
+.fams b{color:var(--fg);font-weight:500;border-bottom:1px solid var(--brass)}
+.cap{position:fixed;left:clamp(16px,3vw,44px);top:50%;transform:translateY(-42%);z-index:2;width:min(440px,calc(100vw - 32px))}
+.cap .k{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--brass)}
+.cap h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,4.4vw,66px);line-height:1;margin:10px 0 6px}
+.cap .sc{font-family:var(--italic);font-style:italic;font-size:19px;color:var(--dim)}
+.cap p{font-size:13.5px;line-height:1.55;margin:14px 0 0;max-width:38ch}
+.cap a{display:inline-block;margin-top:16px;color:var(--fg);text-decoration:none;font-size:12px;letter-spacing:.2em;text-transform:uppercase;border-bottom:1px solid var(--brass);padding-bottom:3px}
+.fade{transition:opacity .45s,transform .55s}
+.fade.out{opacity:0}
+.floors{position:fixed;right:clamp(16px,3vw,44px);top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column-reverse;gap:14px;align-items:flex-end}
+.floors button{background:none;border:0;color:var(--dim);font:11px var(--sans);letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:flex;gap:10px;align-items:center;padding:4px 0}
+.floors button::after{content:'';width:18px;height:1px;background:var(--hair);transition:width .4s,background .4s}
+.floors button.on{color:var(--fg)}
+.floors button.on::after{width:40px;background:var(--brass)}
+.floors button:focus-visible{outline:1px solid var(--brass);outline-offset:3px}
+.arrows{position:fixed;right:clamp(16px,3vw,44px);bottom:calc(38px + env(safe-area-inset-bottom,0px));z-index:3;display:flex;gap:10px;align-items:center}
+.arrows button{width:44px;height:44px;border-radius:50%;border:1px solid var(--hair);background:rgba(0,0,0,.35);color:var(--fg);font:16px var(--sans);cursor:pointer}
+.arrows .z{width:auto;border-radius:22px;padding:0 18px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;margin-right:10px}
+.arrows button:focus-visible{outline:1px solid var(--brass);outline-offset:3px}
+.dots{display:flex;gap:7px;margin-right:8px}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--hair)}
+.dots i.on{background:var(--fg)}
+.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:5;font-family:var(--italic);font-style:italic;font-size:22px;color:#cfc8bc;background:#070707;transition:opacity .8s}
+.loading.done{opacity:0;pointer-events:none}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#a7a39b;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#efeae2;font-weight:500}
+@media (max-width:760px){ nav{display:none} .fams{justify-content:flex-start;top:calc(64px + env(safe-area-inset-top,0px))} .cap{top:auto;transform:none;bottom:calc(40px + env(safe-area-inset-bottom,0px))} .floors{top:auto;transform:none;bottom:calc(200px + env(safe-area-inset-bottom,0px))} .scrim{background:linear-gradient(0deg,rgba(4,6,10,.85) 0,rgba(4,6,10,.4) 30%,transparent 48%)} .cap p{display:none} .cap h1{font-size:38px}
+  .arrows{left:16px;right:16px;justify-content:space-between;bottom:calc(30px + env(safe-area-inset-bottom,0px))} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} }
+@media (prefers-reduced-motion:reduce){ .fade{transition:none} }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">Lighting the house…</div>
+<canvas id="gl" aria-label="A glass house standing in still water at dusk; each floor is a small living room for one project"></canvas>
+<div class="scrim"></div>
+<header><span class="mk">Kiarash<i>Fa</i></span><nav><span>Home</span><span>Chronology</span><b>Families</b><span>About</span></nav></header>
+<div class="fams" id="fams"></div>
+<section class="cap fade" id="cap">
+  <div class="k" id="k"></div>
+  <h1 id="nm"></h1>
+  <div class="sc" id="sc"></div>
+  <p id="ln"></p>
+  <a href="#">Open the project →</a>
+</section>
+<div class="floors" id="floors"></div>
+<a class="mockbar" href="../">← concepts · <b>R03 · Families · The Glass House</b> · three.js · Dusk ambient + rigged figures</a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { FAMILIES, byFamily } from './_data.js';
+import { kit, rescaleLights, MATS } from './_vitrine.js';
+import { ROOMS, SCENE_NOTES } from './_rooms.js';
+import { buildAmbient } from './_ambients.js';
+
+const Q = new URLSearchParams(location.search), STILL = Q.has('still'), $ = id => document.getElementById(id);
+const FAM = 'tributes', LIST = byFamily(FAM).filter(p => ROOMS[p.slug]);
+$('fams').innerHTML = FAMILIES.map(f => f.id === FAM ? `<b>${f.name}</b>` : `<span title="Rooms for this family come in a later round">${f.name}</span>`).join('');
+
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.toneMapping = T.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFShadowMap; T.RectAreaLightUniformsLib.init();
+const scene = new T.Scene(), camera = new T.PerspectiveCamera(30, 1, .05, 900);
+const amb = await buildAmbient('dusk', { scene, renderer }); amb.plinth.visible = false; renderer.toneMappingExposure = .62;
+
+// the house: a basalt footing in the water, then one floor per project, slab by slab, all under one skin of glass
+const house = new T.Group(); scene.add(house); const K = kit(house), Wd = 1.7, Dp = 1.42, base = .55, slab = .035;
+const basalt = new T.MeshPhysicalMaterial({ color: 0x1b1b1d, roughness: .6, clearcoat: .3 });
+K.box(Wd + .3, base + .3, Dp + .3, basalt, 0, (base + .3) / 2 - .3, 0, { r: .02 }); K.box(Wd + .31, .012, Dp + .31, MATS.brass, 0, base - .01, 0);
+let y = base; const floors = [];
+for (const p of LIST) {
+  const r = await ROOMS[p.slug](), sc = Wd * .97 / r.size[0], hgt = r.size[2] * sc + .05; r.group.scale.setScalar(sc); rescaleLights(r.group, sc);
+  K.box(Wd, slab, Dp, MATS.lacquer, 0, y + slab / 2, 0); K.box(Wd + .01, .006, Dp + .01, MATS.brass, 0, y + slab, 0);
+  r.group.position.set(0, y + slab + .001, (r.size[1] * sc - Dp) / 2 + .02); house.add(r.group);
+  floors.push({ p, r, y0: y + slab, h: hgt }); y += slab + hgt;
+}
+K.box(Wd, slab, Dp, MATS.lacquer, 0, y + slab / 2, 0); K.box(Wd + .01, .006, Dp + .01, MATS.brass, 0, y + slab, 0); const top = y + slab;
+// the glass skin and its edges
+const glass = MATS.glass.clone(), gh = top - base, gy = base + gh / 2; glass.envMapIntensity = .45;
+[[Wd, gh, 0, gy, Dp / 2, 0], [Wd, gh, 0, gy, -Dp / 2, 0], [Dp, gh, Wd / 2, gy, 0, Math.PI / 2], [Dp, gh, -Wd / 2, gy, 0, Math.PI / 2]].forEach(([a, b, x, yy, z, ry]) => { const m = new T.Mesh(new T.PlaneGeometry(a, b), glass); m.position.set(x, yy, z); m.rotation.y = ry; house.add(m); });
+const edge = new T.MeshPhysicalMaterial({ color: 0xa9d6c4, roughness: .08, transparent: true, opacity: .55, envMapIntensity: 2.5, emissive: 0x16241e });
+[[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const m = new T.Mesh(new T.BoxGeometry(.0045, gh, .0045), edge); m.position.set(sx * Wd / 2, gy, sz * Dp / 2); house.add(m); });
+house.position.z = -.3;
+
+const composer = new T.EffectComposer(renderer); composer.addPass(new T.RenderPass(scene, camera));
+const gtao = new T.GTAOPass(scene, camera, 1, 1); gtao.updateGtaoMaterial({ radius: .06, distanceExponent: 1.4, thickness: .04, scale: 1.1, samples: 16 }); composer.addPass(gtao);
+const bokeh = new T.BokehPass(scene, camera, { focus: 3.5, aperture: .004, maxblur: .006 }); composer.addPass(bokeh);
+composer.addPass(new T.UnrealBloomPass(new T.Vector2(1, 1), .2, .45, 1.15)); composer.addPass(new T.OutputPass());
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); composer.setSize(w, h); camera.aspect = w / h; camera.fov = w < h ? 46 : 30; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+// floors as a lift panel on the right; scroll, keys or swipe move between them
+let cur = Math.max(0, Math.min(LIST.length - 1, parseInt(Q.get('i')) || 0)), camY = floors[cur].y0 + floors[cur].h / 2;
+$('floors').innerHTML = floors.map((f, i) => `<button data-i="${i}">${f.p.name}</button>`).join('');
+$('floors').onclick = e => { const b = e.target.closest('button'); if (b) show(+b.dataset.i); };
+function show(i){ cur = Math.max(0, Math.min(LIST.length - 1, i)); const p = LIST[cur]; $('cap').classList.add('out');
+  setTimeout(() => { $('k').textContent = FAMILIES.find(f => f.id === FAM).name + (p.flagship ? ' · a flagship' : ''); $('nm').textContent = p.name; $('sc').textContent = SCENE_NOTES[p.slug] || '';
+    $('ln').textContent = p.line; $('cap').classList.remove('out'); }, STILL ? 0 : 300);
+  [...$('floors').children].forEach((b, k) => b.classList.toggle('on', k === cur)); }
+addEventListener('keydown', e => { if (e.key === 'ArrowUp') show(cur + 1); if (e.key === 'ArrowDown') show(cur - 1); });
+let lock = 0; addEventListener('wheel', e => { if (Math.abs(e.deltaY) < 12 || performance.now() < lock) return; lock = performance.now() + 700; show(cur + (e.deltaY < 0 ? 1 : -1)); }, { passive: true });
+let sy = null; addEventListener('pointerdown', e => sy = e.clientY); addEventListener('pointerup', e => { if (sy !== null && Math.abs(e.clientY - sy) > 40) show(cur + (e.clientY > sy ? 1 : -1)); sy = null; });
+let mx = 0; addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; });
+show(cur);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now(), t = 3;
+function frame(now){
+  const dt = STILL ? 0 : Math.min(.05, (now - last) / 1000); last = now; t += dt;
+  floors.forEach(f => f.r.update(t, dt || 1e-4)); amb.update(t);
+  const f = floors[cur], tgt = f.y0 + f.h * .45; camY += (tgt - camY) * (STILL || reduce ? 1 : 1 - Math.exp(-dt * 2.6));
+  const portrait = innerWidth < innerHeight;
+  camera.position.set((portrait ? .9 : 1.7) + mx * .4, camY + (portrait ? .75 : .6), portrait ? 4.2 : 4.5); camera.lookAt(portrait ? .1 : -.55, camY - (portrait ? .12 : .05), -.3);
+  bokeh.uniforms.focus.value = camera.position.distanceTo(new T.Vector3(0, camY, -.3));
+  composer.render(); window.__frames = (window.__frames || 0) + 1; requestAnimationFrame(frame);
+}
+floors.forEach(f => f.r.update(t, .5));
+requestAnimationFrame(n => { $('loading').classList.add('done'); last = n; frame(n); });
+</script>
+</body>
+</html>

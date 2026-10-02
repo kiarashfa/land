@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The Saleroom · Chronology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: you sit in the salesroom; the lot turns on stage; the catalogue card is on the left; time runs along the bottom like a ruler. */
+:root{
+  --fg:#EFE8DC; --dim:rgba(239,232,220,.56); --hair:rgba(239,232,220,.16); --brass:#D2AE6C;
+  --display:'Bodoni Moda',ui-serif,Didot,Georgia,serif; --italic:'Cormorant Garamond',ui-serif,Georgia,serif; --sans:'Manrope',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#060505;color:var(--fg);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,rgba(0,0,0,.6) 0,transparent 36%),linear-gradient(0deg,rgba(0,0,0,.72) 0,transparent 24%)}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:3;font-size:12.5px;letter-spacing:.04em}
+.mk{font-family:var(--display);font-size:22px}
+.mk i{font-family:var(--italic);font-weight:300}
+nav{display:flex;gap:26px;color:var(--dim)}
+nav b{color:var(--fg);font-weight:500}
+.card{position:fixed;left:clamp(16px,3vw,44px);top:50%;transform:translateY(-58%);z-index:2;width:min(380px,calc(100vw - 32px))}
+.card .lot{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--brass)}
+.card h1{font-family:var(--display);font-weight:400;font-size:clamp(42px,4.6vw,72px);line-height:.98;margin:12px 0 6px;font-variation-settings:'opsz' 96}
+.card .fam{font-family:var(--italic);font-style:italic;font-size:20px;color:var(--dim)}
+.card .rule{height:1px;background:var(--hair);margin:18px 0}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:0;font-size:13px}
+.card dt{color:var(--dim);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;padding-top:2px}
+.card dd{margin:0;line-height:1.5}
+.card a{display:inline-block;margin-top:20px;color:var(--fg);text-decoration:none;font-size:12px;letter-spacing:.2em;text-transform:uppercase;border-bottom:1px solid var(--brass);padding-bottom:3px}
+.fade{transition:opacity .5s,transform .6s}
+.fade.out{opacity:0;transform:translateY(-54%)}
+.time{position:fixed;left:clamp(16px,3vw,44px);right:clamp(16px,3vw,44px);bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:2;height:64px}
+.time .axis{position:absolute;left:0;right:0;top:34px;height:1px;background:var(--hair)}
+.time .m{position:absolute;top:30px;width:1px;height:9px;background:var(--hair)}
+.time .ml b{font-weight:inherit}
+.time .ml{position:absolute;top:44px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);transform:translateX(-50%);white-space:nowrap}
+.time .gap{position:absolute;top:27px;font-family:var(--italic);font-style:italic;font-size:14px;color:var(--dim);transform:translateX(-50%)}
+.time .lot{position:absolute;top:28px;width:13px;height:13px;margin-left:-6.5px;border-radius:50%;border:0;padding:0;cursor:pointer;background:radial-gradient(circle at 35% 30%,#fff 0,#b9bec6 35%,#4a4e55 75%);opacity:.55;transition:opacity .3s,transform .3s}
+.time .lot.on{opacity:1;transform:scale(1.45);box-shadow:0 0 14px rgba(255,240,210,.55)}
+.time .lot:focus-visible{outline:1px solid var(--brass);outline-offset:3px}
+.time .now{position:absolute;top:0;font-family:var(--italic);font-style:italic;font-size:17px;transform:translateX(-50%);white-space:nowrap;transition:left .6s cubic-bezier(.2,.8,.2,1)}
+.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:5;font-family:var(--italic);font-style:italic;font-size:22px;color:#cfc8bc;background:#060505;transition:opacity .8s}
+.loading.done{opacity:0;pointer-events:none}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#a7a39b;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#efeae2;font-weight:500}
+@media (max-width:760px){ .time .y24 b{display:none} nav{display:none} .card{top:auto;bottom:112px;transform:none} .card dl,.card .rule{display:none} .card h1{font-size:38px} .time .ml{font-size:8.5px} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">Taking your seat…</div>
+<canvas id="gl" aria-label="An auction salesroom; each project is offered as a lot, in the order it was made"></canvas>
+<div class="scrim"></div>
+<header><span class="mk">Kiarash<i>Fa</i></span><nav><span>Home</span><b>Chronology</b><span>Families</span><span>About</span></nav></header>
+<section class="card fade" id="card">
+  <div class="lot" id="lot"></div>
+  <h1 id="nm"></h1>
+  <div class="fam" id="fam"></div>
+  <div class="rule"></div>
+  <dl><dt>Offered</dt><dd id="line"></dd><dt>For</dt><dd id="for"></dd><dt>Estimate</dt><dd>Free · no account, no reserve</dd></dl>
+  <a href="#">Open the project →</a>
+</section>
+<div class="time" id="time"><div class="axis"></div></div>
+<a class="mockbar" href="../">← concepts · <b>R03 · Chronology · The Saleroom</b> · three.js · rigged figures + DOF</a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { byDate, FAMILIES, MONTHS, asset } from './_data.js';
+import { makeSculpture } from './_sculptures.js';
+import { makeDissolvable } from './_qs.js';
+import { loadHDR } from './_ambients.js';
+import { makeRig, loadCharacter, POSES, over, blend } from './_rig.js';
+
+const LOTS = byDate(), $ = id => document.getElementById(id);
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 760 ? 1.5 : 1.75)); renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFShadowMap;
+const scene = new T.Scene(); scene.background = new T.Color(0x050404); scene.fog = new T.FogExp2(0x050404, .028);
+const hdr = await loadHDR('studio'); scene.environment = hdr; scene.environmentIntensity = .22;
+const camera = new T.PerspectiveCamera(34, 1, .05, 100);
+const tex = (w, h, draw, rep = [1, 1]) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(...rep); t.anisotropy = 8; return t; };
+const noise = (g, w, h, a) => { const d = g.getImageData(0, 0, w, h); for (let i = 0; i < d.data.length; i += 4) { const n = (Math.random() - .5) * a; d.data[i] += n; d.data[i + 1] += n; d.data[i + 2] += n; } g.putImageData(d, 0, 0); };
+const shadowy = o => { o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
+const add = (geo, mat, x, y, z, parent = scene) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m; };
+
+// materials shared with the home's Atelier: black lacquer, brass, walnut, velvet
+const lacquer = new T.MeshPhysicalMaterial({ color: 0x0a0a0b, roughness: .3, clearcoat: 1, clearcoatRoughness: .08 });
+const brass = new T.MeshPhysicalMaterial({ color: 0xcfa968, metalness: 1, roughness: .26 });
+const walnut = new T.MeshPhysicalMaterial({ map: tex(512, 512, (g, w, h) => { g.fillStyle = '#2b1810'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 2) { g.fillStyle = `rgba(${70 + Math.sin(y * .05) * 20},${40 + Math.sin(y * .05) * 10},20,${.25 + Math.random() * .2})`; g.fillRect(0, y, w, 1 + Math.random() * 2); } noise(g, w, h, 10); }, [1, 2]), roughness: .4, clearcoat: .8, clearcoatRoughness: .2 });
+const velvet = new T.MeshPhysicalMaterial({ color: 0x3a0d14, roughness: .8, sheen: 1, sheenColor: new T.Color(0xa0384a), sheenRoughness: .4 });
+
+// floor: deep carpet under the seats; a black lacquer stage topped with mirror stone, as in the home's Atelier
+const STAGE = .5;
+const carpet = new T.Mesh(new T.PlaneGeometry(26, 22), new T.MeshStandardMaterial({ roughness: .95, map: tex(512, 512, (g, w, h) => { g.fillStyle = '#16100e'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(160,120,70,.12)'; g.lineWidth = 2; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.beginPath(); g.moveTo(i * 64 + 32, j * 64 + 8); g.lineTo(i * 64 + 56, j * 64 + 32); g.lineTo(i * 64 + 32, j * 64 + 56); g.lineTo(i * 64 + 8, j * 64 + 32); g.closePath(); g.stroke(); } noise(g, w, h, 18); }, [10, 9]) }));
+carpet.rotation.x = -Math.PI / 2; carpet.position.z = 6; carpet.receiveShadow = true; scene.add(carpet);
+const mirror = new T.Reflector(new T.PlaneGeometry(12, 3.6), { textureWidth: 1024, textureHeight: 512, color: 0x1c1c20 }); mirror.rotation.x = -Math.PI / 2; mirror.position.set(0, STAGE + .001, -.4); scene.add(mirror);
+const stoneSkin = new T.Mesh(new T.PlaneGeometry(12, 3.6), new T.MeshPhysicalMaterial({ color: 0x0b0b0c, transparent: true, opacity: .84, roughness: .25, clearcoat: 1 })); stoneSkin.rotation.x = -Math.PI / 2; stoneSkin.position.set(0, STAGE + .003, -.4); stoneSkin.receiveShadow = true; scene.add(stoneSkin);
+add(new T.BoxGeometry(12, STAGE, 3.6), lacquer, 0, STAGE / 2, -.4); add(new T.BoxGeometry(12, .014, .014), brass, 0, STAGE, 1.4);
+
+// back wall: fluted walnut between brass bands, the salesroom plate above
+const fluteGeo = new T.CylinderGeometry(.11, .11, 6, 20, 1, false, 0, Math.PI); fluteGeo.rotateY(-Math.PI / 2);
+const fluteMat = walnut.clone(); fluteMat.roughness = .62; fluteMat.clearcoat = .15; fluteMat.clearcoatRoughness = .5; fluteMat.envMapIntensity = .25;
+const flutes = new T.InstancedMesh(fluteGeo, fluteMat, 84); const m4 = new T.Matrix4();
+for (let i = 0; i < 84; i++) { m4.makeTranslation(-9.3 + i * .224, 3.36, -2.1); flutes.setMatrixAt(i, m4); } flutes.receiveShadow = true; scene.add(flutes);
+add(new T.BoxGeometry(19, .14, .3), brass, 0, .4, -2.05); add(new T.BoxGeometry(19, .3, .4), lacquer, 0, 6.4, -2.0); add(new T.BoxGeometry(19, .02, .02), brass, 0, 6.24, -1.8);
+const plate = new T.Mesh(new T.PlaneGeometry(4.6, .5), new T.MeshPhysicalMaterial({ metalness: .55, roughness: .38, color: 0xffffff, map: tex(1024, 112, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#f0d49a'); gr.addColorStop(.5, '#a8803f'); gr.addColorStop(1, '#e2c287'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#2a1c0c'; g.font = '46px "Bodoni Moda", Didot, Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('K I A R A S H F A   ·   S A L E R O O M', w / 2, h / 2 + 2); }) }));
+plate.position.set(0, 5.75, -1.9); scene.add(plate);
+
+// the lot stands on the home's lacquer plinth (brass seam), turning slowly under a hazy beam
+const plinth = new T.Group(); plinth.position.set(0, STAGE, -.2); scene.add(plinth);
+add(new T.CylinderGeometry(.62, .66, .8, 96), lacquer, 0, .4, 0, plinth); const seam = add(new T.TorusGeometry(.625, .007, 8, 160), brass, 0, .66, 0, plinth); seam.rotation.x = Math.PI / 2;
+const turn = new T.Group(); turn.position.y = .8; plinth.add(turn);
+add(new T.CylinderGeometry(.58, .6, .05, 96), lacquer, 0, .025, 0, turn); const ring = add(new T.TorusGeometry(.585, .006, 8, 160), brass, 0, .05, 0, turn); ring.rotation.x = Math.PI / 2;
+const lotHolder = new T.Group(); lotHolder.position.y = .05; turn.add(lotHolder);
+const aim = new T.Object3D(); aim.position.set(0, STAGE + 1.4, -.2); scene.add(aim);
+const spot = new T.SpotLight(0xfff0dc, 230, 16, .2, .5, 1.4); spot.position.set(.6, 7.6, 2.6); spot.target = aim; spot.castShadow = true; spot.shadow.mapSize.set(2048, 2048); spot.shadow.bias = -.0004; scene.add(spot);
+// a soft photographic key from the front, like the home's softboxes
+const key = new T.RectAreaLight(0xfff4e6, 2.4, 1.4, .9); key.position.set(-.6, 2.9, 2.6); key.lookAt(0, STAGE + 1.3, -.2); scene.add(key);
+const beamMat = new T.ShaderMaterial({ transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide,
+  vertexShader: `varying vec2 vU; varying vec3 vN; varying vec3 vV; void main(){ vU = uv; vec4 w = modelViewMatrix * vec4(position,1.); vN = normalize(normalMatrix * normal); vV = normalize(-w.xyz); gl_Position = projectionMatrix * w; }`,
+  fragmentShader: `varying vec2 vU; varying vec3 vN; varying vec3 vV; void main(){ float e = pow(abs(dot(vN, vV)), 1.8) * pow(vU.y, 1.3); gl_FragColor = vec4(vec3(1., .9, .76) * e * .07, 1.); }` });
+const beam = new T.Mesh(new T.CylinderGeometry(.2, 1.1, 6.4, 48, 1, true), beamMat); beam.position.set(.3, 4.6, 1.15); beam.rotation.x = .3; scene.add(beam);
+
+// rostrum, lamp, gavel; the auctioneer behind it
+const ros = new T.Group(); ros.position.set(2.15, STAGE, .5); ros.rotation.y = -.3; scene.add(ros);
+add(new T.BoxGeometry(1.1, 1.12, .7), walnut, 0, .56, 0, ros); add(new T.BoxGeometry(1.18, .05, .78), brass, 0, 1.13, 0, ros);
+const top = add(new T.BoxGeometry(1.0, .04, .5), walnut, 0, 1.2, .03, ros); top.rotation.x = -.2;
+add(new T.CylinderGeometry(.07, .07, .006, 32), brass, 0, .7, .351, ros).rotation.x = Math.PI / 2;
+const lampShade = add(new T.CylinderGeometry(.09, .13, .12, 32, 1, true), new T.MeshPhysicalMaterial({ color: 0x0e4a32, roughness: .18, clearcoat: 1, emissive: 0x0b3a24, emissiveIntensity: .6, side: T.DoubleSide }), .32, 1.5, 0, ros); lampShade.rotation.z = Math.PI / 2 * .0;
+add(new T.CylinderGeometry(.012, .012, .3, 12), brass, .32, 1.33, 0, ros); add(new T.CylinderGeometry(.08, .09, .03, 32), brass, .32, 1.19, 0, ros);
+const lamp = new T.PointLight(0xffc77d, 3.5, 3.2, 1.6); lamp.position.set(.32, 1.42, .05); ros.add(lamp);
+const gavel = new T.Group(); gavel.position.set(-.25, 1.24, .12); ros.add(gavel);
+add(new T.CylinderGeometry(.03, .03, .13, 16), walnut, 0, 0, 0, gavel).rotation.z = Math.PI / 2; add(new T.CylinderGeometry(.008, .008, .2, 8), walnut, .05, 0, .1, gavel).rotation.x = Math.PI / 2;
+const auctioneer = await loadCharacter('Xbot'); auctioneer.position.set(2.36, STAGE, -.16); auctioneer.rotation.y = -.34; scene.add(auctioneer); const aRig = makeRig(auctioneer);
+
+// the screen and the split-flap date board
+const screenTex = new T.Texture(); screenTex.colorSpace = T.SRGBColorSpace;
+const screen = new T.Group(); screen.position.set(3.05, 3.2, -1.9); screen.rotation.y = -.14; scene.add(screen);
+add(new T.BoxGeometry(2.2, 1.34, .08), lacquer, 0, 0, 0, screen); const scr = add(new T.PlaneGeometry(2.1, 1.1), new T.MeshBasicMaterial({ map: screenTex, toneMapped: false }), 0, .07, .045, screen);
+const caption = new T.Mesh(new T.PlaneGeometry(2.1, .103), new T.MeshBasicMaterial({ toneMapped: false })); caption.position.set(0, -.6, .045); screen.add(caption);
+const screenGlow = new T.RectAreaLight(0xc9d6ff, .8, 2.1, 1.1); T.RectAreaLightUniformsLib.init(); screenGlow.position.set(0, 0, .2); screenGlow.lookAt(-3, 0, 8); screen.add(screenGlow);
+const flapC = document.createElement('canvas'); flapC.width = 1024; flapC.height = 134; const flapT = new T.CanvasTexture(flapC); flapT.colorSpace = T.SRGBColorSpace;
+const board = new T.Group(); board.position.set(-.1, 4.0, -1.98); scene.add(board);
+add(new T.BoxGeometry(2.9, .46, .1), lacquer, 0, 0, 0, board); add(new T.BoxGeometry(2.96, .012, .012), brass, 0, -.24, .05, board); add(new T.PlaneGeometry(2.8, .37), new T.MeshBasicMaterial({ map: flapT, toneMapped: false }), 0, 0, .055, board);
+let flapK = -1, flapFor = '';
+function drawFlaps(text, k){ if (k >= 1 && flapK >= 1 && flapFor === text) return; flapK = k; flapFor = text; const g = flapC.getContext('2d'), w = 1024, h = 134, n = 14, cw = w / n; g.fillStyle = '#060606'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < n; i++) { const ch = (text[i] || ' '), flip = Math.max(0, Math.min(1, k * 2.2 - i * .08)); g.fillStyle = '#141414'; g.fillRect(i * cw + 3, 8, cw - 6, h - 16);
+    g.fillStyle = flip < 1 ? '#8a8378' : '#f1e6cf'; g.font = '500 80px Manrope, "Helvetica Neue", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const shown = flip < 1 ? 'ABCDEFGHIJKLMNOPRSTUVWXYZ0123456789'[Math.floor(Math.random() * 35)] : ch; g.save(); g.translate(i * cw + cw / 2, h / 2 + 5); g.scale(1, flip < 1 ? .6 + .4 * flip : 1); g.fillText(shown, 0, 0); g.restore();
+    g.fillStyle = 'rgba(0,0,0,.75)'; g.fillRect(i * cw + 3, h / 2 - 1, cw - 6, 2); }
+  flapT.needsUpdate = true; }
+function drawCaption(p){ const c = document.createElement('canvas'); c.width = 1024; c.height = 50; const g = c.getContext('2d'); g.fillStyle = '#0a0a0a'; g.fillRect(0, 0, 1024, 50); g.fillStyle = '#d2ae6c'; g.font = '22px Manrope, sans-serif'; g.fillText(`kiarashfa.github.io/${p.slug === 'website' ? 'website' : p.name}/`, 16, 33); caption.material.map = new T.CanvasTexture(c); caption.material.map.colorSpace = T.SRGBColorSpace; caption.material.needsUpdate = true; }
+
+// soft wall-washers along the flutes
+[-6, -2.2, 2.2, 6].forEach(x => { const s = new T.SpotLight(0xffd7a3, 16, 8, .5, .9, 1.4); s.position.set(x, 6.1, -1.3); s.target.position.set(x, 1, -2.1); scene.add(s, s.target); });
+scene.add(new T.HemisphereLight(0x2b2420, 0x050404, .35));
+const rim = new T.DirectionalLight(0xffe3c0, .5); rim.position.set(0, 3, -4); scene.add(rim);
+
+// audience: rows of velvet chairs, charcoal figures, paddles
+const seat = new T.Group(); { const s = new T.RoundedBoxGeometry(.52, .1, .5, 3, .03), b = new T.RoundedBoxGeometry(.52, .62, .08, 3, .03);
+  const sm = new T.Mesh(s, velvet); sm.position.y = .46; seat.add(sm); const bm = new T.Mesh(b, velvet); bm.position.set(0, .8, .24); bm.rotation.x = .08; seat.add(bm);
+  const fr = new T.Mesh(new T.BoxGeometry(.54, .015, .015), brass); fr.position.set(0, 1.11, .27); seat.add(fr);
+  [[-.22, -.2], [.22, -.2], [-.22, .2], [.22, .2]].forEach(([x, z]) => { const l = new T.Mesh(new T.CylinderGeometry(.012, .01, .44, 8), brass); l.position.set(x, .22, z); seat.add(l); }); shadowy(seat); }
+const people = [];
+// the audience reads as dark-suited silhouettes against the lit stage
+const suit = new T.MeshPhysicalMaterial({ color: 0x141416, roughness: .86, sheen: .6, sheenColor: new T.Color(0x55555f), sheenRoughness: .45, envMapIntensity: .45 });
+const suitJ = new T.MeshPhysicalMaterial({ color: 0x0b0b0c, roughness: .6, envMapIntensity: .5 });
+function paddle(n){ const g = new T.Group(), white = new T.MeshStandardMaterial({ color: 0xf2ede3, roughness: .55, map: tex(256, 256, (c, w, h) => { c.fillStyle = '#f2ede3'; c.fillRect(0, 0, w, h); c.fillStyle = '#1a1a1a'; c.font = '600 120px "Bodoni Moda", Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.translate(w / 2, h / 2); c.rotate(-Math.PI / 2); c.fillText(n, 0, 6); }) });
+  const d = new T.Mesh(new T.CylinderGeometry(.085, .085, .008, 40), white); d.rotation.x = Math.PI / 2; d.position.y = .19; g.add(d);
+  const hnd = new T.Mesh(new T.CylinderGeometry(.012, .014, .16, 10), new T.MeshStandardMaterial({ color: 0x1a120c, roughness: .4 })); hnd.position.y = .05; g.add(hnd); return g; }
+const ws = new T.Vector3();
+for (let r = 0; r < 4; r++) for (let c = 0; c < 8; c++) {
+  const x = (c - 3.5) * .74 + (c >= 4 ? .6 : -.6), z = 3.6 + r * 1.15, ch = seat.clone(); ch.position.set(x, 0, z); ch.rotation.y = Math.PI + (x * -.02); scene.add(ch);
+  if ((r * 7 + c * 3) % 5 === 0) continue;
+  const f = await loadCharacter('Xbot'), sc = .94 + ((r * 5 + c * 7) % 7) * .018; f.scale.setScalar(sc); f.position.set(x, -.43 * sc + (1 - sc) * .5, z - .04); f.rotation.y = Math.PI + (x * -.02); scene.add(f);
+  f.traverse(o => { if (o.isMesh) o.material = /Joint/i.test(o.name + (o.material.name || '')) ? suitJ : suit; });
+  const rig = makeRig(f), pd = paddle(String(100 + ((r * 37 + c * 53) % 400))); pd.visible = false;
+  scene.add(pd);
+  people.push({ f, rig, paddle: pd, phase: Math.random() * 6, bidAt: -10, bidder: [[0, 3], [0, 4], [1, 2], [3, 1], [2, 0]].some(([a, b]) => a === r && b === c), x }); }
+auctioneer.traverse(o => { if (o.isMesh) o.material = /Joint/i.test(o.name + (o.material.name || '')) ? suitJ : suit; });
+
+// post: depth of field on the lot, a little bloom
+const composer = new T.EffectComposer(renderer); composer.addPass(new T.RenderPass(scene, camera));
+const bokeh = new T.BokehPass(scene, camera, { focus: 9.9, aperture: .0018, maxblur: .008 }); if (!location.search.includes('nobokeh')) composer.addPass(bokeh);
+const bloom = new T.UnrealBloomPass(new T.Vector2(1, 1), .22, .5, .93); composer.addPass(bloom); composer.addPass(new T.OutputPass());
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); composer.setSize(w, h); camera.aspect = w / h; camera.fov = w < h ? 50 : 27; camera.updateProjectionMatrix(); bokeh.uniforms.focus.value = w < h ? 12.5 : 9.9; }
+addEventListener('resize', resize); resize();
+
+// timeline: months as a ruler; the long quiet 2025 is folded into a gap
+const first = LOTS[0].started, months = [];
+for (let y = 2026, m = 3; y === 2026 && m <= 9; m++) months.push([y, m]);
+const pos = d => { const [y, m, dd] = d.split('-').map(Number); if (y < 2026) return .03; return .1 + ((m - 4) + (dd - 1) / 30) / 6.2 * .88; };
+const time = $('time');
+time.insertAdjacentHTML('beforeend', `<span class="ml y24" style="left:3%"><b>Nov </b>2024</span><span class="gap" style="left:6.5%">⋯</span>`);
+months.forEach(([y, m]) => { const x = (.1 + (m - 4) / 6.2 * .88) * 100; time.insertAdjacentHTML('beforeend', `<span class="m" style="left:${x}%"></span><span class="ml" style="left:${x}%">${MONTHS[m - 1]}</span>`); });
+const dots = LOTS.map((p, i) => { const b = document.createElement('button'); b.className = 'lot'; b.style.left = pos(p.started) * 100 + '%'; b.title = p.name; b.onclick = () => show(i); time.appendChild(b); return b; });
+const now = document.createElement('div'); now.className = 'now'; time.appendChild(now);
+
+// lots: dissolve the old one out, the new one in, with the gavel and paddles
+const disU = { uDis: { value: 0 }, uEdge: { value: new T.Color(1, .42, .12) } }, built = new Map();
+function lotObject(p){ if (built.has(p.slug)) return built.get(p.slug); const o = makeSculpture(p); const b = new T.Box3().setFromObject(o), sz = b.getSize(new T.Vector3());
+  o.scale.setScalar((p.flagship ? 1.12 : 1.0) / Math.max(sz.y, sz.x * .85, sz.z * .85)); const b2 = new T.Box3().setFromObject(o); o.position.y = -b2.min.y; const w = new T.Group(); w.add(o); makeDissolvable(o, disU); built.set(p.slug, w); return w; }
+const loader = new T.TextureLoader(); let cur = -1, target = 0, phase = 'in', pt = 0, pendingP = null, strike = -10;
+function fmt(d){ const [y, m, dd] = d.split('-').map(Number); return `${dd} ${MONTHS[m - 1]} ${y}`; }
+function show(i){ if (i === cur || i < 0 || i >= LOTS.length) return; target = i; if (phase === 'hold' || cur === -1) { phase = cur === -1 ? 'swap' : 'out'; pt = 0; } }
+function swap(){ cur = target; const p = LOTS[cur]; lotHolder.clear(); lotHolder.add(lotObject(p)); phase = 'in'; pt = 0; strike = clock;
+  $('card').classList.add('out'); setTimeout(() => { $('lot').textContent = `Lot · ${fmt(p.started)}`; $('nm').textContent = p.name; $('fam').textContent = FAMILIES.find(f => f.id === p.family).name + (p.flagship ? ', a flagship' : '');
+    $('line').textContent = p.line; $('for').textContent = p.for ? `Those ${p.for.replace(/^those /, '')}` : 'Anyone curious'; $('card').classList.remove('out'); }, 350);
+  dots.forEach((d, k) => d.classList.toggle('on', k === cur)); now.style.left = dots[cur].style.left; now.textContent = fmt(p.started); const px = parseFloat(dots[cur].style.left); now.style.transform = `translateX(${px < 12 ? -10 : px > 88 ? -90 : -50}%)`;
+  loader.load(asset(p.slug, 'og.png'), t => { screenTex.image = t.image; screenTex.needsUpdate = true; }, undefined, () => loader.load(asset(p.slug, 'icon.png'), t => { screenTex.image = t.image; screenTex.needsUpdate = true; }));
+  drawCaption(p); flapTxt = (MONTHS[+p.started.slice(5, 7) - 1] + ' ' + p.started.slice(0, 4)).toUpperCase().padStart(10, ' ').padEnd(14, ' ');
+  const wide = innerWidth > innerHeight; people.forEach((q, n) => { if (q.bidder && (n + cur) % 2 === 0 && !(wide && q.x < -1)) q.bidAt = clock + .6 + Math.random() * 1.8; }); }
+let flapTxt = '', clock = 0;
+addEventListener('wheel', e => { if (Math.abs(e.deltaY) < 10 || phase !== 'hold') return; show(Math.max(0, Math.min(LOTS.length - 1, cur + (e.deltaY > 0 ? 1 : -1)))); }, { passive: true });
+addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowDown') show(cur + 1); if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') show(cur - 1); });
+let mx = 0, my = 0; addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+const Q = new URLSearchParams(location.search), CAM = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null, STILL = Q.has('still');
+const startAt = parseInt(Q.get('lot')); target = isNaN(startAt) ? 0 : startAt; show(target);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now(), idle = 0;
+const ease = t => t * t * (3 - 2 * t);
+function frame(now){
+  let dt = Math.min(.05, (now - last) / 1000); last = now;
+  // ?still: a settled frame for screenshots (lot cooled in, flaps landed, a few paddles up)
+  if (STILL && phase !== 'hold') { if (phase === 'swap' || phase === 'out') swap(); phase = 'hold'; disU.uDis.value = 1; clock += 3; strike = clock - 3; turn.rotation.y = .7;
+    people.forEach(q => { q.bidAt = q.bidder && !(innerWidth > innerHeight && q.x < -1) ? clock - 1 : -10; }); }
+  if (STILL) dt = 0;
+  clock += dt; idle += dt; pt += dt;
+  if (phase === 'swap') swap();
+  else if (phase === 'out') { disU.uDis.value = 1 - ease(Math.min(1, pt / .9)); if (pt > .9) swap(); }
+  else if (phase === 'in') { disU.uDis.value = ease(Math.min(1, pt / 1.6)); if (pt > 1.6) { phase = 'hold'; pt = 0; } }
+  else if (phase === 'hold' && pt > 7 && !reduce) show((cur + 1) % LOTS.length);
+  turn.rotation.y += reduce ? 0 : dt * .22; lotHolder.children.forEach(o => o.children[0].userData.tick && o.children[0].userData.tick(clock));
+  drawFlaps(flapTxt, Math.min(1, (clock - strike) / 1.2));
+  // the auctioneer: lectern pose, raising the gavel as each lot is knocked down
+  const g = STILL ? 0 : Math.max(0, 1 - Math.abs(clock - strike - .25) / .35);
+  aRig.apply(blend([over(POSES.stand, POSES.lectern), 1 - g], [over(over(POSES.stand, POSES.lectern), POSES.gavelUp), g + .001]), { twist: Math.sin(clock * .5) * .08 });
+  gavel.rotation.z = -g * 1.1;
+  // bidders breathe; some raise their paddles for the new lot
+  people.forEach(q => { const up = Math.max(0, Math.min(1, (clock - q.bidAt) * 2.5)) * Math.max(0, Math.min(1, (q.bidAt + 2.6 - clock) * 2.5));
+    q.rig.apply(blend([POSES.sit, 1 - up], [over(POSES.sit, POSES.sitPaddle), up + .0001]), { twist: Math.sin(clock * .7 + q.phase) * .03 }); q.paddle.visible = up > .3; if (q.paddle.visible) { q.rig.bones.RightHand.getWorldPosition(q.paddle.position); q.rig.bones.RightForeArm.getWorldPosition(ws); q.paddle.position.addScaledVector(ws.sub(q.paddle.position).normalize(), -.05); q.paddle.rotation.set(0, Math.PI, 0); } });
+  const portrait = innerWidth < innerHeight;
+  if (CAM) { camera.position.set(CAM[0], CAM[1], CAM[2]); camera.lookAt(CAM[3], CAM[4], CAM[5]); }
+  else if (portrait) { camera.position.set(.5 + mx * .3, 1.9, 11.0); camera.lookAt(.5, 2.15, -.3); }
+  else { camera.position.set(.2 + mx * .5, 1.62 - my * .15, 9.8); camera.lookAt(-.55, 2.0, -.3); }
+  composer.render(); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(t => { $('loading').classList.add('done'); frame(t); });
+</script>
+</body>
+</html>

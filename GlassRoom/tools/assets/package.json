@@ -1,0 +1,7 @@
+{
+  "name": "land-asset-tools",
+  "private": true,
+  "type": "module",
+  "description": "Convert vendored 3D assets into files any static host (and the artifact viewer) will serve.",
+  "dependencies": { "pngjs": "^7.0.0" }
+}

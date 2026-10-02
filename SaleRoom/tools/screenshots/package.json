@@ -1,0 +1,9 @@
+{
+  "name": "land-screenshots",
+  "private": true,
+  "type": "module",
+  "description": "Headless screenshots of mock pages, used to check mocks before showing them.",
+  "dependencies": {
+    "playwright-core": "^1.56.0"
+  }
+}
