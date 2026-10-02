@@ -1,6 +1,8 @@
 // Make 1440x900 JPEG thumbnails for a round's gallery, retrying when Google Fonts fail to load.
 // usage: node thumbs.mjs <round-dir> <name[:waitMs[:hash]]> ...
 //   e.g. node thumbs.mjs r01-concepts 01-monomer:6000 05-latent:2500:emblem
+//   a third part starting with '?' is a query string instead: 04-auction:4000:?lot=8&still
+//   heavy scenes: FRAMES=2 waits for that many rendered frames (window.__frames); screenshots may take minutes
 // Writes to mocks/<round-dir>/thumbs/<name>.jpg. Serve mocks/ on BASE first (see shot.mjs).
 import { chromium } from 'playwright-core';
 import { fileURLToPath } from 'node:url';
@@ -16,10 +18,12 @@ for (const item of list) {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
     const page = await ctx.newPage(); let fontFail = false;
     page.on('requestfailed', r => { if (/fonts\.(googleapis|gstatic)/.test(r.url())) fontFail = true; });
-    await page.goto(`${BASE}/${round}/${file}.html${hash ? '#' + hash : ''}`, { waitUntil: 'load', timeout: 60000 }).catch(() => fontFail = true);
+    const suffix = !hash ? '' : hash.startsWith('?') ? hash : '#' + hash;
+    await page.goto(`${BASE}/${round}/${file}.html${suffix}`, { waitUntil: 'load', timeout: 60000 }).catch(() => fontFail = true);
     await page.waitForTimeout(+wait);
+    if (process.env.FRAMES) await page.waitForFunction(n => (window.__frames || 0) >= n, +process.env.FRAMES, { timeout: 240000 }).catch(() => {});
     if (fontFail && attempt < 3) { await ctx.close(); continue; }
-    await page.screenshot({ path: `${outDir}${file}.jpg`, type: 'jpeg', quality: 78 });
+    await page.screenshot({ path: `${outDir}${file}.jpg`, type: 'jpeg', quality: 78, timeout: 180000 });
     console.log(file, 'ok', fontFail ? '(font fallback)' : '');
     await ctx.close(); break;
   }

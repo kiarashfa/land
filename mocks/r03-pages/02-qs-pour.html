@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quicksilver II · Pour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700&family=Newsreader:ital,opsz,wght@1,6..72,300;1,6..72,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: two streams fall from the top edge onto the plinth; the name is cut across the plinth's face; notes sit in the right column. */
+:root{
+  --fg:#EEE9E1; --dim:rgba(238,233,225,.56); --hair:rgba(238,233,225,.16); --accent:#D2B06E;
+  --display:'Syne',ui-sans-serif,system-ui,sans-serif; --italic:'Newsreader',ui-serif,Georgia,serif; --sans:'Manrope',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+body.light{ --fg:#211D18; --dim:rgba(33,29,24,.6); --hair:rgba(33,29,24,.18); --accent:#8A6A32; color-scheme:light }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#0a0a0b;color:var(--fg);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,transparent 55%,rgba(0,0,0,.45) 100%),linear-gradient(180deg,rgba(0,0,0,.35) 0,transparent 18%)}
+body.light .scrim{background:linear-gradient(90deg,transparent 55%,rgba(242,235,224,.7) 100%),linear-gradient(180deg,rgba(242,235,224,.5) 0,transparent 18%)}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:3;font-size:12.5px}
+.mk{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.08em;text-transform:uppercase}
+nav{display:flex;gap:26px;color:var(--dim)}
+.vword{position:fixed;left:0;top:0;z-index:2;writing-mode:vertical-rl;font-family:var(--italic);font-style:italic;font-weight:300;font-size:clamp(22px,2vw,30px);letter-spacing:.06em;white-space:nowrap;pointer-events:none;transform:translate(-50%,0)}
+.vword span{display:inline-block;transition:opacity .5s,transform .7s cubic-bezier(.2,.8,.2,1)}
+.plate{position:fixed;left:0;top:0;z-index:2;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:min(820px,calc(100vw - 32px))}
+.plate h1{font-family:var(--display);font-weight:700;font-size:clamp(38px,6.4vw,104px);line-height:.9;letter-spacing:.08em;text-transform:uppercase;margin:0;
+  background:linear-gradient(180deg,#ffffff 0%,#c9ccd2 38%,#7d828a 52%,#e9ebee 70%,#9aa0a8 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35))}
+body.light .plate h1{background:linear-gradient(180deg,#5b5f66 0%,#2a2c30 45%,#8c9098 60%,#3b3e43 100%);-webkit-background-clip:text;background-clip:text;filter:none}
+.plate .bar{width:180px;height:1px;background:var(--hair);margin:16px auto 0;position:relative;overflow:hidden}
+.plate .bar i{position:absolute;inset:0;background:var(--accent);transform-origin:0 50%;transform:scaleX(0)}
+.notes{position:fixed;right:clamp(16px,3vw,44px);top:50%;transform:translateY(-50%);z-index:2;width:min(300px,30vw);display:grid;gap:12px}
+.notes .k{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+.notes .r{font-family:var(--italic);font-style:italic;font-size:22px;line-height:1.2}
+.notes .l{font-size:13.5px;line-height:1.6;color:var(--dim)}
+.notes a{color:var(--fg);text-decoration:none;font-size:12px;letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid var(--accent);padding-bottom:3px;justify-self:start}
+.chip{position:fixed;left:clamp(16px,3vw,44px);bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:4;display:flex;gap:4px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+.chip button{all:unset;cursor:pointer;padding:5px 9px;border:1px solid var(--hair);border-radius:20px;color:var(--dim)}
+.chip button.on{color:var(--fg);border-color:var(--accent)}
+.hint{position:fixed;right:clamp(16px,3vw,44px);bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:2;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:5;font-family:var(--italic);font-style:italic;font-size:22px;color:#cfc8bc;background:#0a0a0b;transition:opacity .8s}
+.loading.done{opacity:0;pointer-events:none}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#a7a39b;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#efeae2;font-weight:500}
+.mockbar a{color:inherit}
+@media (max-width:760px){ nav,.hint{display:none} .notes{top:auto;bottom:70px;transform:none;width:auto;left:16px;right:16px} .notes .l{display:none} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} .chip{bottom:36px} }
+@media (prefers-reduced-motion:reduce){ .vword span{transition:none} }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">Melting the first drop…</div>
+<canvas id="gl" aria-label="Two streams of liquid metal pour onto a plinth and rise into each project's sculpture"></canvas>
+<div class="scrim"></div>
+<header><span class="mk">KiarashFa</span><nav><span>Chronology</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<div class="vword" id="va"></div><div class="vword" id="vb"></div>
+<section class="plate" id="plate"><h1 id="nm"></h1><div class="bar"><i id="bar"></i></div></section>
+<aside class="notes"><div class="k" id="fam"></div><div class="r" id="roots"></div><div class="l" id="line"></div><div class="l" id="for"></div><a href="#">Open the project →</a></aside>
+<div class="chip" id="chip"></div>
+<div class="hint">Scroll for the next pour</div>
+<a class="mockbar" href="../">← concepts · <b>R03 · Home II · Pour</b> · three.js + ray-marched liquid · <a href="01-qs-converge.html">I</a> · <a href="03-qs-magnet.html">III</a></a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { createStage, ambientChip, hashAmbient, PLINTH_TOP } from './_qs.js';
+import { AMBIENTS } from './_ambients.js';
+import { SEQUENCE, FUSE, family, ease, seg } from './_home.js';
+
+const ids = AMBIENTS.map(a => a.id), light = id => document.body.classList.toggle('light', id === 'travertine');
+const stage = await createStage(gl, { ambient: hashAmbient('travertine', ids), onAmbient: light });
+ambientChip(document.getElementById('chip'), stage, ids, AMBIENTS.map(a => a.name)); light(stage.ambient.id);
+const $ = id => document.getElementById(id), U = stage.U, N = SEQUENCE.length, LEN = 7.5;
+
+// chapters: each project plays as one timed pour; scrolling moves to the next or previous
+const q = new URLSearchParams(location.search), at = parseFloat(q.get('at'));
+let idx = isNaN(at) ? 0 : Math.floor(at), clock = isNaN(at) ? 0 : (at % 1) * LEN, paused = !isNaN(at), entry = null, cur = -1, lock = 0;
+function go(d){ const n = (idx + d + N) % N; if (n === idx) return; idx = n; clock = 0; }
+addEventListener('wheel', e => { const t = performance.now(); if (t < lock || Math.abs(e.deltaY) < 8) return; lock = t + 900; go(e.deltaY > 0 ? 1 : -1); }, { passive: true });
+addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowRight') go(1); if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') go(-1); });
+let sy = null; addEventListener('pointerdown', e => sy = e.clientY); addEventListener('pointerup', e => { if (sy !== null && Math.abs(e.clientY - sy) > 40) go(e.clientY < sy ? 1 : -1); sy = null; });
+let mx = 0; addEventListener('pointermove', e => mx = e.clientX / innerWidth - .5);
+
+function letters(el, word){ el.innerHTML = [...word].map(c => `<span>${c}</span>`).join(''); }
+function texts(p){ const F = FUSE[p.slug]; letters($('va'), F.roots[0]); letters($('vb'), F.roots[1]); $('nm').textContent = p.name;
+  $('fam').textContent = family(p) + (p.flagship ? ' · Flagship' : ''); $('roots').textContent = `${F.roots[0]} poured into ${F.roots[1]}${F.guess ? ' (to confirm)' : ''}`;
+  $('line').textContent = p.line; $('for').textContent = p.for ? `Made for ${p.for}.` : ''; }
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, v3 = new T.Vector3(), FAR = new T.Vector4(0, 60, 0, .01);
+let last = performance.now(), first = true;
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  if (!paused) { clock += dt; if (clock > LEN) { go(1); first = false; } }
+  const f = Math.min(1, clock / LEN), p = SEQUENCE[idx];
+  if (idx !== cur) { cur = idx; entry = stage.setProject(p); texts(p); setTimeout(() => stage.prepare(SEQUENCE[(idx + 1) % N]), 900); }
+  // pour, pool, rise, cool, hold, melt back to the pool
+  const fall = ease(seg(f, 0, .2)), tail = ease(seg(f, .16, .36)), xs = .2 - .05 * fall;
+  const top = 3.8 - tail * (3.8 - PLINTH_TOP), low = 3.8 - fall * (3.8 - PLINTH_TOP);
+  U.uS1.value.set(-xs, low, 0, Math.max(0, top - low)); U.uS2.value.set(xs, low, 0, Math.max(0, top - low)); U.uSW.value = (f < .36 ? .045 : 0) * (1 - tail * .6);
+  const startPool = first && idx === 0 ? 0 : .34, pool = f < .4 ? startPool + (.44 - startPool) * ease(seg(f, .1, .34)) : .44 * (1 - ease(seg(f, .4, .58))) + .38 * ease(seg(f, .9, 1));
+  U.uPool.value.set(0, PLINTH_TOP + .015, 0, pool);
+  U.uA.value.copy(FAR); U.uB.value.copy(FAR); U.uK.value = .1;
+  const morph = ease(seg(f, .4, .58)) * (1 - ease(seg(f, .9, 1))), dis = ease(seg(f, .58, .7)) * (1 - ease(seg(f, .86, .93)));
+  U.uMorph.value = morph; U.uWob.value = .6 * (1 - morph); U.uHide.value = .05 * dis; stage.disU.uDis.value = dis;
+  stage.holder.rotation.y = reduce ? .5 : t * .2;
+  // vertical words fall with their streams, letter by letter
+  [['va', -xs], ['vb', xs]].forEach(([id, x], k) => { const el = $(id), [sx, syy] = stage.project(v3.set(x * 1.0 + (k ? .32 : -.32), low + .1, 0));
+    el.style.transform = `translate(${sx}px,${Math.max(80, syy - el.offsetHeight)}px) translate(-50%,0)`;
+    [...el.children].forEach((s, i) => { const o = seg(f, i * .012, .1 + i * .012) * (1 - seg(f, .3, .4)); s.style.opacity = o; s.style.transform = `translateY(${(1 - o) * -30}px)`; }); });
+  // name cut across the plinth face
+  const [px, py] = stage.project(v3.set(0, PLINTH_TOP * .45, .7)), nm = ease(seg(f, .56, .72)) * (1 - ease(seg(f, .92, 1)));
+  $('plate').style.transform = `translate(${px}px,${py}px) translate(-50%,-50%)`; $('plate').style.opacity = nm; $('nm').style.letterSpacing = `${.08 + (1 - nm) * .3}em`;
+  $('bar').style.transform = `scaleX(${f})`;
+  const cam = stage.ambient.cam, portrait = innerWidth < innerHeight;
+  stage.camera.position.set(mx * .3, cam.y + .38 + (portrait ? .3 : 0), portrait ? 6.6 : 5.2); stage.camera.lookAt(0, cam.look - .05, 0);
+  stage.frame(t); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(t => { $('loading').classList.add('done'); frame(t); });
+</script>
+</body>
+</html>

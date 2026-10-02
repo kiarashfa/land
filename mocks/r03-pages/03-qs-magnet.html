@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quicksilver III · Magnet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* Layout: the liquid pair orbits above the plinth; the cursor is a magnet with a ring that fills while held; the name assembles top-left. */
+:root{
+  --fg:#ECEAE6; --dim:rgba(236,234,230,.55); --hair:rgba(236,234,230,.16); --accent:#9EC3FF;
+  --sans:'Geist',ui-sans-serif,system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+body.light{ --fg:#1E1C19; --dim:rgba(30,28,25,.6); --hair:rgba(30,28,25,.18); --accent:#3E5E99; color-scheme:light }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#06080b;color:var(--fg);overflow:hidden;font-family:var(--sans);cursor:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(105deg,rgba(0,0,0,.5) 0,transparent 42%),linear-gradient(0deg,rgba(0,0,0,.45) 0,transparent 25%)}
+body.light .scrim{background:linear-gradient(105deg,rgba(242,235,224,.75) 0,transparent 42%),linear-gradient(0deg,rgba(242,235,224,.6) 0,transparent 25%)}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:3;font-size:12px}
+.mk{font-weight:300;font-size:19px;letter-spacing:-.01em}
+.mk b{font-weight:400}
+nav{display:flex;gap:24px;color:var(--dim);font-family:var(--mono);font-size:11px}
+.title{position:fixed;left:clamp(16px,3vw,44px);top:clamp(110px,18vh,170px);z-index:2;max-width:min(560px,calc(100vw - 32px))}
+.title .eq{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.04em}
+.title h1{font-weight:200;font-size:clamp(52px,7.6vw,124px);line-height:.92;letter-spacing:-.045em;margin:8px 0 0;min-height:1em}
+.title h1 span{display:inline-block;transition:opacity .5s,filter .6s,transform .6s}
+.title p{font-size:14.5px;line-height:1.6;color:var(--dim);margin:18px 0 0;max-width:40ch;font-weight:300}
+.title .f{font-family:var(--mono);font-size:11.5px;color:var(--fg);margin-top:10px}
+.word{position:fixed;left:0;top:0;z-index:2;font-family:var(--mono);font-size:12px;letter-spacing:.06em;white-space:nowrap;pointer-events:none;transform:translate(-50%,-50%);padding:3px 7px;border:1px solid var(--hair);border-radius:20px;background:rgba(0,0,0,.25);backdrop-filter:blur(4px)}
+body.light .word{background:rgba(255,255,255,.35)}
+.ring{position:fixed;left:0;top:0;z-index:6;width:46px;height:46px;margin:-23px 0 0 -23px;pointer-events:none}
+.ring circle{fill:none;stroke-width:1.2}
+.ring .b{stroke:var(--hair)} .ring .p{stroke:var(--accent);stroke-dasharray:132;stroke-dashoffset:132;transform:rotate(-90deg);transform-origin:center}
+.ring .c{fill:var(--fg);stroke:none}
+.hold{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2;font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.06em}
+.chip{position:fixed;right:clamp(16px,3vw,44px);bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:7;display:flex;gap:4px;font-family:var(--mono);font-size:10.5px;cursor:auto}
+.chip button{all:unset;cursor:pointer;padding:5px 9px;border:1px solid var(--hair);border-radius:20px;color:var(--dim)}
+.chip button.on{color:var(--fg);border-color:var(--accent)}
+.next{position:fixed;left:clamp(16px,3vw,44px);bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:7;font-family:var(--mono);font-size:11px;color:var(--fg);cursor:pointer;background:none;border:0;border-bottom:1px solid var(--accent);padding:0 0 3px}
+.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:8;font-family:var(--mono);font-size:13px;color:#b8c2cf;background:#06080b;transition:opacity .8s}
+.loading.done{opacity:0;pointer-events:none}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#a7a39b;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap;cursor:auto}
+.mockbar b{color:#efeae2;font-weight:500}
+.mockbar a{color:inherit}
+@media (max-width:760px){ nav,.hold{display:none} body{cursor:auto} .ring{display:none} .title{top:auto;bottom:110px} .title p{display:none} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} .chip{bottom:40px} .next{bottom:44px} }
+@media (prefers-reduced-motion:reduce){ .title h1 span{transition:none} }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">magnetising…</div>
+<canvas id="gl" aria-label="Two magnetic liquid droplets that fuse into each project's sculpture"></canvas>
+<div class="scrim"></div>
+<header><span class="mk">Kiarash<b>Fa</b></span><nav><span>chronology</span><span>families</span><span>about</span><span>sound ○</span></nav></header>
+<section class="title"><div class="eq" id="eq"></div><h1 id="nm"></h1><p id="line"></p><div class="f" id="for"></div></section>
+<div class="word" id="wa"></div><div class="word" id="wb"></div>
+<svg class="ring" id="ring" viewBox="0 0 46 46" aria-hidden="true"><circle class="b" cx="23" cy="23" r="21"/><circle class="p" id="ringp" cx="23" cy="23" r="21"/><circle class="c" cx="23" cy="23" r="2"/></svg>
+<div class="hold" id="hold">hold anywhere to fuse</div>
+<button class="next" id="next">next project →</button>
+<div class="chip" id="chip"></div>
+<a class="mockbar" href="../">← concepts · <b>R03 · Home III · Magnet</b> · three.js + ray-marched ferrofluid · <a href="01-qs-converge.html">I</a> · <a href="02-qs-pour.html">II</a></a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { createStage, ambientChip, hashAmbient, PLINTH_TOP } from './_qs.js';
+import { AMBIENTS } from './_ambients.js';
+import { SEQUENCE, FUSE, family, ease, seg } from './_home.js';
+
+const ids = AMBIENTS.map(a => a.id), light = id => document.body.classList.toggle('light', id === 'travertine');
+const stage = await createStage(gl, { ambient: hashAmbient('dusk', ids), onAmbient: light });
+ambientChip(document.getElementById('chip'), stage, ids, AMBIENTS.map(a => a.name)); light(stage.ambient.id);
+const $ = id => document.getElementById(id), U = stage.U, N = SEQUENCE.length;
+
+// state: field builds while the pointer is held (or by itself after a pause); once fused the object forms
+const q = new URLSearchParams(location.search), at = parseFloat(q.get('at'));
+let idx = isNaN(at) ? 0 : Math.floor(at), field = isNaN(at) ? 0 : Math.min(1, (at % 1) * 1.25), formed = field >= 1 ? 1 : 0, holding = false, idle = 0, melt = 0, cur = -1, entry = null;
+const frozen = !isNaN(at);
+let px = innerWidth * .62, py = innerHeight * .4;
+addEventListener('pointermove', e => { px = e.clientX; py = e.clientY; idle = 0; });
+gl.addEventListener('pointerdown', () => { holding = true; idle = 0; }); addEventListener('pointerup', () => holding = false);
+function next(){ melt = .0001; }
+$('next').onclick = next; addEventListener('wheel', e => { if (e.deltaY > 20 && formed > .9 && !melt) next(); }, { passive: true });
+addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next(); if (e.key === ' ') holding = true; });
+addEventListener('keyup', e => { if (e.key === ' ') holding = false; });
+
+function texts(p){ const F = FUSE[p.slug]; $('wa').textContent = F.roots[0]; $('wb').textContent = F.roots[1];
+  $('eq').textContent = `${F.roots[0]} × ${F.roots[1]}${F.guess ? '  (to confirm)' : ''}`; $('nm').innerHTML = [...p.name].map(c => `<span>${c}</span>`).join('');
+  $('line').textContent = `${family(p)}${p.flagship ? ', flagship' : ''}. ${p.line}`; $('for').textContent = p.for ? `made for ${p.for}` : ''; }
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, v3 = new T.Vector3(), ray = new T.Raycaster(), plane = new T.Plane(new T.Vector3(0, 0, 1), -.9), mag = new T.Vector3();
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000; idle += dt;
+  if (idx !== cur) { cur = idx; entry = stage.setProject(SEQUENCE[idx]); texts(SEQUENCE[idx]); setTimeout(() => stage.prepare(SEQUENCE[(idx + 1) % N]), 900); }
+  if (!frozen) {
+    if (melt) { melt += dt / 2.2; if (melt >= 1) { melt = 0; formed = 0; field = 0; idx = (idx + 1) % N; } }
+    else if (formed < 1) { const push = holding ? .55 : idle > 3 && !reduce ? .22 : -.25; field = Math.max(0, Math.min(1, field + push * dt)); if (field >= 1) formed = Math.min(1, formed + dt / 2.4); }
+    else if (idle > 9 && !reduce) next();
+  }
+  const cy = PLINTH_TOP + entry.height * .44;
+  // magnet: the pointer projected onto a plane in front of the plinth
+  ray.setFromCamera(new T.Vector2(px / innerWidth * 2 - 1, -(py / innerHeight) * 2 + 1), stage.camera); ray.ray.intersectPlane(plane, mag) || mag.set(0, 2, 1);
+  U.uMag.value.lerp(mag, .15);
+  // two droplets orbit each other; the field draws them in until they fuse
+  const fz = ease(field), orbit = .62 * (1 - fz), a = t * (.6 + fz * 2.2);
+  const pull = new T.Vector3().subVectors(U.uMag.value, new T.Vector3(0, cy, 0)).multiplyScalar(.08 * (1 - formed));
+  U.uA.value.set(Math.cos(a) * orbit + pull.x, cy + Math.sin(a * .7) * .08 * (1 - fz) + pull.y, Math.sin(a) * orbit * .6, .22 + fz * .05);
+  U.uB.value.set(-Math.cos(a) * orbit + pull.x, cy - Math.sin(a * .7) * .08 * (1 - fz) + pull.y, -Math.sin(a) * orbit * .6, .22 + fz * .05);
+  U.uK.value = .12 + fz * .3;
+  const form = ease(seg(formed, 0, .55)) * (1 - ease(seg(melt, .3, 1))), dis = ease(seg(formed, .5, 1)) * (1 - ease(seg(melt, 0, .35)));
+  U.uFerro.value = (.35 + fz * 1.1) * (1 - form) * (1 - dis); U.uMorph.value = form; U.uWob.value = .5 * (1 - form); U.uHide.value = .05 * dis; stage.disU.uDis.value = dis;
+  stage.holder.rotation.y = reduce ? .4 : t * .2;
+  // word tags ride the droplets until they fuse
+  [['wa', U.uA.value], ['wb', U.uB.value]].forEach(([id, d]) => { const [x, y] = stage.project(v3.set(d.x, d.y + d.w + .16, d.z)); const el = $(id);
+    el.style.transform = `translate(${x}px,${y}px) translate(-50%,-50%)`; el.style.opacity = (1 - seg(field, .7, .95)) * (1 - seg(melt, 0, .1)); });
+  // the name assembles letter by letter as the object forms
+  const spans = $('nm').children, shown = form * (spans.length + 2);
+  for (let i = 0; i < spans.length; i++) { const o = Math.max(0, Math.min(1, shown - i)); spans[i].style.opacity = o; spans[i].style.filter = `blur(${(1 - o) * 8}px)`; spans[i].style.transform = `translateY(${(1 - o) * 14}px)`; }
+  $('eq').style.opacity = .4 + .6 * fz; $('line').style.opacity = $('for').style.opacity = dis;
+  $('ring').style.transform = `translate(${px}px,${py}px)`; $('ringp').style.strokeDashoffset = 132 * (1 - field);
+  $('hold').textContent = formed >= 1 ? 'scroll or press → for the next' : holding ? 'fusing…' : 'hold anywhere to fuse';
+  const cam = stage.ambient.cam, portrait = innerWidth < innerHeight;
+  stage.camera.position.set(.6 + (px / innerWidth - .5) * .25, cam.y + .1 + (portrait ? .3 : 0), portrait ? 6.6 : 5.0); stage.camera.lookAt(portrait ? 0 : -.55, cam.look + .05, 0);
+  stage.frame(t); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(t => { $('loading').classList.add('done'); frame(t); });
+</script>
+</body>
+</html>

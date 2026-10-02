@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quicksilver I · Converge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: the plinth is centre stage; the two words ride the droplets; the fused name sits under the object like a hallmark. */
+:root{
+  --fg:#EFEAE2; --dim:rgba(239,234,226,.56); --hair:rgba(239,234,226,.16); --accent:#D6B36F;
+  --display:'Bodoni Moda',ui-serif,Didot,Georgia,serif; --italic:'Cormorant Garamond',ui-serif,Georgia,serif; --sans:'Manrope',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+body.light{ --fg:#1F1B16; --dim:rgba(31,27,22,.6); --hair:rgba(31,27,22,.18); --accent:#8A6A32; color-scheme:light }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#070708;color:var(--fg);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.42) 0,transparent 22%,transparent 62%,rgba(0,0,0,.62) 100%)}
+body.light .scrim{background:linear-gradient(180deg,rgba(240,232,220,.55) 0,transparent 20%,transparent 66%,rgba(240,232,220,.7) 100%)}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:3;font-size:12.5px;letter-spacing:.04em}
+.mk{font-family:var(--display);font-size:22px;letter-spacing:.02em}
+.mk i{font-family:var(--italic);font-weight:300}
+nav{display:flex;gap:26px;color:var(--dim)}
+.word{position:fixed;left:0;top:0;z-index:2;font-family:var(--italic);font-style:italic;font-weight:300;font-size:clamp(26px,2.6vw,40px);white-space:nowrap;pointer-events:none;transform:translate(-50%,-100%);opacity:0;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+body.light .word{text-shadow:none}
+.word small{display:block;text-align:center;font-family:var(--sans);font-style:normal;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin-top:4px}
+.mark{position:fixed;left:50%;bottom:clamp(96px,15vh,150px);transform:translateX(-50%);z-index:2;text-align:center;pointer-events:none;width:min(900px,calc(100vw - 32px))}
+.mark .roots{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;transition:opacity .5s}
+.mark h1{font-family:var(--display);font-weight:400;font-size:clamp(46px,7vw,112px);line-height:.95;margin:0;letter-spacing:-.01em;font-variation-settings:'opsz' 96}
+.mark h1 .dot{display:inline-block;width:.16em;height:.16em;border-radius:50%;margin:0 .06em;vertical-align:.12em;background:radial-gradient(circle at 35% 30%,#fff 0,#cfd3d8 30%,#5d6168 70%,#2a2c30 100%);box-shadow:0 0 12px rgba(255,255,255,.3)}
+.mark h1 span{display:inline-block;transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .9s}
+.foot{position:fixed;left:clamp(16px,3vw,44px);right:clamp(16px,3vw,44px);bottom:calc(clamp(20px,4vh,40px) + env(safe-area-inset-bottom,0px));z-index:2;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;border-top:1px solid var(--hair);padding-top:12px}
+.foot .l{font-size:13.5px;line-height:1.55;color:var(--dim);max-width:52ch}
+.foot .l b{color:var(--fg);font-weight:500}
+.foot .f{font-family:var(--italic);font-style:italic;font-size:19px}
+.foot a{color:var(--fg);text-decoration:none;font-size:12px;letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid var(--accent);padding-bottom:3px;white-space:nowrap}
+.rail{position:fixed;right:clamp(16px,3vw,44px);top:50%;transform:translateY(-50%);z-index:2;display:grid;gap:6px;text-align:right}
+.rail button{all:unset;cursor:pointer;font-size:11px;letter-spacing:.06em;color:var(--dim);opacity:.7;transition:color .3s,opacity .3s}
+.rail button.on{color:var(--fg);opacity:1}
+.rail button.on::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:8px;background:radial-gradient(circle at 35% 30%,#fff,#9aa0a8 45%,#3a3d42);vertical-align:0}
+.rail button:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+.chip{position:fixed;left:clamp(16px,3vw,44px);top:calc(64px + env(safe-area-inset-top,0px));z-index:4;display:flex;gap:4px;align-items:center;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.chip::before{content:"Ambient";margin-right:8px}
+.chip button{all:unset;cursor:pointer;padding:5px 9px;border:1px solid var(--hair);border-radius:20px;color:var(--dim)}
+.chip button.on{color:var(--fg);border-color:var(--accent)}
+.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:5;font-family:var(--italic);font-style:italic;font-size:22px;color:#cfc8bc;background:#070708;transition:opacity .8s}
+.loading.done{opacity:0;pointer-events:none}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#a7a39b;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#efeae2;font-weight:500}
+@media (max-width:760px){ nav,.rail{display:none} .foot{flex-direction:column;align-items:flex-start} .foot .l{font-size:12.5px} .mark{bottom:150px} .chip::before{display:none} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} }
+@media (prefers-reduced-motion:reduce){ .mark h1 span{transition:none} }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">Warming the mercury…</div>
+<canvas id="gl" aria-label="Liquid metal fusing into each project's sculpture"></canvas>
+<div class="scrim"></div>
+<header><span class="mk">Kiarash<i>Fa</i></span><nav><span>Chronology</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<div class="chip" id="chip"></div>
+<div class="word" id="wa"></div><div class="word" id="wb"></div>
+<section class="mark" id="mark"><div class="roots" id="roots"></div><h1 id="name"></h1></section>
+<nav class="rail" id="rail" aria-label="Projects"></nav>
+<section class="foot"><div><div class="l" id="line"></div><div class="f" id="for"></div></div><a href="#" id="cta">Open the project →</a></section>
+<a class="mockbar" href="../">← concepts · <b>R03 · Home I · Converge</b> · three.js + ray-marched liquid · <span id="vers"></span></a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { createStage, ambientChip, hashAmbient, PLINTH_TOP } from './_qs.js';
+import { AMBIENTS } from './_ambients.js';
+import { SEQUENCE, FUSE, family, splitName, rail, ease, seg } from './_home.js';
+
+const ids = AMBIENTS.map(a => a.id), light = id => document.body.classList.toggle('light', id === 'travertine');
+const stage = await createStage(gl, { ambient: hashAmbient('atelier', ids), onAmbient: light });
+ambientChip(document.getElementById('chip'), stage, ids, AMBIENTS.map(a => a.name)); light(stage.ambient.id);
+document.getElementById('vers').innerHTML = '<a style="color:inherit" href="02-qs-pour.html">II</a> · <a style="color:inherit" href="03-qs-magnet.html">III</a>';
+
+const N = SEQUENCE.length, U = stage.U, $ = id => document.getElementById(id);
+const nameEl = $('name'), rootsEl = $('roots'), wa = $('wa'), wb = $('wb'), lineEl = $('line'), markEl = $('mark');
+let target = 0, pos = 0, idle = 0, cur = -1, entry = null;
+const mark = rail(document.getElementById('rail'), i => { target = i + .66; idle = 0; });
+addEventListener('wheel', e => { target += e.deltaY * .0008; idle = 0; }, { passive: true });
+let ty = null; addEventListener('pointerdown', e => ty = e.clientY); addEventListener('pointerup', () => ty = null);
+let mx = 0, my = 0; addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; if (ty !== null && e.pointerType !== 'mouse') { target -= (e.clientY - ty) * .003; ty = e.clientY; idle = 0; } });
+addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { target = Math.floor(target) + 1.66; idle = 0; } if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { target = Math.max(.66, Math.floor(target) - .34); idle = 0; } });
+const start = parseFloat(new URLSearchParams(location.search).get('at')); if (!isNaN(start)) target = pos = start;
+
+function texts(p){
+  const [a, b] = splitName(p), F = FUSE[p.slug];
+  nameEl.innerHTML = `<span>${a}</span><i class="dot"></i><span>${b}</span>`;
+  rootsEl.textContent = `${F.roots[0]} + ${F.roots[1]}${F.guess ? '  (words to confirm)' : ''}`;
+  wa.innerHTML = `${F.roots[0]}`; wb.innerHTML = `${F.roots[1]}`;
+  lineEl.innerHTML = `<b>${family(p)}${p.flagship ? ' · Flagship' : ''}.</b> ${p.line}`; document.getElementById('for').textContent = p.for ? `Made for ${p.for}.` : '';
+}
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, v3 = new T.Vector3();
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000; idle += dt;
+  if (idle > 5 && !reduce) target += dt * .055;
+  target = Math.max(0, Math.min(N - .001, target)); pos += (target - pos) * (reduce ? 1 : .07);
+  const i = Math.floor(pos), f = pos - i, p = SEQUENCE[i];
+  if (i !== cur) { cur = i; entry = stage.setProject(p); texts(p); mark(i); setTimeout(() => SEQUENCE[i + 1] && stage.prepare(SEQUENCE[i + 1]), 900); }
+  const cy = PLINTH_TOP + entry.height * .42;
+  // split the drop into its two words, hold, fuse, pour into the object, cool, hold, melt
+  const apart = ease(seg(f, 0, .14)) * (1 - ease(seg(f, .26, .38))), sep = .82 * apart, bob = Math.sin(t * 1.3) * .035 * apart;
+  U.uA.value.set(-sep, cy + bob, 0, .25 - .03 * apart); U.uB.value.set(sep, cy - bob, 0, .25 - .03 * apart); U.uK.value = .42 - .3 * apart;
+  const morph = ease(seg(f, .38, .52)) * (1 - ease(seg(f, .9, 1)));
+  const dis = ease(seg(f, .52, .64)) * (1 - ease(seg(f, .84, .92)));
+  U.uMorph.value = morph; U.uWob.value = 1 - morph * .9; U.uHide.value = .05 * dis; stage.disU.uDis.value = dis;
+  stage.holder.rotation.y = reduce ? .4 : t * .22;
+  // words ride the droplets, then slide together and dissolve into the name
+  const fuse = ease(seg(f, .26, .38)), wo = apart > .02 ? Math.min(1, apart * 1.6) * (1 - fuse) : 0;
+  [[wa, U.uA.value, -1], [wb, U.uB.value, 1]].forEach(([el, d, s]) => { const [x, y] = stage.project(v3.set(d.x, d.y + d.w + .1, 0));
+    el.style.opacity = wo; el.style.transform = `translate(${x}px,${y}px) translate(-50%,-100%) translateX(${-s * fuse * 40}px)`; el.style.filter = `blur(${fuse * 6}px)`; });
+  const nm = ease(seg(f, .4, .56)) * (1 - ease(seg(f, .9, .98)));
+  markEl.style.opacity = nm;
+  const spans = document.querySelectorAll('#name span'); if (spans.length) { spans[0].style.transform = `translateX(${(1 - nm) * -40}px)`; spans[1].style.transform = `translateX(${(1 - nm) * 40}px)`; }
+  const cam = stage.ambient.cam, portrait = innerWidth < innerHeight;
+  stage.camera.position.set(mx * .3, cam.y + .05 - my * .12 + (portrait ? .25 : 0), portrait ? 6.4 : 5.0); stage.camera.lookAt(0, cam.look + (portrait ? .12 : 0), 0);
+  stage.frame(t); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(t => { document.getElementById('loading').classList.add('done'); frame(t); });
+</script>
+</body>
+</html>
