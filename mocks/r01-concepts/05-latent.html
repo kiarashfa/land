@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Latent · Concept 05</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* Layout: a research figure. The cloud is the figure, the index is its legend, the caption is real. */
+:root{
+  --bg:#06070A; --fg:#E6E3DC; --dim:rgba(230,227,220,.45); --hair:rgba(230,227,220,.12); --ice:#A9C7FF;
+  --sans:'Geist',ui-sans-serif,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(22px + env(safe-area-inset-top,0px)) clamp(16px,2.8vw,40px) 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;z-index:2}
+header .mk{font-family:var(--sans);font-weight:400;font-size:17px;letter-spacing:-.01em}
+header .mk span{color:var(--dim)}
+header nav{display:flex;gap:24px;color:var(--dim)}
+.title{position:fixed;left:clamp(16px,2.8vw,40px);top:clamp(84px,14vh,140px);z-index:2;pointer-events:none}
+.title h1{font-weight:200;font-size:clamp(40px,5.4vw,88px);line-height:.98;letter-spacing:-.035em;margin:0}
+.title h1 b{font-weight:400;color:var(--ice)}
+.legend{position:fixed;left:clamp(16px,2.8vw,40px);bottom:clamp(70px,10vh,110px);z-index:2;font-family:var(--mono);font-size:11px;display:grid;grid-template-columns:repeat(2,auto);gap:5px 26px}
+.legend div{display:flex;gap:10px;color:var(--dim);cursor:pointer;transition:color .3s}
+.legend div i{font-style:normal;opacity:.5;font-variant-numeric:tabular-nums}
+.legend div.on{color:var(--fg)}
+.legend div.on::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ice);align-self:center;margin-left:-16px;position:absolute}
+.big{position:fixed;right:clamp(16px,2.8vw,40px);top:clamp(84px,14vh,140px);text-align:right;z-index:2;pointer-events:none;transition:opacity .6s}
+.big .k{font-family:var(--mono);font-size:11px;color:var(--ice);letter-spacing:.06em}
+.big .n{font-weight:300;font-size:clamp(30px,3.4vw,52px);letter-spacing:-.03em;margin-top:6px}
+.big .l{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:8px;max-width:34ch;margin-left:auto;line-height:1.6}
+.cap{position:fixed;left:clamp(16px,2.8vw,40px);right:clamp(16px,2.8vw,40px);bottom:clamp(22px,4vh,40px);border-top:1px solid var(--hair);padding-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--dim);display:flex;justify-content:space-between;gap:20px;z-index:2}
+.lbl{position:fixed;left:0;top:0;font-family:var(--mono);font-size:10px;color:var(--fg);pointer-events:none;white-space:nowrap;z-index:1;transition:opacity .5s}
+.lbl::before{content:"";display:inline-block;width:14px;height:1px;background:currentColor;vertical-align:middle;margin-right:6px;opacity:.5}
+.mockbar{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#8c8a85;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#ece8e2;font-weight:500}
+@media (max-width:700px){
+  header nav{display:none}
+  .legend{grid-template-columns:repeat(2,auto);gap:4px 18px;font-size:10px;bottom:78px}
+  .big{top:auto;bottom:250px;right:16px}
+  .big .l{display:none}
+  .cap span:last-child{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<header><span class="mk">KiarashFa <span>/ latent index</span></span><nav><span>Index</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<section class="title"><h1>Everything<br>I've made,<br><b>embedded.</b></h1></section>
+<div class="big" id="big"><div class="k" id="bk">cluster 07 · course</div><div class="n" id="bn">Perceptense</div><div class="l" id="bl">Intuition for numbers, scale and systems.</div></div>
+<div class="legend" id="legend"></div>
+<div class="cap"><span>Fig. 1. Twenty-five projects, each described in my own words, embedded and projected from 768 dimensions to 3.</span><span>n = 48,000 · UMAP · seed 25</span></div>
+<a class="mockbar" href="../">← concepts · <b>05 Latent</b> · three.js · GPU particles</a>
+
+<script type="module">
+import * as T from '../vendor/three.bundle.min.js';
+import { PROJECTS } from './_data.js';
+const N = PROJECTS.length, COUNT = 48000;
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: false, alpha: false });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setClearColor(0x06070a, 1);
+const scene = new T.Scene(), camera = new T.PerspectiveCamera(40, 1, .1, 100); camera.position.set(0, 0, 9);
+
+let seed = 25; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const gauss = () => { let u = 0, v = 0; while (!u) u = rnd(); while (!v) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+// cluster centres in a loose sphere; real projects are larger
+const centres = PROJECTS.map((p, i) => { const a = i * 2.399963, y = 1 - (i + .5) / N * 2, r = Math.sqrt(1 - y * y);
+  return new T.Vector3(Math.cos(a) * r * 3.1, y * 2.1, Math.sin(a) * r * 2.2).add(new T.Vector3(gauss() * .3, gauss() * .3, gauss() * .3)); });
+const share = PROJECTS.map(p => p.tier === 1 ? 3 : p.tier === 2 ? 2 : .7), tot = share.reduce((a, b) => a + b);
+
+const A = new Float32Array(COUNT * 3), B = new Float32Array(COUNT * 3), C = new Float32Array(COUNT), R = new Float32Array(COUNT);
+let k = 0;
+PROJECTS.forEach((p, c) => { const n = c === N - 1 ? COUNT - k : Math.round(COUNT * share[c] / tot), s = p.tier === 3 ? .16 : .3;
+  for (let j = 0; j < n && k < COUNT; j++, k++) { A[k * 3] = centres[c].x + gauss() * s; A[k * 3 + 1] = centres[c].y + gauss() * s * .8; A[k * 3 + 2] = centres[c].z + gauss() * s; C[k] = c; R[k] = rnd(); } });
+
+// emblem shapes: every particle joins the chosen project's form
+const SH = {
+  helix(i, t) { const bead = Math.floor(t * 26), u = (bead + .5) / 26, a = u * Math.PI * 7; const cx = Math.cos(a) * 1.1, cy = (u - .5) * 4.2, cz = Math.sin(a) * 1.1;
+    const r = .17 * Math.cbrt(rnd()), th = rnd() * 6.283, ph = Math.acos(2 * rnd() - 1); return [cx + r * Math.sin(ph) * Math.cos(th), cy + r * Math.cos(ph), cz + r * Math.sin(ph) * Math.sin(th)]; },
+  planet(i, t) { const th = rnd() * 6.283, ph = Math.acos(2 * rnd() - 1), crater = Math.sin(th * 7) * Math.sin(ph * 5) > .7 ? .96 : 1, r = (t < .9 ? 1.7 * crater : 1.7 + rnd() * .35);
+    return [r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)]; },
+  coupe(i, t) { const th = rnd() * 6.283; let y, r;
+    if (t < .62) { const u = t / .62; y = .4 + u * 1.2; r = Math.sqrt(u) * 1.6; } else if (t < .82) { y = -1.4 + (t - .62) / .2 * 1.8; r = .06; } else { const u = (t - .82) / .18; y = -1.45; r = u * .95; }
+    return [Math.cos(th) * r, y, Math.sin(th) * r]; },
+  grid(i, t) { const cell = Math.floor(t * 81), gx = cell % 9, gz = Math.floor(cell / 9), lit = (gx * 7 + gz * 3) % 5 === 0;
+    return [(gx - 4) * .44 + (rnd() - .5) * .3, (lit ? .5 : 0) + (rnd() - .5) * (lit ? .5 : .06), (gz - 4) * .44 + (rnd() - .5) * .3]; },
+  surface(i, t) { const x = (rnd() - .5) * 4.4, z = (rnd() - .5) * 4.4; return t < .92 ? [x, Math.sin(x * 1.6) * Math.cos(z * 1.6) * .7, z] : [rnd() < .5 ? x : 0, rnd() < .5 ? 0 : (rnd() - .5) * 2, rnd() < .5 ? 0 : z]; },
+  streamlines(i, t) { const line = Math.floor(t * 40), y0 = (line / 40 - .5) * 3.2, x = (rnd() - .5) * 5.4, body = Math.max(0, 1 - x * x / 1.6);
+    const push = Math.sign(y0 || 1) * body * .8 * Math.exp(-y0 * y0 * .8); return t < .82 ? [x, y0 + push, (rnd() - .5) * .15] : [ (rnd() - .5) * 2.4, (rnd() - .5) * 2 * Math.sqrt(Math.max(0, 1 - x * x / 1.44)) * .5, (rnd() - .5) * .9 ]; },
+  bowl(i, t) { const th = rnd() * 6.283; if (t < .7) { const ph = rnd() * Math.PI / 2; return [Math.cos(th) * Math.sin(ph) * 1.7, -Math.cos(ph) * 1.2, Math.sin(th) * Math.sin(ph) * 1.7]; }
+    const s = rnd(), w = Math.floor(rnd() * 3) - 1; return [w * .55 + Math.sin(s * 9 + w) * .22, .2 + s * 2.2, Math.cos(s * 7) * .15]; },
+  scales(i, t) { const shell = Math.floor(t * 5), r = .25 * Math.pow(1.9, shell), th = rnd() * 6.283, ph = Math.acos(2 * rnd() - 1); return [r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph) * .999, r * Math.sin(ph) * Math.sin(th)]; },
+  cartridge(i, t) { const th = rnd() * 6.283; if (t < .7) { const u = t / .7, y = -1.6 + u * 3, r = y < .6 ? .42 : .42 * Math.max(.05, Math.cos((y - .6) / 1.4 * Math.PI / 2)); return [Math.cos(th) * r, y, Math.sin(th) * r]; }
+    const u = (t - .7) / .3 * 5.6; return [u - 1.5, 1.8 - .12 * u * u + .55 * u - 1.2, 0]; },
+  glyph: null,
+};
+// LaLista: sample the letter ñ from a canvas
+(() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.font = 'italic 120px Georgia'; g.textAlign = 'center'; g.fillText('ñ', 64, 104);
+  const d = g.getImageData(0, 0, 128, 128).data, pts = []; for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) if (d[(y * 128 + x) * 4] > 128) pts.push([(x - 64) / 26, (64 - y) / 26]);
+  SH.glyph = () => { const p = pts[Math.floor(rnd() * pts.length)]; return [p[0] + (rnd() - .5) * .04, p[1] + (rnd() - .5) * .04, (rnd() - .5) * .35]; }; })();
+const SHAPE_OF = ['helix', 'streamlines', 'bowl', 'coupe', 'planet', 'surface', 'scales', 'cartridge', 'glyph', 'grid'];
+const fill = name => { for (let i = 0; i < COUNT; i++) { const v = SH[name](i, i / COUNT); B[i * 3] = v[0] * .85; B[i * 3 + 1] = v[1] * .85; B[i * 3 + 2] = v[2] * .85; } };
+
+const geo = new T.BufferGeometry();
+geo.setAttribute('position', new T.BufferAttribute(A, 3)); geo.setAttribute('aB', new T.BufferAttribute(B, 3));
+geo.setAttribute('aC', new T.BufferAttribute(C, 1)); geo.setAttribute('aR', new T.BufferAttribute(R, 1));
+const mat = new T.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: T.AdditiveBlending,
+  uniforms: { uT: { value: 0 }, uM: { value: 0 }, uActive: { value: 6 }, uPx: { value: 1 } },
+  vertexShader: `
+    attribute vec3 aB; attribute float aC; attribute float aR; uniform float uT, uM, uActive, uPx; varying float vA; varying float vHot;
+    void main(){
+      float m = smoothstep(0., 1., clamp(uM * 1.6 - aR * .6, 0., 1.));
+      vec3 drift = vec3(sin(uT*.31 + aR*40.), cos(uT*.27 + aR*31.), sin(uT*.23 + aR*23.)) * .06 * (1. - m);
+      vec3 p = mix(position + drift, aB, m);
+      vec4 mv = modelViewMatrix * vec4(p, 1.);
+      gl_Position = projectionMatrix * mv;
+      vHot = step(abs(aC - uActive), .5);
+      gl_PointSize = uPx * (1.1 + aR * 1.6 + vHot * (1. - m) * 1.2) * (6. / -mv.z);
+      vA = mix(.3 + vHot * .55, .32, m);
+    }`,
+  fragmentShader: `
+    varying float vA; varying float vHot;
+    void main(){ vec2 c = gl_PointCoord - .5; float d = dot(c, c); if (d > .25) discard;
+      vec3 warm = vec3(.93,.9,.85), ice = vec3(.66,.78,1.);
+      gl_FragColor = vec4(mix(warm, ice, vHot * .85), vA * (1. - d * 4.)); }`,
+});
+const pts = new T.Points(geo, mat); scene.add(pts);
+
+// labels and legend
+const legend = document.getElementById('legend');
+const items = PROJECTS.slice(0, 10).map((p, i) => { const d = document.createElement('div'); d.innerHTML = `<i>${String(i + 1).padStart(2, '0')}</i>${p.name}`; d.onmouseenter = () => go(i, true); legend.appendChild(d); return d; });
+const labels = PROJECTS.slice(0, 10).map(p => { const l = document.createElement('div'); l.className = 'lbl'; l.textContent = p.name; document.body.appendChild(l); return l; });
+let active = 6, phase = 0, morph = 0, timer = 0, held = false;
+const bk = document.getElementById('bk'), bn = document.getElementById('bn'), bl = document.getElementById('bl');
+function go(i, hold){ active = i; held = !!hold; timer = 0; phase = 0; fill(SHAPE_OF[i]); geo.attributes.aB.needsUpdate = true; mat.uniforms.uActive.value = i;
+  items.forEach((d, k) => d.classList.toggle('on', k === i)); const p = PROJECTS[i];
+  bk.textContent = `cluster ${String(i + 1).padStart(2, '0')} · ${p.kind.toLowerCase()}`; bn.textContent = p.name; bl.textContent = p.line + '.'; }
+go(6);
+if (location.hash === '#emblem') { timer = 3; morph = 1; held = true; } // lets a screenshot catch the emblem state
+
+let mx = 0, my = 0; addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.position.z = w < h ? 13 : 11; camera.updateProjectionMatrix();
+  mat.uniforms.uPx.value = renderer.getPixelRatio() * (w < h ? 1.3 : 1); }
+addEventListener('resize', resize); resize();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, v = new T.Vector3();
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; timer += dt;
+  // cycle: latent cloud -> emblem -> cloud -> next project
+  const goalM = held && timer > 2.2 ? 1 : timer > 2.2 && timer < 6.2 ? 1 : 0; morph += (goalM - morph) * (reduce ? 1 : dt * 1.6);
+  if (timer > 8 && !held) go((active + 1) % 10);
+  mat.uniforms.uT.value = now / 1000; mat.uniforms.uM.value = morph;
+  pts.rotation.y += reduce ? 0 : dt * .06 * (1 - morph * .7); pts.rotation.x += ((my * .4) - pts.rotation.x) * .04;
+  camera.position.x += (mx * 1.6 - camera.position.x) * .04; camera.lookAt(innerWidth < innerHeight ? 0 : -1.5, innerWidth < innerHeight ? -.6 : 0, 0);
+  pts.updateMatrixWorld();
+  labels.forEach((l, i) => { v.copy(centres[i]).applyMatrix4(pts.matrixWorld).project(camera);
+    l.style.transform = `translate(${(v.x * .5 + .5) * innerWidth + 8}px,${(-v.y * .5 + .5) * innerHeight - 6}px)`; l.style.opacity = (1 - morph) * (i === active ? 1 : .55); });
+  renderer.render(scene, camera); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

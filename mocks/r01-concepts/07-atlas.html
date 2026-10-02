@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atlas · Concept 07</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=IM+Fell+DW+Pica:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* Layout: a single sea chart you can drag. Each project is an island; the voyage line is the order I made them. */
+:root{
+  --paper:#EEE5D0; --ink:#36291C; --faded:rgba(54,41,28,.55); --red:#B03A26; --green:#4B6A47;
+  --fell:'IM Fell English',ui-serif,Georgia,serif; --sc:'IM Fell English SC',ui-serif,Georgia,serif; --pica:'IM Fell DW Pica',ui-serif,Georgia,serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--paper);color:var(--ink);overflow:hidden;font-family:var(--fell)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+canvas.drag{cursor:grabbing}
+#over{position:fixed;inset:0;pointer-events:none;overflow:visible}
+.isl{position:fixed;left:0;top:0;pointer-events:auto;cursor:pointer;white-space:nowrap;transform-origin:0 50%;color:var(--ink);font-style:italic;font-size:15px;letter-spacing:.02em;text-shadow:0 0 3px var(--paper),0 0 6px var(--paper)}
+.isl.big{font-family:var(--sc);font-style:normal;font-size:19px;letter-spacing:.14em}
+.isl.ph{opacity:.5;font-size:12px}
+.isl:hover{color:var(--red)}
+.cart{position:fixed;left:clamp(12px,3vw,40px);top:calc(clamp(12px,3vw,40px) + env(safe-area-inset-top,0px));width:min(380px,calc(100vw - 24px));background:rgba(238,229,208,.9);padding:18px 22px;border:1px solid var(--ink);outline:3px double var(--ink);outline-offset:4px;text-align:center;z-index:2}
+.cart .s{font-family:var(--sc);font-size:11px;letter-spacing:.3em}
+.cart h1{font-family:var(--sc);font-weight:400;font-size:clamp(24px,2.6vw,34px);letter-spacing:.08em;line-height:1.05;margin:6px 0 4px}
+.cart h1 i{font-family:var(--fell);font-style:italic;letter-spacing:0;font-size:.7em;display:block}
+.cart p{font-family:var(--pica);font-style:italic;font-size:13px;line-height:1.45;margin:8px 0 0}
+.cart .by{font-family:var(--sc);font-size:11px;letter-spacing:.18em;margin-top:10px;color:var(--faded)}
+.scale{position:fixed;left:clamp(12px,3vw,40px);bottom:clamp(20px,4vh,40px);z-index:2;font-family:var(--sc);font-size:11px;letter-spacing:.1em}
+.scale .bar{display:flex;margin:6px 0 4px;border:1px solid var(--ink)}
+.scale .bar span{width:34px;height:6px}
+.scale .bar span:nth-child(odd){background:var(--ink)}
+.scale .nums{display:flex;justify-content:space-between;width:calc(34px * 5 + 2px)}
+.note{position:fixed;right:clamp(12px,3vw,40px);bottom:clamp(20px,4vh,40px);z-index:2;max-width:290px;text-align:right;background:rgba(238,229,208,.92);border:1px solid var(--ink);padding:12px 16px;font-family:var(--pica);font-style:italic;font-size:14px;line-height:1.4}
+.note b{font-family:var(--sc);font-style:normal;font-weight:400;font-size:18px;letter-spacing:.08em;display:block;color:var(--red)}
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#e8e0cf;background:rgba(54,41,28,.88);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10;white-space:nowrap}
+.mockbar b{color:#fff;font-weight:500}
+@media (max-width:700px){ .cart{padding:12px 14px} .cart p{display:none} .note{bottom:70px} .scale{bottom:70px} .scale .nums,.scale .bar{transform:scale(.8);transform-origin:0 0} }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="A sea chart. Each island is a project."></canvas>
+<svg id="over" aria-hidden="true"></svg>
+<div id="labels"></div>
+<section class="cart">
+  <div class="s">A New &amp; Exact Chart of the</div>
+  <h1>KiarashFa Archipelago<i>with all its islands</i></h1>
+  <p>Wherein are laid down five and twenty islands, each one a thing its maker wished existed, with the course by which they were found.</p>
+  <div class="by">Surveyed by K. Farajzadehahary</div>
+</section>
+<div class="scale">Scale of Projects<div class="bar"><span></span><span></span><span></span><span></span><span></span></div><div class="nums"><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span><span>25</span></div></div>
+<div class="note" id="note"><b>Elysium</b>A solitude experience on Mars. Drag the chart to sail; click an island to land.</div>
+<a class="mockbar" href="../">← concepts · <b>07 Atlas</b> · raw WebGL shader + SVG</a>
+
+<script type="module">
+import { PROJECTS } from './_data.js';
+const N = PROJECTS.length;
+const cv = document.getElementById('gl'), gl = cv.getContext('webgl2', { antialias: false });
+// islands: deterministic scatter, larger for flagship projects
+let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+const isl = [];
+for (let i = 0; i < N; i++) { const s = PROJECTS[i].tier === 1 ? .2 : PROJECTS[i].tier === 2 ? .14 : .085;
+  let x, y, tries = 0; do { x = (rnd() * 2 - 1) * 1.75; y = (rnd() * 2 - 1) * 1.05; tries++; } while (tries < 300 && isl.some(o => Math.hypot(o[0] - x, o[1] - y) < (o[2] + s) * 1.9));
+  isl.push([x, y, s]); }
+
+const VS = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
+const FS = `#version 300 es
+precision highp float; out vec4 o;
+uniform vec2 uRes; uniform vec2 uPan; uniform float uZoom; uniform vec3 uIs[${N}]; uniform float uSel;
+float hash(vec2 p){ p = fract(p*vec2(443.897,441.423)); p += dot(p, p.yx+19.19); return fract((p.x+p.y)*p.x); }
+float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }
+float fbm(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*noise(p); p=p*2.03+17.1; a*=.5; } return s; }
+float height(vec2 m){
+  vec2 w = m + .16*vec2(fbm(m*2.4), fbm(m*2.4+5.2)) - .08;
+  w += .04*vec2(fbm(m*9.), fbm(m*9.+3.3)) - .02;
+  float h = 0.;
+  for (int i=0;i<${N};i++){ vec2 c = uIs[i].xy; float r = uIs[i].z, fi = float(i);
+    vec2 o1 = r*1.15*vec2(cos(fi*2.3), sin(fi*2.3)), o2 = r*1.05*vec2(cos(fi*4.1+1.), sin(fi*4.1+1.));
+    vec2 d0 = w-c, d1 = w-c-o1, d2 = w-c-o2;
+    h += r*2.1*exp(-dot(d0,d0)/(r*r)) + r*1.5*exp(-dot(d1,d1)/(r*r*.36)) + r*1.3*exp(-dot(d2,d2)/(r*r*.25)); }
+  h += (fbm(m*8.)-.5)*.13;
+  return h - .2;
+}
+float iso(float v, float k, float wdt){ float f = abs(fract(v*k - .5) - .5); float fw = fwidth(v*k); return 1. - smoothstep(0., fw*wdt, f); }
+void main(){
+  vec2 m = (gl_FragCoord.xy - .5*uRes)/uRes.y * uZoom + uPan;
+  float h = height(m);
+  vec3 paper = vec3(.933,.898,.816), ink = vec3(.21,.16,.11), land = vec3(.905,.85,.72), red = vec3(.69,.23,.15);
+  // foxing and fibres
+  float fox = fbm(m*1.3 + 3.)*.5 + fbm(gl_FragCoord.xy*.004)*.5;
+  vec3 col = paper * (.95 + .07*fox) - vec3(.0,.01,.03)*smoothstep(.55,.8,fbm(m*2.2+9.));
+  col -= (hash(gl_FragCoord.xy) - .5)*.035;
+  float land01 = smoothstep(-.003,.003,h);
+  // relief shading on land
+  vec2 g = vec2(dFdx(h), dFdy(h)) / (uZoom / uRes.y);
+  float shade = clamp(.5 + dot(normalize(vec3(-g*.06, 1.)), normalize(vec3(-.6,.6,.55))) * .55, 0., 1.);
+  col = mix(col, land * (.86 + .2*shade), land01*.85);
+  // contour lines, every fifth one heavier
+  float lev = floor(h*14.);
+  float cl = iso(h, 14., 1.) * (mod(lev,5.) == 4. ? 1. : .45) * land01;
+  col = mix(col, ink, cl*.6);
+  // coastline and engraved coastal ripples
+  float coast = 1. - smoothstep(0., fwidth(h)*2.2, abs(h));
+  col = mix(col, ink, coast*.95);
+  float sea = 1. - land01, nearCoast = smoothstep(-.14, 0., h);
+  col = mix(col, ink, iso(h, 70., 1.) * nearCoast * sea * .55);
+  // open-sea hatching
+  float hatch = iso(m.y, 140., .9) * sea * (1. - nearCoast) * .18 * (.6 + .4*noise(m*4.));
+  col = mix(col, ink, hatch);
+  // selected island gets a red wash
+  vec2 sd = m - uIs[int(uSel)].xy; float sel = exp(-dot(sd,sd)/pow(uIs[int(uSel)].z*1.4,2.)) * land01;
+  col = mix(col, red*1.25, sel*.18);
+  // burnt edges
+  vec2 q = gl_FragCoord.xy/uRes; float v = pow(16.*q.x*q.y*(1.-q.x)*(1.-q.y), .22);
+  col *= mix(.72, 1., v); col = mix(col, vec3(.45,.3,.15), (1.-v)*.18*fbm(q*6.));
+  o = vec4(col, 1.);
+}`;
+function sh(t, s){ const x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(x)); return x; }
+const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,3,-1,-1,3]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+const U = n => gl.getUniformLocation(pr, n);
+gl.uniform3fv(U('uIs'), isl.flat());
+
+// overlay: portolan rhumb lines, voyage route, island names
+const svg = document.getElementById('over'), NS = 'http://www.w3.org/2000/svg';
+const rose = [.95, -.35];
+const rhumb = Array.from({ length: 32 }, (_, i) => { const l = document.createElementNS(NS, 'line'); const c = i % 4 === 0 ? '#36291C' : i % 2 ? '#B03A26' : '#4B6A47';
+  l.setAttribute('stroke', c); l.setAttribute('stroke-width', i % 4 === 0 ? .9 : .6); l.setAttribute('opacity', .45); svg.appendChild(l); return l; });
+const route = document.createElementNS(NS, 'path'); route.setAttribute('fill', 'none'); route.setAttribute('stroke', '#B03A26'); route.setAttribute('stroke-width', 1.4); route.setAttribute('stroke-dasharray', '2 6'); route.setAttribute('stroke-linecap', 'round'); svg.appendChild(route);
+const roseG = document.createElementNS(NS, 'g'); svg.appendChild(roseG);
+for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, L = i % 4 === 0 ? 46 : i % 2 ? 20 : 30, w = i % 4 === 0 ? 7 : 5;
+  const pth = document.createElementNS(NS, 'path'); const x = Math.cos(a), y = Math.sin(a), nx = -y, ny = x;
+  pth.setAttribute('d', `M0 0 L${nx * w} ${ny * w} L${x * L} ${y * L} Z`); pth.setAttribute('fill', i % 2 ? '#EEE5D0' : '#36291C'); pth.setAttribute('stroke', '#36291C'); pth.setAttribute('stroke-width', .7); roseG.appendChild(pth); }
+const ring = document.createElementNS(NS, 'circle'); ring.setAttribute('r', 14); ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', '#36291C'); roseG.appendChild(ring);
+const fl = document.createElementNS(NS, 'text'); fl.textContent = '⚜'; fl.setAttribute('font-size', 18); fl.setAttribute('text-anchor', 'middle'); fl.setAttribute('y', -50); fl.setAttribute('fill', '#B03A26'); roseG.appendChild(fl);
+const labels = PROJECTS.map((p, i) => { const d = document.createElement('div'); d.className = 'isl' + (p.tier === 1 ? ' big' : p.tier === 3 ? ' ph' : ''); d.textContent = p.tier === 3 ? p.name : (p.tier === 1 ? p.name : 'Isle of ' + p.name);
+  d.onmouseenter = () => pick(i); document.getElementById('labels').appendChild(d); return d; });
+let sel = 4; const note = document.getElementById('note');
+function pick(i){ sel = i; const p = PROJECTS[i]; note.innerHTML = `<b>${p.name}</b>${p.line}. Drag the chart to sail; click an island to land.`; }
+
+let pan = [.15, 0], vel = [0, 0], zoom = 2.3, drag = null;
+cv.addEventListener('pointerdown', e => { drag = [e.clientX, e.clientY]; cv.classList.add('drag'); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { if (!drag) return; const k = zoom / innerHeight; vel = [-(e.clientX - drag[0]) * k, (e.clientY - drag[1]) * k]; pan[0] += vel[0]; pan[1] += vel[1]; drag = [e.clientX, e.clientY]; });
+addEventListener('pointerup', () => { drag = null; cv.classList.remove('drag'); });
+const toScreen = (x, y) => [(x - pan[0]) / zoom * innerHeight + innerWidth / 2, innerHeight / 2 - (y - pan[1]) / zoom * innerHeight];
+function resize(){ const d = Math.min(devicePixelRatio, 2); cv.width = innerWidth * d; cv.height = innerHeight * d; zoom = innerWidth < innerHeight ? 2.6 : 2.3; svg.setAttribute('viewBox', `0 0 ${innerWidth} ${innerHeight}`); }
+addEventListener('resize', resize); resize();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(t){
+  if (!drag) { vel[0] *= .94; vel[1] *= .94; pan[0] += vel[0] + (reduce ? 0 : Math.sin(t / 9000) * .00012); pan[1] += vel[1]; }
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.uniform2f(U('uRes'), cv.width, cv.height); gl.uniform2f(U('uPan'), pan[0], pan[1]); gl.uniform1f(U('uZoom'), zoom); gl.uniform1f(U('uSel'), sel);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  const [rx, ry] = toScreen(rose[0], rose[1]);
+  rhumb.forEach((l, i) => { const a = i / 32 * Math.PI * 2; l.setAttribute('x1', rx); l.setAttribute('y1', ry); l.setAttribute('x2', rx + Math.cos(a) * 3000); l.setAttribute('y2', ry + Math.sin(a) * 3000); });
+  roseG.setAttribute('transform', `translate(${rx} ${ry})`);
+  route.setAttribute('d', isl.slice(0, 10).map((o, i) => { const [x, y] = toScreen(o[0], o[1]); return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1); }).join(' '));
+  labels.forEach((l, i) => { const [x, y] = toScreen(isl[i][0] + isl[i][2] * .7, isl[i][1] - isl[i][2] * .2); l.style.transform = `translate(${x}px,${y}px)`; });
+  window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

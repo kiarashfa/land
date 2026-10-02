@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kinetic · Concept 06</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: a gallery plinth shot. The sculpture fills the room; the words sit on the wall like a placard. */
+:root{
+  --stone:#E5DFD4; --ink:#1D1B18; --muted:#77716A; --brass:#8B6B3A; --rule:rgba(29,27,24,.16);
+  --display:'Fraunces',ui-serif,Georgia,serif; --sans:'Instrument Sans',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--stone);color:var(--ink);overflow:hidden;font-family:var(--sans)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:2;font-size:13px}
+.mk{font-family:var(--display);font-size:22px;font-weight:500;font-variation-settings:'opsz' 144,'SOFT' 100;letter-spacing:-.01em}
+nav{display:flex;gap:26px;color:var(--muted)}
+.hero{position:fixed;left:clamp(16px,3vw,44px);top:clamp(92px,15vh,150px);z-index:2;pointer-events:none}
+.hero h1{font-family:var(--display);font-weight:300;font-size:clamp(40px,5.6vw,92px);line-height:.98;letter-spacing:-.025em;margin:0;font-variation-settings:'opsz' 144,'SOFT' 50}
+.hero h1 em{font-weight:400;color:var(--brass)}
+.hero p{margin:18px 0 0;max-width:36ch;font-size:14px;line-height:1.6;color:var(--muted)}
+.placard{position:fixed;right:clamp(16px,3vw,44px);bottom:clamp(28px,5vh,52px);z-index:2;width:min(300px,80vw);border-top:1px solid var(--ink);padding-top:12px;font-size:12.5px;line-height:1.55}
+.placard .t{font-family:var(--display);font-style:italic;font-size:24px;line-height:1.1;font-variation-settings:'opsz' 72}
+.placard .m{color:var(--muted);margin-top:6px}
+.placard .s{display:flex;justify-content:space-between;margin-top:12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tag{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .25s;background:var(--ink);color:var(--stone);font-size:12px;padding:6px 10px;border-radius:2px;white-space:nowrap;transform:translate(-50%,-150%)}
+.tag.on{opacity:1}
+.tag b{font-family:var(--display);font-weight:500;font-size:15px;margin-right:6px}
+.mockbar{position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#ddd6ca;background:rgba(29,27,24,.86);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#fff;font-weight:500}
+@media (max-width:700px){ nav span:not(:last-child){display:none} .hero p{display:none} .placard{bottom:44px} }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="A pendulum-wave sculpture with 25 bobs, one per project"></canvas>
+<header><span class="mk">KiarashFa</span><nav><span>Index</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<section class="hero"><h1>Twenty-five things,<br><em>each on its own rhythm.</em></h1><p>Side projects by Kia. Every bob swings at its own period; together they fall in and out of step. Tap anywhere to release them again.</p></section>
+<aside class="placard"><div class="t" id="pt">Perceptense</div><div class="m" id="pm">Intuition for numbers, scale and systems. Brass, steel wire, code.</div><div class="s"><span>Pendulum wave</span><span>Cycle 30 s</span></div></aside>
+<div class="tag" id="tag"></div>
+<a class="mockbar" href="../">← concepts · <b>06 Kinetic</b> · three.js · shadows + PBR</a>
+
+<script type="module">
+import * as T from '../vendor/three.bundle.min.js';
+import { PROJECTS } from './_data.js';
+const N = PROJECTS.length, STONE = 0xe5dfd4;
+const renderer = new T.WebGLRenderer({ canvas: gl, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFShadowMap;
+renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+const scene = new T.Scene(); scene.background = new T.Color(STONE); scene.fog = new T.Fog(STONE, 14, 30);
+const pm = new T.PMREMGenerator(renderer); scene.environment = pm.fromScene(new T.RoomEnvironment(), .04).texture; scene.environmentIntensity = .8;
+const camera = new T.PerspectiveCamera(30, 1, .1, 100);
+
+scene.add(new T.HemisphereLight(0xfff8ee, 0xb8ae9e, 1.1));
+const sun = new T.DirectionalLight(0xfff1dc, 2.4); sun.position.set(-5, 9, 6); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.camera.left = -8; sun.shadow.camera.right = 8; sun.shadow.camera.top = 8; sun.shadow.camera.bottom = -8; sun.shadow.radius = 6; sun.shadow.bias = -.0004;
+scene.add(sun);
+const floor = new T.Mesh(new T.PlaneGeometry(80, 80), new T.MeshStandardMaterial({ color: STONE, roughness: 1 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+const brass = new T.MeshPhysicalMaterial({ color: 0xc9a46a, metalness: 1, roughness: .22, clearcoat: .4 });
+const chrome = new T.MeshPhysicalMaterial({ color: 0xe8e8e8, metalness: 1, roughness: .08 });
+const black = new T.MeshPhysicalMaterial({ color: 0x0c0c0c, metalness: .1, roughness: .12, clearcoat: 1 });
+const H = 3.5, span = 6.2, gap = span / (N - 1);
+// frame: a long bar on two slim posts
+const bar = new T.Mesh(new T.CylinderGeometry(.035, .035, span + .7, 24), brass); bar.rotation.z = Math.PI / 2; bar.position.y = H; bar.castShadow = true; scene.add(bar);
+[-1, 1].forEach(s => { const post = new T.Mesh(new T.CylinderGeometry(.03, .03, H, 16), brass); post.position.set(s * (span / 2 + .35), H / 2, 0); post.castShadow = true; scene.add(post);
+  const foot = new T.Mesh(new T.CylinderGeometry(.22, .25, .05, 32), black); foot.position.set(s * (span / 2 + .35), .025, 0); foot.castShadow = foot.receiveShadow = true; scene.add(foot); });
+
+// pendulum wave: periods T_i = 30 / (18 + i), so every bob returns in step after 30 s
+const CYCLE = 30, Tp = PROJECTS.map((_, i) => CYCLE / (18 + i)), L = Tp.map(t => 2.75 * (t / Tp[0]) ** 2);
+const bobs = [], wires = new T.BufferGeometry(), wpos = new Float32Array(N * 2 * 3 * 2);
+wires.setAttribute('position', new T.BufferAttribute(wpos, 3));
+scene.add(new T.LineSegments(wires, new T.LineBasicMaterial({ color: 0x3a342c, transparent: true, opacity: .75 })));
+const sph = new T.SphereGeometry(1, 48, 32);
+PROJECTS.forEach((p, i) => { const m = new T.Mesh(sph, p.tier === 1 ? brass : i % 3 === 0 ? black : chrome);
+  m.scale.setScalar(p.tier === 1 ? .17 : p.tier === 2 ? .14 : .12); m.castShadow = true; m.userData.i = i; scene.add(m); bobs.push(m); });
+
+let t0 = performance.now(), hover = -1;
+const ray = new T.Raycaster(), mouse = new T.Vector2(9, 9), tag = document.getElementById('tag'), pt = document.getElementById('pt'), pmEl = document.getElementById('pm'), v = new T.Vector3();
+addEventListener('pointermove', e => mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1));
+gl.addEventListener('click', () => t0 = performance.now());
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
+  if (w < h) camera.position.set(12.5, 4.4, 7.5); else camera.position.set(5.5, 3.7, 12.5); camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now){
+  const t = reduce ? 4.2 : (now - t0) / 1000 + 4.2;
+  for (let i = 0; i < N; i++) {
+    const th = .42 * Math.cos(2 * Math.PI * t / Tp[i]), x = -span / 2 + i * gap, px = x, py = H, pz = 0;
+    const bx = x, by = H - L[i] * Math.cos(th), bz = L[i] * Math.sin(th);
+    bobs[i].position.set(bx, by, bz);
+    // bifilar suspension: two wires in a V keep each swing in one plane
+    const o = i * 12, d = gap * .38;
+    wpos.set([px - d, py, pz, bx, by, bz, px + d, py, pz, bx, by, bz], o);
+  }
+  wires.attributes.position.needsUpdate = true;
+  ray.setFromCamera(mouse, camera); const h = ray.intersectObjects(bobs)[0], nh = h ? h.object.userData.i : -1;
+  if (nh !== hover) { hover = nh; tag.classList.toggle('on', hover >= 0);
+    if (hover >= 0) { const p = PROJECTS[hover]; tag.innerHTML = `<b>${p.name}</b>${p.kind}`; pt.textContent = p.name; pmEl.textContent = p.line + '.'; } }
+  if (hover >= 0) { v.copy(bobs[hover].position).project(camera); tag.style.transform = `translate(${(v.x * .5 + .5) * innerWidth}px,${(-v.y * .5 + .5) * innerHeight}px) translate(-50%,-160%)`; }
+  camera.lookAt(innerWidth < innerHeight ? -.6 : -2.1, innerWidth < innerHeight ? 2.4 : 2.5, 0);
+  renderer.render(scene, camera); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

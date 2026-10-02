@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cabinet · Concept 03</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;1,400&family=Spline+Sans+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* Layout: a museum wall text up top, then a 5 x 5 specimen cabinet; each plate is drawn by code from the project's name. */
+:root{
+  --paper:#E6E4DC; --plate:#F1EFE8; --ink:#17181A; --muted:#64635D; --rule:rgba(23,24,26,.16); --prussian:#22385A; --seal:#8C2B22;
+  --display:'Libre Caslon Display',ui-serif,Georgia,serif; --text:'Libre Caslon Text',ui-serif,Georgia,serif; --mono:'Spline Sans Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--text);padding-inline:clamp(16px,4vw,64px);padding-block:0 80px;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:multiply;z-index:5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .38 0 0 0 0 .33 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#dust{position:fixed;inset:0;pointer-events:none;z-index:4}
+header{display:flex;justify-content:space-between;align-items:baseline;padding-block:calc(26px + env(safe-area-inset-top,0px)) 18px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+header .mk{font-family:var(--display);font-size:20px;letter-spacing:.02em;text-transform:none}
+header nav{display:flex;gap:26px;color:var(--muted)}
+.wall{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(24px,5vw,80px);padding-block:clamp(40px,7vw,96px) clamp(36px,5vw,64px);align-items:end}
+.wall h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,7vw,112px);line-height:.94;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.wall h1 em{font-family:var(--text);font-style:italic;font-size:.62em;letter-spacing:0;display:block;margin-top:.25em;color:var(--prussian)}
+.walltext{font-size:15px;line-height:1.65;max-width:42ch}
+.walltext p{margin:0 0 18px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);border-top:1px solid var(--rule);padding-top:14px}
+.facts b{font-weight:400;color:var(--ink)}
+.drawer{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border-top:2px solid var(--ink);padding-top:12px;margin-bottom:22px}
+.drawer span:first-child{color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(10px,1.4vw,22px);row-gap:44px}
+.spec{position:relative;background:var(--plate);border:1px solid var(--rule);padding:14px 14px 0;display:flex;flex-direction:column;cursor:pointer;transition:transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .5s}
+.spec::before{content:"";position:absolute;inset:6px;border:1px solid var(--rule);pointer-events:none}
+.spec:hover{transform:translateY(-4px);box-shadow:0 18px 30px -18px rgba(23,24,26,.35)}
+.spec canvas{width:100%;aspect-ratio:1;display:block}
+.spec .no{position:absolute;top:14px;left:16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--muted)}
+.label{position:relative;margin:10px -2px -18px 18px;background:#FBFAF6;border:1px solid var(--rule);padding:9px 11px 10px;transform:rotate(-1.4deg);transform-origin:12px 0;transition:transform .8s cubic-bezier(.3,1.6,.4,1);box-shadow:0 4px 8px -6px rgba(0,0,0,.25);z-index:1}
+.spec:nth-child(even) .label{transform:rotate(1.1deg)}
+.spec:hover .label{transform:rotate(-4deg)}
+.label::before{content:"";position:absolute;left:10px;top:-14px;width:1px;height:16px;background:var(--muted)}
+.label .nm{font-family:var(--display);font-size:clamp(17px,1.6vw,22px);line-height:1.05}
+.label .la{font-style:italic;font-size:12.5px;color:var(--prussian);margin-top:2px}
+.label .ds{font-family:var(--mono);font-size:9.5px;line-height:1.5;color:var(--muted);margin-top:6px;letter-spacing:.02em}
+.spec.ph{opacity:.62}
+.seal{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--seal);margin-right:6px;vertical-align:1px}
+.mockbar{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#d8d4ca;background:rgba(23,24,26,.86);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#fff;font-weight:500}
+@media (max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){
+  header nav span:not(:last-child){display:none}
+  .wall{grid-template-columns:1fr}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:34px}
+  .label .ds{display:none}
+}
+@media (prefers-reduced-motion:reduce){.spec,.label{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="dust" aria-hidden="true"></canvas>
+<header><span class="mk">KiarashFa</span><nav><span>Index</span><span>By family</span><span>By year</span><span>About</span></nav></header>
+<section class="wall">
+  <h1>A cabinet of things I wished existed<em>collected and made by Kia</em></h1>
+  <div>
+    <div class="walltext">
+      <p>Each drawer holds one side project. They are free, open, and built for the pleasure of making them: encyclopedias that compute their own numbers, a calculator that writes like a person, a quiet walk on Mars.</p>
+      <p>Every specimen plate below is drawn by code from the project's name, so no two are alike.</p>
+    </div>
+    <div class="facts"><span>Specimens</span><b>25</b><span>Families</span><b>7</b><span>Maker</span><b>Kiarash Farajzadehahary</b><span>Licence</span><b>KFA Source-Available 1.0</b></div>
+  </div>
+</section>
+<div class="drawer"><span><span class="seal"></span>Drawer I · All specimens</span><span>Sorted by accession</span></div>
+<main class="grid" id="grid"></main>
+<a class="mockbar" href="../">← concepts · <b>03 Cabinet</b> · Canvas 2D + CSS · no WebGL</a>
+
+<script type="module">
+import { PROJECTS } from './_data.js';
+const LATIN = { PolymerAtlas: 'macromolecularis', Markey: 'automobilis', Xefy: 'culinaria', eXir: 'potabilis', Elysium: 'solitaria martis',
+  Kalculator: 'numeralis', Perceptense: 'intuitiva', ARMAG: 'ballistica', LaLista: 'hispanica', Pseudoku: 'refinata' };
+const css = getComputedStyle(document.documentElement);
+const INK = css.getPropertyValue('--ink').trim(), PRU = css.getPropertyValue('--prussian').trim();
+
+function rng(seed){ let h = 2166136261; for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; }; }
+
+// An engraved, radially symmetric "radiolarian" drawn from a seed.
+function plate(cv, seed, rot = 0){
+  const dpr = Math.min(devicePixelRatio, 2), S = cv.clientWidth * dpr; cv.width = cv.height = S;
+  const g = cv.getContext('2d'), r = rng(seed), R = S * .4, k = 3 + Math.floor(r() * 10);
+  g.clearRect(0, 0, S, S); g.save(); g.translate(S / 2, S / 2); g.rotate(rot);
+  g.strokeStyle = INK; g.fillStyle = INK; g.lineCap = 'round';
+  const lw = v => g.lineWidth = v * dpr;
+  // outer spines
+  const spines = r() < .8 ? k * (1 + Math.floor(r() * 3)) : 0, sl = .45 + r() * .55;
+  for (let i = 0; i < spines; i++) { const a = i / spines * Math.PI * 2, L = R * (i % 2 ? sl * .8 : sl) + R * .45;
+    lw(.7); g.beginPath(); g.moveTo(Math.cos(a) * R * .62, Math.sin(a) * R * .62); g.lineTo(Math.cos(a) * L, Math.sin(a) * L); g.stroke();
+    g.beginPath(); g.arc(Math.cos(a) * L, Math.sin(a) * L, 1.3 * dpr, 0, 7); g.fill(); }
+  const r1 = R * (.52 + r() * .1), r2 = R * (.66 + r() * .08), cells = k * (2 + Math.floor(r() * 3)), shell = Math.floor(r() * 4);
+  if (shell === 0) { // lattice shell between two rings
+    lw(.8); g.beginPath(); g.arc(0, 0, r1, 0, 7); g.stroke(); g.beginPath(); g.arc(0, 0, r2, 0, 7); g.stroke();
+    for (let i = 0; i < cells; i++) { const a = i / cells * Math.PI * 2, b = (i + .5) / cells * Math.PI * 2, rm = (r1 + r2) / 2;
+      lw(.55); g.beginPath(); g.ellipse(Math.cos(b) * rm, Math.sin(b) * rm, (r2 - r1) * .42, Math.PI * rm / cells * .7, b, 0, 7); g.stroke();
+      g.beginPath(); g.moveTo(Math.cos(a) * r1, Math.sin(a) * r1); g.lineTo(Math.cos(a) * r2, Math.sin(a) * r2); g.stroke(); }
+  } else if (shell === 1) { // nested polygon cage
+    for (let j = 0; j < 4; j++) { const rr = r1 * (.7 + j * .14), off = j % 2 ? Math.PI / k : 0; lw(j === 3 ? .9 : .5); g.beginPath();
+      for (let i = 0; i <= k; i++) { const a = i / k * Math.PI * 2 + off; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.stroke(); }
+    for (let i = 0; i < k * 2; i++) { const a = i / (k * 2) * Math.PI * 2; lw(.45); g.beginPath(); g.moveTo(Math.cos(a) * r1 * .7, Math.sin(a) * r1 * .7); g.lineTo(Math.cos(a + Math.PI / k) * r2, Math.sin(a + Math.PI / k) * r2); g.stroke(); }
+  } else if (shell === 2) { // logarithmic spiral arms
+    const arms = k * 2, tw = .8 + r() * 1.6;
+    for (let i = 0; i < arms; i++) { lw(.55); g.beginPath();
+      for (let s2 = 0; s2 <= 1; s2 += .02) { const rr = R * .14 + s2 * (r2 - R * .14), a = i / arms * Math.PI * 2 + s2 * tw * (i % 2 ? 1 : -1); g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.stroke(); }
+    lw(.9); g.beginPath(); g.arc(0, 0, r2, 0, 7); g.stroke();
+  } else { // concentric dotted rings
+    for (let j = 0; j < 5; j++) { const rr = r1 * .55 + j * (r2 - r1 * .55) / 4, n = Math.floor(rr / (4 * dpr));
+      for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; g.beginPath(); g.arc(Math.cos(a) * rr, Math.sin(a) * rr, (j === 4 ? 1.1 : .7) * dpr, 0, 7); g.fill(); } }
+  }
+  // petals
+  const petals = r() < .7 ? k : 0, pr = R * (.28 + r() * .16);
+  for (let i = 0; i < petals; i++) { const a = i / petals * Math.PI * 2; g.save(); g.rotate(a); lw(.7);
+    g.beginPath(); g.moveTo(R * .08, 0); g.bezierCurveTo(pr * .6, -pr * .45, pr * 1.2, -pr * .2, r1 * .96, 0); g.bezierCurveTo(pr * 1.2, pr * .2, pr * .6, pr * .45, R * .08, 0); g.stroke();
+    for (let j = 1; j < 6; j++) { lw(.35); g.beginPath(); g.moveTo(R * .1 + j * pr * .14, -pr * .05 * j * .6); g.lineTo(R * .1 + j * pr * .14, pr * .05 * j * .6); g.stroke(); }
+    g.restore(); }
+  // perforated ring
+  const holes = k * 4, hr = R * .2;
+  for (let i = 0; i < holes; i++) { const a = i / holes * Math.PI * 2; lw(.5); g.beginPath(); g.arc(Math.cos(a) * hr, Math.sin(a) * hr, R * .022, 0, 7); g.stroke(); }
+  // nucleus, cross-hatched
+  g.save(); g.beginPath(); g.arc(0, 0, R * .12, 0, 7); g.clip(); lw(.35);
+  for (let x = -R * .12; x < R * .12; x += 2.4 * dpr) { g.beginPath(); g.moveTo(x, -R * .12); g.lineTo(x + R * .1, R * .12); g.stroke(); }
+  g.restore(); lw(.9); g.beginPath(); g.arc(0, 0, R * .12, 0, 7); g.stroke();
+  g.restore();
+}
+
+const grid = document.getElementById('grid');
+const cards = PROJECTS.map((p, i) => {
+  const el = document.createElement('article'); el.className = 'spec' + (p.tier === 3 ? ' ph' : '');
+  const latin = LATIN[p.name] ? `${p.name} <i>${LATIN[p.name]}</i>` : 'Species nova';
+  el.innerHTML = `<span class="no">KF.${String(i + 1).padStart(3, '0')}</span><canvas></canvas>
+    <div class="label"><div class="nm">${p.name}</div><div class="la">${LATIN[p.name] ? p.name.toLowerCase() + ' ' + LATIN[p.name] : 'species nova'}</div><div class="ds">${p.line}</div></div>`;
+  grid.appendChild(el); return { el, cv: el.querySelector('canvas'), seed: p.name + i, rot: 0, spin: 0 };
+});
+const draw = () => cards.forEach(c => plate(c.cv, c.seed, c.rot));
+draw(); addEventListener('resize', draw);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+cards.forEach(c => { c.el.addEventListener('pointerenter', () => c.spin = reduce ? 0 : 1); c.el.addEventListener('pointerleave', () => c.spin = 0); });
+(function turn(){ cards.forEach(c => { if (c.spin) { c.rot += .004; plate(c.cv, c.seed, c.rot); } }); requestAnimationFrame(turn); })();
+
+// dust motes drifting in a shaft of light
+const dc = document.getElementById('dust'), dg = dc.getContext('2d'); let motes = [];
+function sizeDust(){ dc.width = innerWidth; dc.height = innerHeight; motes = Array.from({ length: 70 }, () => ({ x: Math.random() * innerWidth, y: Math.random() * innerHeight, r: Math.random() * 1.4 + .3, v: Math.random() * .15 + .03, p: Math.random() * 6 })); }
+sizeDust(); addEventListener('resize', sizeDust);
+(function dust(t){ dg.clearRect(0, 0, dc.width, dc.height);
+  const grd = dg.createLinearGradient(dc.width * .55, 0, dc.width * .2, dc.height); grd.addColorStop(0, 'rgba(255,253,245,.28)'); grd.addColorStop(1, 'rgba(255,253,245,0)');
+  dg.fillStyle = grd; dg.beginPath(); dg.moveTo(dc.width * .5, 0); dg.lineTo(dc.width * .78, 0); dg.lineTo(dc.width * .42, dc.height); dg.lineTo(dc.width * .05, dc.height); dg.fill();
+  dg.fillStyle = 'rgba(80,70,50,.35)';
+  motes.forEach(m => { if (!reduce) { m.y -= m.v; m.x += Math.sin(t / 2000 + m.p) * .12; } if (m.y < -5) m.y = dc.height + 5; dg.beginPath(); dg.arc(m.x, m.y, m.r, 0, 7); dg.fill(); });
+  window.__frames = (window.__frames || 0) + 1; requestAnimationFrame(dust); })(0);
+</script>
+</body>
+</html>

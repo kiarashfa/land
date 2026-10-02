@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Complications · Concept 04</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Tenor+Sans&display=swap" rel="stylesheet">
+<style>
+/* Layout: a single watch dial is the whole index; the left column reads like a manufacture's movement sheet. */
+:root{
+  --lacquer:#080B13; --ivory:#EFE9DE; --dim:rgba(239,233,222,.5); --hair:rgba(239,233,222,.14); --rose:#E2AE8C; --blue:#6F8FE0;
+  --display:'Bodoni Moda',ui-serif,Didot,Georgia,serif; --caps:'Tenor Sans',ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:radial-gradient(90% 80% at 68% 50%,#141b2c 0%,#0b0f1a 50%,var(--lacquer) 100%);color:var(--ivory);overflow:hidden}
+#dial{position:fixed;display:block;cursor:pointer;touch-action:none}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3.4vw,52px) 0;font-family:var(--caps);font-size:11px;letter-spacing:.28em;text-transform:uppercase;z-index:2}
+header .mk{font-family:var(--display);font-size:20px;letter-spacing:.04em;text-transform:none;font-style:italic}
+header nav{display:flex;gap:28px;color:var(--dim)}
+.sheet{position:fixed;left:clamp(16px,3.4vw,52px);top:50%;transform:translateY(-50%);width:min(420px,34vw);z-index:2}
+.eyebrow{font-family:var(--caps);font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--rose)}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,3.6vw,58px);line-height:1.02;margin:16px 0 0;font-variation-settings:'opsz' 96;text-wrap:balance}
+h1 i{color:var(--rose)}
+.now{margin-top:40px;border-top:1px solid var(--hair);padding-top:18px}
+.now .no{font-family:var(--caps);font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
+.now .nm{font-family:var(--display);font-style:italic;font-size:clamp(30px,3vw,44px);margin:6px 0 8px;font-variation-settings:'opsz' 72}
+.now .ln{font-family:var(--display);font-size:16px;line-height:1.5;color:var(--dim);font-variation-settings:'opsz' 12}
+.now .go{display:inline-block;margin-top:18px;font-family:var(--caps);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--ivory);text-decoration:none;border-bottom:1px solid var(--rose);padding-bottom:4px}
+.foot{position:fixed;left:clamp(16px,3.4vw,52px);bottom:clamp(20px,4vh,40px);font-family:var(--display);font-style:italic;font-size:13px;color:var(--dim);max-width:46ch;z-index:2;font-variation-settings:'opsz' 12}
+.mockbar{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#9b98a5;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#ece8e2;font-weight:500}
+@media (max-width:760px){
+  header nav{display:none}
+  .sheet{top:auto;bottom:64px;transform:none;width:auto;right:16px}
+  h1{font-size:26px;margin-top:8px}
+  .now{margin-top:16px;padding-top:12px}
+  .now .nm{font-size:28px;margin:2px 0 4px}
+  .now .ln{font-size:14px}
+  .now .go{margin-top:10px}
+  .foot{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="dial" aria-label="A watch dial with 25 indices, one per project"></canvas>
+<header><span class="mk">KiarashFa</span><nav><span>Index</span><span>Families</span><span>About</span><span>Sound ○</span></nav></header>
+<section class="sheet">
+  <div class="eyebrow">Grande Complication · Calibre KFA</div>
+  <h1>My day job tells the time. <i>These are my complications.</i></h1>
+  <div class="now">
+    <div class="no" id="no">Complication No. VII</div>
+    <div class="nm" id="nm">Perceptense</div>
+    <div class="ln" id="ln">Intuition for numbers, scale and systems.</div>
+    <a class="go" href="#">Wind it →</a>
+  </div>
+</section>
+<p class="foot">In watchmaking, a complication is anything a watch does beyond telling the time. Turn the dial.</p>
+<a class="mockbar" href="../">← concepts · <b>04 Complications</b> · Canvas 2D · no WebGL</a>
+
+<script type="module">
+import { PROJECTS } from './_data.js';
+const N = PROJECTS.length, TAU = Math.PI * 2;
+const roman = n => [['M',1000],['CM',900],['D',500],['CD',400],['C',100],['XC',90],['L',50],['XL',40],['X',10],['IX',9],['V',5],['IV',4],['I',1]].reduce((s,[r,v]) => { while (n >= v) { s += r; n -= v; } return s; }, '');
+const cv = document.getElementById('dial'), g = cv.getContext('2d');
+const off = document.createElement('canvas'), o = off.getContext('2d');
+let S, dpr, cx, cy, R, Rd;
+
+function metal(ctx, x0, y0, x1, y1, stops){ const gr = ctx.createLinearGradient(x0, y0, x1, y1); stops.forEach(([p, c]) => gr.addColorStop(p, c)); return gr; }
+const ROSE = [[0,'#f6d2b8'],[.35,'#c98c69'],[.55,'#8a5a40'],[.8,'#e7b694'],[1,'#7a4c34']];
+
+function drawStatic(){
+  off.width = off.height = S; o.setTransform(1,0,0,1,0,0); o.clearRect(0,0,S,S); o.translate(S/2, S/2);
+  // case and bezel
+  o.beginPath(); o.arc(0,0,R,0,TAU); o.fillStyle = metal(o,-R,-R,R,R,ROSE); o.fill();
+  o.beginPath(); o.arc(0,0,R*.965,0,TAU); o.fillStyle = metal(o,R,-R,-R,R,ROSE); o.fill();
+  o.beginPath(); o.arc(0,0,R*.94,0,TAU); o.fillStyle = '#05070c'; o.fill();
+  // enamel dial
+  const en = o.createRadialGradient(-Rd*.2,-Rd*.3,Rd*.05,0,0,Rd); en.addColorStop(0,'#24345c'); en.addColorStop(.6,'#15203d'); en.addColorStop(1,'#0b1226');
+  o.beginPath(); o.arc(0,0,Rd,0,TAU); o.fillStyle = en; o.fill();
+  // guilloché: a rose-engine wave pattern of concentric curves
+  o.save(); o.beginPath(); o.arc(0,0,Rd*.66,0,TAU); o.clip();
+  o.lineWidth = .55*dpr; o.strokeStyle = 'rgba(180,200,255,.16)';
+  for (let i = 0; i < 150; i++) { const r0 = Rd*.03 + i/150*Rd*.66; o.beginPath();
+    for (let a = 0; a <= TAU + .01; a += TAU/360) { const r = r0 + Rd*.011*Math.sin(18*a + i*.42); o.lineTo(Math.cos(a)*r, Math.sin(a)*r); } o.stroke(); }
+  o.restore();
+  // chapter ring: sunray lines + minute track
+  o.save(); o.beginPath(); o.arc(0,0,Rd,0,TAU); o.arc(0,0,Rd*.7,0,TAU,true); o.clip();
+  o.fillStyle = 'rgba(255,255,255,.03)'; o.fillRect(-Rd,-Rd,Rd*2,Rd*2);
+  o.strokeStyle = 'rgba(180,200,255,.07)'; o.lineWidth = .5*dpr;
+  for (let i = 0; i < 720; i++) { const a = i/720*TAU; o.beginPath(); o.moveTo(Math.cos(a)*Rd*.7, Math.sin(a)*Rd*.7); o.lineTo(Math.cos(a)*Rd, Math.sin(a)*Rd); o.stroke(); }
+  o.restore();
+  o.strokeStyle = 'rgba(239,233,222,.5)'; o.lineWidth = .7*dpr;
+  o.beginPath(); o.arc(0,0,Rd*.7,0,TAU); o.stroke(); o.beginPath(); o.arc(0,0,Rd*.955,0,TAU); o.stroke();
+  for (let i = 0; i < N*5; i++) { const a = i/(N*5)*TAU - Math.PI/2, l = i % 5 ? .018 : .035;
+    o.lineWidth = (i % 5 ? .6 : 1.1)*dpr; o.beginPath(); o.moveTo(Math.cos(a)*Rd*.955, Math.sin(a)*Rd*.955); o.lineTo(Math.cos(a)*Rd*(.955-l), Math.sin(a)*Rd*(.955-l)); o.stroke(); }
+  // roman numerals, one per project
+  o.fillStyle = '#EFE9DE'; o.textAlign = 'center'; o.textBaseline = 'middle';
+  for (let i = 0; i < N; i++) { const a = i/N*TAU - Math.PI/2; o.save(); o.translate(Math.cos(a)*Rd*.84, Math.sin(a)*Rd*.84); o.rotate(a + Math.PI/2);
+    o.font = `${(PROJECTS[i].tier === 1 ? 600 : 400)} ${Rd*.055}px 'Bodoni Moda'`; o.globalAlpha = PROJECTS[i].tier === 3 ? .45 : 1; o.fillText(roman(i+1), 0, 0); o.restore(); }
+  o.globalAlpha = 1;
+  // applied batons
+  for (let i = 0; i < N; i++) { const a = i/N*TAU - Math.PI/2, big = PROJECTS[i].tier === 1; o.save(); o.rotate(a);
+    const w = Rd*(big ? .022 : .012), x0 = Rd*.6, x1 = Rd*.69;
+    o.fillStyle = metal(o, x0, -w, x0, w, ROSE); o.shadowColor = 'rgba(0,0,0,.6)'; o.shadowBlur = 4*dpr; o.shadowOffsetY = 1.5*dpr;
+    if (big) { o.fillRect(x0, -w*1.6, x1-x0, w*.9); o.fillRect(x0, w*.7, x1-x0, w*.9); } else o.fillRect(x0 + (x1-x0)*.25, -w/2, (x1-x0)*.75, w);
+    o.restore(); }
+  // sub-dials with azurage
+  [[-Rd*.36, 0, 'ANNO', ['19','21','23','25']], [Rd*.36, 0, 'FAMILIA', ['ENC','EXP','TOOL','GAME']]].forEach(([x, y, lab, ticks]) => {
+    const r = Rd*.15; o.save(); o.translate(x, y);
+    o.beginPath(); o.arc(0,0,r,0,TAU); o.fillStyle = '#0d162c'; o.fill();
+    o.strokeStyle = 'rgba(190,205,255,.13)'; o.lineWidth = .6*dpr; for (let k = 2; k < r; k += 2.2*dpr) { o.beginPath(); o.arc(0,0,k,0,TAU); o.stroke(); }
+    o.strokeStyle = metal(o,-r,-r,r,r,ROSE); o.lineWidth = 1.4*dpr; o.beginPath(); o.arc(0,0,r,0,TAU); o.stroke();
+    o.fillStyle = '#EFE9DE'; o.font = `${Rd*.026}px 'Tenor Sans'`;
+    ticks.forEach((t, k) => { const a = k/ticks.length*TAU - Math.PI/2; o.fillText(t, Math.cos(a)*r*.72, Math.sin(a)*r*.72); });
+    o.font = `${Rd*.022}px 'Tenor Sans'`; o.fillStyle = 'rgba(239,233,222,.6)'; o.fillText(lab, 0, r*.36);
+    o.restore(); });
+  // signature and window
+  o.fillStyle = '#EFE9DE'; o.font = `${Rd*.05}px 'Bodoni Moda'`; o.fillText('K I A R A S H   F A', 0, -Rd*.4);
+  o.font = `italic ${Rd*.034}px 'Bodoni Moda'`; o.fillStyle = 'rgba(239,233,222,.7)'; o.fillText('Complications', 0, -Rd*.33);
+  o.font = `${Rd*.022}px 'Tenor Sans'`; o.fillStyle = 'rgba(239,233,222,.55)'; o.fillText('S E L F   M A D E', 0, Rd*.5);
+  o.fillStyle = metal(o,0,Rd*.27,0,Rd*.41,ROSE); o.fillRect(-Rd*.075, Rd*.28, Rd*.15, Rd*.12);
+  o.fillStyle = '#F3EFE6'; o.fillRect(-Rd*.065, Rd*.29, Rd*.13, Rd*.1);
+}
+
+function layout(){
+  dpr = Math.min(devicePixelRatio, 2);
+  const W = innerWidth, H = innerHeight, mobile = W < 760;
+  const size = mobile ? Math.min(W * .92, H * .5) : Math.min(H * .86, W * .56);
+  cv.style.width = cv.style.height = size + 'px';
+  cv.style.left = (mobile ? (W - size) / 2 : W * .66 - size / 2) + 'px';
+  cv.style.top = (mobile ? 70 : (H - size) / 2) + 'px';
+  S = Math.round(size * dpr); cv.width = cv.height = S; R = S / 2 * .985; Rd = R * .9;
+  drawStatic();
+}
+
+let target = 6, angle = 6 / N * TAU, vel = 0, sheen = -.6, sheenT = -.6, idle = 0;
+const no = document.getElementById('no'), nm = document.getElementById('nm'), ln = document.getElementById('ln');
+function select(i){ if (i === target) return; target = i; idle = 0; const p = PROJECTS[i];
+  no.textContent = `Complication No. ${roman(i + 1)} · ${p.kind}`; nm.textContent = p.name; ln.textContent = p.line + '.'; }
+cv.addEventListener('pointermove', e => {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2;
+  sheenT = Math.atan2(y, x); const d = Math.hypot(x, y) / (r.width / 2);
+  if (d > .5 && d < 1) select(((Math.round((Math.atan2(y, x) + Math.PI / 2) / TAU * N) % N) + N) % N);
+});
+addEventListener('pointermove', e => { if (e.target !== cv) sheenT = Math.atan2(e.clientY - innerHeight / 2, e.clientX - innerWidth * .66); });
+
+function hand(len, tail, width, ring){
+  const gr = g.createLinearGradient(0, -len, 0, tail); gr.addColorStop(0, '#9fb8ff'); gr.addColorStop(.4, '#2c4aa8'); gr.addColorStop(1, '#13245e');
+  g.fillStyle = gr; g.strokeStyle = gr;
+  g.beginPath(); g.moveTo(0, -len); g.lineTo(width, -len * .78); g.lineTo(width * .45, tail); g.lineTo(-width * .45, tail); g.lineTo(-width, -len * .78); g.closePath(); g.fill();
+  if (ring) { g.lineWidth = width * .9; g.beginPath(); g.arc(0, -len * .62, width * 2.6, 0, TAU); g.stroke(); }
+}
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; idle += dt;
+  if (idle > 3.2 && !reduce) select((target + 1) % N);
+  // spring the hand toward its index, the short way round
+  let goal = target / N * TAU, diff = ((goal - angle) % TAU + TAU * 1.5) % TAU - TAU / 2;
+  vel += diff * 60 * dt; vel *= Math.pow(.0009, dt); angle += vel * dt;
+  sheen += (sheenT - sheen) * .05;
+  g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,S,S); g.drawImage(off, 0, 0);
+  g.translate(S/2, S/2);
+  // moving light across the guilloché and case
+  g.save(); g.beginPath(); g.arc(0,0,R,0,TAU); g.clip(); g.globalCompositeOperation = 'overlay';
+  const cg = g.createConicGradient(sheen, 0, 0); cg.addColorStop(0,'rgba(255,255,255,.55)'); cg.addColorStop(.12,'rgba(255,255,255,0)'); cg.addColorStop(.5,'rgba(255,255,255,.28)'); cg.addColorStop(.62,'rgba(255,255,255,0)'); cg.addColorStop(1,'rgba(255,255,255,.55)');
+  g.fillStyle = cg; g.fillRect(-R,-R,R*2,R*2); g.restore();
+  // date window shows the index number
+  g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `600 ${Rd*.062}px 'Bodoni Moda'`; g.fillText(String(target + 1).padStart(2, '0'), 0, Rd*.345);
+  // sub-dial hands
+  const t = now / 1000;
+  [[-Rd*.36, (target % 4) / 4 * TAU + .2], [Rd*.36, ['Encyclopedia','Experience','Tool','Game'].indexOf(PROJECTS[target].kind) / 4 * TAU]].forEach(([x, a]) => {
+    g.save(); g.translate(x, 0); g.rotate(a); hand(Rd*.12, Rd*.03, Rd*.009, false); g.restore();
+    g.beginPath(); g.arc(x, 0, Rd*.012, 0, TAU); g.fillStyle = '#c98c69'; g.fill(); });
+  // main hand (breguet style) and sweeping seconds
+  g.save(); g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 8*dpr; g.shadowOffsetY = 4*dpr;
+  g.save(); g.rotate(angle); hand(Rd*.8, Rd*.12, Rd*.018, true); g.restore();
+  g.save(); g.rotate(reduce ? 0 : t * TAU / 60 * 4); g.fillStyle = '#e7b694';
+  g.fillRect(-.7*dpr, -Rd*.9, 1.4*dpr, Rd*1.08); g.beginPath(); g.arc(0, Rd*.12, Rd*.02, 0, TAU); g.fill(); g.restore();
+  g.restore();
+  g.beginPath(); g.arc(0,0,Rd*.03,0,TAU); g.fillStyle = metal(g,-Rd*.03,-Rd*.03,Rd*.03,Rd*.03,ROSE); g.fill();
+  g.beginPath(); g.arc(0,0,Rd*.01,0,TAU); g.fillStyle = '#2c4aa8'; g.fill();
+  window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+addEventListener('resize', layout);
+document.fonts.ready.then(() => { layout(); requestAnimationFrame(frame); });
+</script>
+</body>
+</html>

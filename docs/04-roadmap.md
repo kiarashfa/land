@@ -1,0 +1,23 @@
+# 04 · Roadmap
+
+Rounds are conversations. Each round ends with something Kia can look at, a set of questions, and an updated decision log. The order can change; the principle is design before code.
+
+| Round | Focus | Output | Status |
+| --- | --- | --- | --- |
+| R01 | Brief, research, world concepts | Docs, nine concept mocks, gallery artifact | done, awaiting feedback |
+| R02 | Narrow to two or three directions | Deeper mocks: home on desktop and phone, the transition into a project page, first sound sketch | next |
+| R03 | Design language | Typography pairs, palettes, material and texture studies, motion principles (3–5 options each) | |
+| R04 | Identity marks | Wordmark, KFA monogram, favicon (about 10 options), OG image template | |
+| R05 | Project page template | Layout for idea / story / challenges / link, media treatment, per-project accent system | |
+| R06 | Architecture | Astro project, content schema, routing, renderer choice, base-path config, deploy workflow, `ADDING-A-PROJECT.md` playbook | |
+| R07 | Build the world | Production home scene with fallbacks, index, views (chronological, families) | |
+| R08 | Sound | Ambient bed, UI sounds, toggle | |
+| R09+ | One project per round | Content, media and page for each project, following the playbook | |
+| Final | Move | Accessibility pass, reduced-motion pass, phone QA, OG images, move to `kiarashfa.github.io` | |
+
+## Inputs needed from Kia
+
+- The full project list (about 25): name, repo, live URL, tier (flagship or small), family, year, and a sentence or two on why it exists. Rough notes are fine.
+- Confirmation of the surname spelling for footers.
+- Contact links for About (email, GitHub, others).
+- Feedback on Round 01 (see the gallery page).

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Prism · Concept 02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;1,300;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* Layout: one beam crosses the screen left to right; the index of projects is the spectrum it lands on. */
+:root{
+  --black:#000; --white:#F2EFEA; --dim:rgba(242,239,234,.42); --faint:rgba(242,239,234,.12);
+  --serif:'Cormorant',ui-serif,Georgia,serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--black);color:var(--white);overflow:hidden;font-family:var(--mono)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:2}
+.mark{font-family:var(--serif);font-size:22px;letter-spacing:.32em;text-transform:uppercase;font-weight:400}
+nav{display:flex;gap:28px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.hero{position:fixed;left:clamp(16px,3vw,44px);bottom:clamp(36px,7vh,80px);max-width:min(560px,52vw);z-index:2}
+.hero h1{font-family:var(--serif);font-weight:300;font-size:clamp(40px,5.6vw,92px);line-height:.95;margin:0;letter-spacing:-.01em}
+.hero h1 i{font-weight:300}
+.hero p{font-size:11.5px;line-height:1.75;color:var(--dim);margin:20px 0 0;max-width:40ch;letter-spacing:.02em}
+.spec{position:fixed;right:clamp(16px,3vw,44px);top:0;bottom:0;width:var(--colw);z-index:2;pointer-events:none}
+.row{position:absolute;left:0;right:0;display:flex;align-items:center;gap:12px;transform:translateY(-50%);pointer-events:auto;cursor:pointer;height:var(--gap)}
+.row .nm{font-family:var(--serif);font-style:italic;font-size:var(--fs);line-height:1;color:var(--dim);transition:color .3s, transform .3s;white-space:nowrap}
+.row .nm.ph{opacity:.45}
+.row .nm b{font-weight:400}
+.row .lam{margin-left:auto;font-size:9.5px;letter-spacing:.06em;color:var(--c);opacity:.75;font-variant-numeric:tabular-nums}
+.row:hover .nm,.row.on .nm{color:var(--white);transform:translateX(-6px)}
+.card{position:fixed;left:clamp(16px,3vw,44px);top:clamp(96px,16vh,150px);z-index:2;max-width:34ch;transition:opacity .4s}
+.card .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--c,var(--dim))}
+.card .t{font-family:var(--serif);font-size:30px;font-weight:400;margin:8px 0 6px}
+.card .d{font-size:11.5px;color:var(--dim);line-height:1.6}
+.mockbar{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#8f8a84;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#ece8e2;font-weight:500}
+@media (max-width:640px){
+  nav{display:none}
+  .mark{font-size:16px}
+  .hero{max-width:56vw;bottom:56px}
+  .hero h1{font-size:27px}
+  .hero p{font-size:10px}
+  .card{top:auto;bottom:230px;max-width:54vw}
+  .card .t{font-size:22px}
+  .row .lam{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<header><div class="mark">Kiarash Fa</div><nav><span>Index</span><span>About</span><span>Sound ○</span></nav></header>
+<div class="card" id="card"><div class="k" id="ck">Hover a line</div><div class="t" id="ct">White light in.</div><div class="d" id="cd">Every project is one wavelength of the same curiosity.</div></div>
+<section class="hero">
+  <h1>One curiosity,<br><i>twenty-five colours.</i></h1>
+  <p>Side projects by Kiarash Farajzadehahary, sorted by wavelength. Move the light. Choose a line.</p>
+</section>
+<div class="spec" id="spec"></div>
+<a class="mockbar" href="../">← concepts · <b>02 Prism</b> · raw WebGL shader · no library</a>
+
+<script type="module">
+import { PROJECTS } from './_data.js';
+const N = PROJECTS.length;
+const cv = document.getElementById('gl');
+const gl = cv.getContext('webgl2', { antialias: false, premultipliedAlpha: false });
+
+const VS = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
+const FS = `#version 300 es
+precision highp float;
+out vec4 o;
+uniform vec2 uRes; uniform float uTime; uniform float uHover;
+uniform vec2 uSrc, uIn, uOut, uA, uB, uC;
+uniform vec2 uEnd[${N}]; uniform float uLam[${N}];
+vec3 bump(vec3 x, vec3 y){ vec3 r = 1. - x*x; return clamp(r - y, 0., 1.); }
+vec3 spectral(float w){ float x = clamp((w-400.)/300.,0.,1.);
+  return bump(vec3(3.54585104,2.93225262,2.41593945)*(x-vec3(.69549072,.49228336,.27699880)), vec3(.02312639,.15225084,.52607955))
+       + bump(vec3(3.90307140,3.21182957,3.96587128)*(x-vec3(.11748627,.86755042,.66077860)), vec3(.84897130,.88445281,.73949448)); }
+float seg(vec2 p, vec2 a, vec2 b, out float h){ vec2 pa=p-a, ba=b-a; h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.); return length(pa-ba*h); }
+float hash(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p+45.32); return fract(p.x*p.y); }
+float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x), f.y); }
+float tri(vec2 p, vec2 a, vec2 b, vec2 c){ // signed distance to triangle
+  vec2 e0=b-a,e1=c-b,e2=a-c,v0=p-a,v1=p-b,v2=p-c;
+  vec2 pq0=v0-e0*clamp(dot(v0,e0)/dot(e0,e0),0.,1.), pq1=v1-e1*clamp(dot(v1,e1)/dot(e1,e1),0.,1.), pq2=v2-e2*clamp(dot(v2,e2)/dot(e2,e2),0.,1.);
+  float s=sign(e0.x*e2.y-e0.y*e2.x);
+  vec2 d=min(min(vec2(dot(pq0,pq0),s*(v0.x*e0.y-v0.y*e0.x)),vec2(dot(pq1,pq1),s*(v1.x*e1.y-v1.y*e1.x))),vec2(dot(pq2,pq2),s*(v2.x*e2.y-v2.y*e2.x)));
+  return -sqrt(d.x)*sign(d.y); }
+void main(){
+  vec2 p = gl_FragCoord.xy; float sc = uRes.y/900.;
+  vec3 col = vec3(0.);
+  float haze = .75 + .5*noise(p*.012 + vec2(uTime*.05, -uTime*.03)) ;
+  // incoming white beam
+  float h; float d = seg(p, uSrc, uIn, h);
+  col += vec3(1.,.98,.95) * (exp(-d/(1.1*sc))*1.2 + exp(-d/(9.*sc))*.22) * haze;
+  // inside the glass
+  d = seg(p, uIn, uOut, h);
+  col += vec3(.9,.92,1.) * (exp(-d/(2.*sc))*.5 + exp(-d/(14.*sc))*.12);
+  // the spectrum: one line per project
+  for (int i=0;i<${N};i++){
+    float hh; float di = seg(p, uOut, uEnd[i], hh);
+    float w = mix(.6, 2.6, hh)*sc;                       // lines thicken as they travel
+    float on = uHover < -.5 ? 1. : (abs(float(i)-uHover) < .5 ? 2.4 : .28);
+    float core = exp(-di/w) * mix(.55,1.,hh);
+    float halo = exp(-di/(w*9.)) * .10;
+    col += spectral(uLam[i]) * (core + halo) * on * haze * smoothstep(0.,.04,hh);
+  }
+  // prism glass
+  float t = tri(p, uA, uB, uC);
+  float edge = exp(-abs(t)/(.9*sc));
+  vec2 g = (p - uB)/(uC.x-uB.x);
+  float face = step(t,0.) * (.035 + .05*smoothstep(0.,1.,g.y) );
+  col += vec3(.85,.9,1.) * (edge*.55 + face);
+  col += vec3(1.) * exp(-length(p-uA)/(6.*sc))*.25;   // apex glint
+  // dust motes caught in the light
+  float m = step(.9965, hash(floor(p/2.) + floor(uTime*8.))) * clamp(length(col)*1.4,0.,1.);
+  col += m*.6;
+  // vignette + grain
+  vec2 q = gl_FragCoord.xy/uRes; col *= .55 + .45*pow(16.*q.x*q.y*(1.-q.x)*(1.-q.y), .18);
+  col += (hash(p + uTime) - .5) * .035;
+  col = 1. - exp(-col*1.25);                         // soft tone map
+  o = vec4(pow(col, vec3(.95)), 1.);
+}`;
+function sh(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; }
+const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,3,-1,-1,3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const U = n => gl.getUniformLocation(pr, n);
+
+const spec = document.getElementById('spec');
+const lam = PROJECTS.map((_, i) => 700 - i * (300 / (N - 1)));
+const rows = PROJECTS.map((p, i) => {
+  const r = document.createElement('div'); r.className = 'row';
+  const c = lam[i];
+  r.innerHTML = `<span class="nm ${p.tier === 3 ? 'ph' : ''}">${p.name}</span><span class="lam">${Math.round(c)} nm</span>`;
+  r.addEventListener('pointerenter', () => setHover(i)); r.addEventListener('pointerleave', () => setHover(-1));
+  spec.appendChild(r); return r;
+});
+const toCss = w => { // matches spectral() closely enough for text
+  const x = (w - 400) / 300; const h = 270 - x * 270; return `hsl(${h} 90% 68%)`;
+};
+rows.forEach((r, i) => r.style.setProperty('--c', toCss(lam[i])));
+let hover = -1, hoverF = -1;
+const card = document.getElementById('card');
+function setHover(i){
+  hover = i; rows.forEach((r, k) => r.classList.toggle('on', k === i));
+  if (i < 0) { ck.textContent = 'Hover a line'; ct.textContent = 'White light in.'; cd.textContent = 'Every project is one wavelength of the same curiosity.'; card.style.setProperty('--c', ''); return; }
+  const p = PROJECTS[i]; ck.textContent = `${String(i + 1).padStart(2, '0')} · ${p.kind} · ${Math.round(lam[i])} nm`; ct.textContent = p.name; cd.textContent = p.line;
+  card.style.setProperty('--c', toCss(lam[i]));
+}
+const ck = document.getElementById('ck'), ct = document.getElementById('ct'), cd = document.getElementById('cd');
+
+let W, H, dpr, geo = {}, mouseY = .5, srcY = .5;
+function layout(){
+  dpr = Math.min(devicePixelRatio, 2); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr;
+  const mobile = W < 640;
+  const colw = mobile ? 116 : Math.min(300, W * .2), top = mobile ? H * .14 : H * .1, bot = mobile ? H * .9 : H * .9;
+  const gap = (bot - top) / (N - 1);
+  document.documentElement.style.setProperty('--colw', colw + 'px');
+  document.documentElement.style.setProperty('--gap', gap + 'px');
+  document.documentElement.style.setProperty('--fs', Math.min(22, gap * .95) + 'px');
+  rows.forEach((r, i) => r.style.top = (top + i * gap) + 'px');
+  const ex = W - (mobile ? 16 : W * .03) - colw - 14;
+  geo.end = PROJECTS.map((_, i) => [ex, H - (top + i * gap)]);       // GL y is up
+  const s = mobile ? H * .085 : H * .16, cx = mobile ? W * .3 : W * .42, cy = mobile ? H * .56 : H * .52;
+  geo.A = [cx, cy + s]; geo.B = [cx - s * .87, cy - s * .5]; geo.C = [cx + s * .87, cy - s * .5];
+}
+addEventListener('resize', layout); layout();
+addEventListener('pointermove', e => { mouseY = 1 - e.clientY / innerHeight; });
+const lerp = (a, b, t) => a + (b - a) * t;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(ms){
+  const t = ms / 1000;
+  srcY = lerp(srcY, mouseY, .04);
+  hoverF = hover;
+  const k = dpr, A = geo.A, B = geo.B, C = geo.C;
+  // entry on left face (B->A), exit on right face (A->C)
+  const fin = .42 + (srcY - .5) * .35 + (reduce ? 0 : Math.sin(t * .4) * .03);
+  const In = [lerp(B[0], A[0], fin), lerp(B[1], A[1], fin)];
+  const Out = [lerp(A[0], C[0], .55), lerp(A[1], C[1], .55)];
+  const Src = [0, In[1] - (In[0]) * .28 + (srcY - .5) * H * .2];
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.uniform2f(U('uRes'), cv.width, cv.height); gl.uniform1f(U('uTime'), t); gl.uniform1f(U('uHover'), hoverF);
+  gl.uniform2f(U('uSrc'), Src[0] * k, Src[1] * k); gl.uniform2f(U('uIn'), In[0] * k, In[1] * k); gl.uniform2f(U('uOut'), Out[0] * k, Out[1] * k);
+  gl.uniform2f(U('uA'), A[0] * k, A[1] * k); gl.uniform2f(U('uB'), B[0] * k, B[1] * k); gl.uniform2f(U('uC'), C[0] * k, C[1] * k);
+  gl.uniform2fv(U('uEnd'), geo.end.flatMap(e => [e[0] * k, e[1] * k])); gl.uniform1fv(U('uLam'), lam);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

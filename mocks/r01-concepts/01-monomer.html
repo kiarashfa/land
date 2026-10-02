@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Monomer · Concept 01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* Layout: full-bleed WebGL stage; type pinned to the four corners like a jewellery campaign. */
+:root{
+  --void:#050505; --bone:#ECE6DA; --dim:rgba(236,230,218,.46); --hair:rgba(236,230,218,.14); --gold:#CBAA72;
+  --serif:'Instrument Serif',ui-serif,Georgia,serif; --mono:'Geist Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:radial-gradient(120% 90% at 62% 42%,#16130f 0%,#0a0908 45%,var(--void) 75%);color:var(--bone);overflow:hidden;font-family:var(--mono)}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#gl.dragging{cursor:grabbing}
+.grain{position:fixed;inset:-50%;pointer-events:none;opacity:.06;mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain .9s steps(5) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}}
+header{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(22px + env(safe-area-inset-top,0px)) clamp(16px,3vw,40px) 0;pointer-events:none}
+.mark{font-family:var(--serif);font-size:24px;letter-spacing:.01em}
+.mark i{color:var(--gold)}
+nav{display:flex;gap:clamp(14px,2.4vw,34px);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);pointer-events:auto}
+nav a{color:inherit;text-decoration:none}
+nav a:hover{color:var(--bone)}
+.hero{position:fixed;left:clamp(16px,3vw,40px);bottom:clamp(64px,9vh,96px);pointer-events:none;max-width:min(92vw,780px)}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(46px,8.4vw,132px);line-height:.9;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.hero h1 i{color:var(--gold)}
+.hero p{margin:22px 0 0;font-size:12px;letter-spacing:.08em;color:var(--dim);max-width:44ch;line-height:1.7}
+.count{position:fixed;right:clamp(16px,3vw,40px);bottom:clamp(64px,9vh,96px);text-align:right;pointer-events:none}
+.count .n{font-family:var(--serif);font-size:clamp(28px,3vw,40px)}
+.count .n span{color:var(--dim)}
+.count .t{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:6px}
+.tag{position:fixed;left:0;top:0;pointer-events:none;transform:translate(-50%,-100%);opacity:0;transition:opacity .35s ease;text-align:center;white-space:nowrap}
+.tag.on{opacity:1}
+.tag .nm{font-family:var(--serif);font-size:30px;font-style:italic;line-height:1}
+.tag .kd{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:6px}
+.tag::after{content:"";display:block;width:1px;height:34px;margin:10px auto 0;background:linear-gradient(var(--bone),transparent)}
+.rule{position:fixed;left:clamp(16px,3vw,40px);right:clamp(16px,3vw,40px);bottom:clamp(44px,6vh,64px);height:1px;background:var(--hair)}
+.mockbar{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font:10px/1.2 ui-monospace,Menlo,monospace;color:#9a9286;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:10}
+.mockbar b{color:#e8e1d4;font-weight:500}
+@media (max-width:640px){
+  nav a:not(.snd){display:none}
+  .hero{bottom:120px}
+  .count{bottom:58px;left:16px;right:auto;text-align:left}
+  .count .t{display:none}
+  .rule{display:none}
+}
+@media (prefers-reduced-motion:reduce){.grain{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="A necklace of 25 beads, one per project"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<header>
+  <div class="mark">Kiarash<i>Fa</i></div>
+  <nav><a href="#">Index</a><a href="#">Families</a><a href="#">About</a><a class="snd" href="#">Sound ○</a></nav>
+</header>
+<section class="hero">
+  <h1>Things I wished<br><i>existed.</i></h1>
+  <p>Twenty-five side projects, strung on one chain. Each bead is a whole world. Grab the chain and pull.</p>
+</section>
+<div class="rule" aria-hidden="true"></div>
+<div class="count"><div class="n" id="cn">07<span> / 25</span></div><div class="t" id="ct">Hover a bead</div></div>
+<div class="tag" id="tag"><div class="nm" id="tn"></div><div class="kd" id="tk"></div></div>
+<a class="mockbar" href="../">← concepts · <b>01 Monomer</b> · three.js · WebGL2</a>
+
+<script type="module">
+import * as T from '../vendor/three.bundle.min.js';
+import { PROJECTS } from './_data.js';
+
+const canvas = document.getElementById('gl');
+const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = T.ACESFilmicToneMapping;
+renderer.toneMappingExposure = .82;
+
+const scene = new T.Scene();
+const pmrem = new T.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new T.RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = .55;
+
+const camera = new T.PerspectiveCamera(32, 1, 0.1, 100);
+camera.position.set(0, 0, 13);
+
+const key = new T.DirectionalLight(0xffe2b8, 2.2); key.position.set(4, 6, 5); scene.add(key);
+const rim = new T.DirectionalLight(0x9fb4ff, 1.2); rim.position.set(-6, -2, -4); scene.add(rim);
+
+// --- materials: a jeweller's mix ---
+const M = {
+  gold: new T.MeshPhysicalMaterial({ color: 0xd8b27a, metalness: 1, roughness: .16, clearcoat: .5, clearcoatRoughness: .1 }),
+  glass: new T.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0, roughness: .03, transmission: 1, thickness: .7, ior: 1.5,
+    iridescence: 1, iridescenceIOR: 1.7, iridescenceThicknessRange: [180, 820], specularIntensity: 1, attenuationColor: 0xb8c4d0, attenuationDistance: 1.2 }),
+  onyx: new T.MeshPhysicalMaterial({ color: 0x070707, metalness: .2, roughness: .07, clearcoat: 1, clearcoatRoughness: .03 }),
+  pearl: new T.MeshPhysicalMaterial({ color: 0x9c958a, metalness: .1, roughness: .22, clearcoat: .8, clearcoatRoughness: .1, iridescence: .7, iridescenceIOR: 1.35 }),
+};
+const N = PROJECTS.length;
+const pick = i => PROJECTS[i].tier === 1 ? 'gold' : ['glass', 'onyx', 'glass', 'pearl'][i % 4];
+const radius = i => PROJECTS[i].tier === 1 ? .33 : PROJECTS[i].tier === 2 ? .26 : .21;
+
+const sphere = new T.SphereGeometry(1, 64, 48);
+const beads = [];
+for (let i = 0; i < N; i++) {
+  const m = new T.Mesh(sphere, M[pick(i)]);
+  m.scale.setScalar(radius(i)); m.userData.i = i; scene.add(m); beads.push(m);
+}
+// thread between beads (instanced thin cylinders)
+const wireGeo = new T.CylinderGeometry(.011, .011, 1, 8, 1, true); wireGeo.translate(0, .5, 0); wireGeo.rotateX(Math.PI / 2);
+const wire = new T.InstancedMesh(wireGeo, new T.MeshStandardMaterial({ color: 0xcfae78, metalness: 1, roughness: .3 }), N - 1);
+scene.add(wire);
+
+// --- verlet bead-spring chain (a tiny polymer) ---
+const P = [], Q = [], target = [];
+let portrait = false;
+function layout() {
+  portrait = innerHeight > innerWidth;
+  for (let i = 0; i < N; i++) {
+    const u = -Math.PI * .92 + (i / (N - 1)) * Math.PI * 1.84;
+    let x = 3.4 * Math.sin(u), y = 1.05 * Math.sin(2 * u) + .35, z = 1.6 * Math.cos(u) - .6;
+    if (portrait) { [x, y] = [y * 1.05, x * .7 + 1.35]; }
+    target[i] = new T.Vector3(x + (portrait ? 0 : 1.9), y + (portrait ? 0 : .55), z);
+  }
+}
+layout();
+for (let i = 0; i < N; i++) { P[i] = target[i].clone().add(new T.Vector3((Math.random() - .5) * .8, (Math.random() - .5) * .8, (Math.random() - .5) * .8)); Q[i] = P[i].clone(); }
+
+const bond = .66, tmp = new T.Vector3(), d = new T.Vector3();
+let dragI = -1; const dragTo = new T.Vector3();
+function step(t) {
+  for (let i = 0; i < N; i++) {
+    const p = P[i], q = Q[i];
+    tmp.subVectors(p, q).multiplyScalar(.965);           // velocity with damping
+    q.copy(p);
+    // thermal wobble + soft pull back to the display curve
+    tmp.x += Math.sin(t * .61 + i * 1.7) * .0009; tmp.y += Math.sin(t * .47 + i * 2.3) * .0009; tmp.z += Math.sin(t * .53 + i * .9) * .0009;
+    d.subVectors(target[i], p).multiplyScalar(.0026); tmp.add(d);
+    p.add(tmp);
+  }
+  if (dragI >= 0) P[dragI].lerp(dragTo, .5);
+  for (let k = 0; k < 8; k++) {
+    for (let i = 0; i < N - 1; i++) {                     // bonds
+      d.subVectors(P[i + 1], P[i]); const L = d.length() || 1e-6, f = (L - bond) / L * .5;
+      if (i !== dragI) P[i].addScaledVector(d, f); if (i + 1 !== dragI) P[i + 1].addScaledVector(d, -f);
+    }
+    for (let i = 0; i < N; i++) for (let j = i + 2; j < N; j++) { // excluded volume
+      d.subVectors(P[j], P[i]); const L = d.length(), m = radius(i) + radius(j) + .05;
+      if (L < m && L > 1e-6) { const f = (L - m) / L * .5; P[i].addScaledVector(d, f); P[j].addScaledVector(d, -f); }
+    }
+  }
+}
+
+// --- interaction ---
+const ray = new T.Raycaster(), mouse = new T.Vector2(9, 9), plane = new T.Plane(), hit = new T.Vector3();
+let hover = -1, ptr = { x: 0, y: 0 };
+const tag = document.getElementById('tag'), tn = document.getElementById('tn'), tk = document.getElementById('tk');
+const cn = document.getElementById('cn'), ct = document.getElementById('ct');
+function setPtr(e) { mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ptr.x = mouse.x; ptr.y = mouse.y; }
+canvas.addEventListener('pointermove', e => {
+  setPtr(e);
+  if (dragI >= 0) { ray.setFromCamera(mouse, camera); ray.ray.intersectPlane(plane, hit) && dragTo.copy(hit); }
+});
+canvas.addEventListener('pointerdown', e => {
+  setPtr(e); ray.setFromCamera(mouse, camera);
+  const h = ray.intersectObjects(beads)[0]; if (!h) return;
+  dragI = h.object.userData.i; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(tmp).negate(), P[dragI]);
+  dragTo.copy(P[dragI]); canvas.classList.add('dragging'); canvas.setPointerCapture(e.pointerId);
+});
+addEventListener('pointerup', () => { dragI = -1; canvas.classList.remove('dragging'); });
+
+// --- post ---
+const composer = new T.EffectComposer(renderer);
+composer.addPass(new T.RenderPass(scene, camera));
+const bloom = new T.UnrealBloomPass(new T.Vector2(1, 1), .16, .45, .9); composer.addPass(bloom);
+composer.addPass(new T.OutputPass());
+
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); composer.setSize(w, h); camera.aspect = w / h;
+  camera.position.z = h > w ? 17 : 13; camera.updateProjectionMatrix(); layout();
+}
+addEventListener('resize', resize); resize();
+
+const q = new T.Quaternion(), up = new T.Vector3(0, 0, 1), sc = new T.Vector3(), mtx = new T.Matrix4(), proj = new T.Vector3();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now(), acc = 0, t = 0;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; acc += dt;
+  while (acc > 1 / 60) { t += 1 / 60; step(reduce ? 0 : t); acc -= 1 / 60; }
+  // hover
+  ray.setFromCamera(mouse, camera);
+  const h = dragI >= 0 ? null : ray.intersectObjects(beads)[0];
+  const nh = dragI >= 0 ? dragI : h ? h.object.userData.i : -1;
+  if (nh !== hover) {
+    hover = nh;
+    if (hover >= 0) {
+      const p = PROJECTS[hover]; tn.textContent = p.name; tk.textContent = `${String(hover + 1).padStart(2, '0')} · ${p.kind}`;
+      cn.innerHTML = `${String(hover + 1).padStart(2, '0')}<span> / ${N}</span>`; ct.textContent = p.line;
+    }
+    tag.classList.toggle('on', hover >= 0);
+  }
+  for (let i = 0; i < N; i++) {
+    beads[i].position.copy(P[i]);
+    const s = radius(i) * (i === hover ? 1.12 : 1); beads[i].scale.lerp(sc.setScalar(s), .2);
+    beads[i].rotation.y += .002;
+  }
+  for (let i = 0; i < N - 1; i++) {
+    d.subVectors(P[i + 1], P[i]); const L = d.length();
+    q.setFromUnitVectors(up, d.clone().normalize()); mtx.compose(P[i], q, sc.set(1, 1, L)); wire.setMatrixAt(i, mtx);
+  }
+  wire.instanceMatrix.needsUpdate = true;
+  if (hover >= 0) {
+    proj.copy(P[hover]); proj.y += radius(hover) + .1; proj.project(camera);
+    tag.style.transform = `translate(${(proj.x * .5 + .5) * innerWidth}px,${(-proj.y * .5 + .5) * innerHeight}px) translate(-50%,-100%)`;
+  }
+  camera.position.x += (ptr.x * .6 - camera.position.x) * .03;
+  camera.position.y += (ptr.y * .4 - camera.position.y) * .03;
+  camera.lookAt(portrait ? 0 : .9, .2, 0);
+  composer.render(); window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
