@@ -6,8 +6,9 @@ Rounds are conversations. Each round ends with something Kia can look at, a set 
 | --- | --- | --- | --- |
 | R01 | Brief, research, world concepts | Docs, concept mocks, gallery artifact | done; none chosen |
 | R02 | New 3D worlds after R01 feedback | A sculpture per project, plus new world mocks that hold any number of projects | done: Quicksilver, Trophy Shelf and Riso Boxes kept, each for a page |
-| R03 | Three pages | Home (three Quicksilver versions × three ambients), chronology (the Saleroom), families (three glass-case layouts), five revised objects | done, awaiting feedback |
-| R03b | Narrow and deepen | Lock home version and ambient; rooms for the other families; the hand-over into a project page; first sound sketch | next |
+| R03 | Three pages | Home (three Quicksilver versions × three ambients), chronology (the Saleroom), families (three glass-case layouts), five revised objects | done: Converge chosen; saleroom and glass cases spun off |
+| R04 | Mercury | Mercury engine, loading screen and quality tiers, rebuilt Atelier, the home in pure mercury, five project-page designs; GlassRoom and SaleRoom hand-off folders | done, awaiting feedback |
+| R04b | Narrow and deepen | Lock the project page; mercury designs for the chronology and families pages; first sound sketch | next |
 | R03c | Design language | Typography, palettes, materials and motion principles, drawn from what Round 03 settles | |
 | R04 | Identity marks | Wordmark, KFA monogram, favicon (about 10 options), OG image template | |
 | R05 | Project page template | Layout for idea / story / challenges / link, media treatment, per-project accent system | |
@@ -20,7 +21,6 @@ Rounds are conversations. Each round ends with something Kia can look at, a set 
 ## Inputs needed from Kia
 
 - Stories and challenges for each project (Kia will send them later).
-- Confirm each project's date (the mocks use the first commit).
-- The two fused words behind Xefy, eXir and DrXRates.
 - Contact links for About (email, GitHub, others).
-- Feedback on Round 03 (see the gallery page): home version and ambient, the Saleroom, the family layout, the five revised objects.
+- Feedback on Round 04 (see the gallery page): does the Atelier render on Kia's GPU, the loading screen, the project page (A–E).
+- Ideas for the chronology and families pages in mercury.

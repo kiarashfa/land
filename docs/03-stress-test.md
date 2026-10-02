@@ -31,6 +31,7 @@ Things that can go wrong, and what we will do about them. Each risk has an ID so
 | R-13 | Text inside WebGL is invisible to screen readers and search engines. | Hybrid: real HTML text for every name, description and link; WebGL decorates. |
 | R-23 | **Heavy scenes.** The Round 03 pages render rigged figures, area lights, shadows, GTAO and depth of field; the saleroom and the glass house draw many lights at once. | Production: render on demand, bake static lighting into textures where possible, drop GTAO and DOF on phones, cap lights per room, load rooms lazily, and keep a still image for very old devices. |
 | R-24 | **Execution quality.** Round 02 showed that ideas fail on execution (Tunnel Book). | Every mock is checked frame by frame on desktop and phone before it is shown; thumbnails are taken from verified states (`?still`, `?at=`). |
+| R-25 | **Sandbox hides GPU bugs.** SwiftShader rendered the R03 Atelier fine while Kia's GPU did not. | Avoid coplanar faces (offset at least 1 mm), avoid exotic render paths (Reflector + custom depth-writing shaders), guard NaNs before bloom, and ask Kia to check on real hardware. |
 | R-14 | Concept clichés (prism ↔ Pink Floyd, particle clouds, toy physics). | Named in each concept card. Push for the version only Kia could have (polymer chains, computed encyclopedias, etc.). |
 
 ## Content and maintenance

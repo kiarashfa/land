@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mercury · Reflections</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ui.css">
+<style>
+/* The emblem rises from a still pool of mercury; the gallery floats around it as five lit screens,
+   doubled in the pool. The words sit in a quiet column on the left; tap a screen to bring it close. */
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,rgba(4,4,5,.88) 0,rgba(4,4,5,.55) 34%,transparent 52%)}
+.col{position:fixed;left:0;top:0;bottom:0;width:min(560px,44vw);z-index:3;overflow-y:auto;padding:128px clamp(20px,3vw,48px) 80px clamp(16px,3vw,44px);scrollbar-width:thin}
+.col .gal{grid-template-columns:repeat(5,1fr)}
+.col .gal button:first-child{grid-column:auto}
+.col .gal figcaption{display:none}
+.tip{position:fixed;right:clamp(16px,3vw,44px);bottom:calc(28px + env(safe-area-inset-bottom,0px));z-index:3;font-family:var(--italic);font-style:italic;font-size:17px;color:var(--dim)}
+.hover{cursor:zoom-in}
+@media (max-width:760px){ .scrim{background:linear-gradient(0deg,rgba(4,4,5,.96) 0,rgba(4,4,5,.85) 46%,transparent 62%)} .col{top:48vh;width:auto;right:0;padding:24px 18px 90px} .tip{display:none} .col .gal{grid-template-columns:repeat(3,1fr)} }
+</style>
+</head>
+<body>
+<div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-in"><div class="ld-drop"><i></i></div><div class="ld-mk">Kiarash<i>Fa</i></div><div class="ld-line">Warming the mercury</div><div class="ld-bar"><i></i></div><div class="ld-tier">&nbsp;</div></div></div>
+<canvas class="gl" id="gl" aria-label="The project's emblem on a plinth rising from a pool of mercury, with five screens floating around it and reflected below"></canvas>
+<div class="scrim"></div>
+<header class="top"><a class="mk" href="01-home.html">Kiarash<i>Fa</i></a><nav><a class="hide-m" href="01-home.html">Home</a><span class="hide-m">Chronology</span><span class="hide-m">Families</span></nav></header>
+<aside class="col" id="col"></aside>
+<div class="tip">Tap a screen to bring it close</div>
+<a class="mockbar" href="../">← concepts · <b>R04 · Project page · Reflections</b> · three.js · mercury pool (planar mirror)</a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { boot } from './_page.js';
+import { headHTML, bodyHTML, mountGallery, shots } from './_detail.js';
+import { ease, seg } from './_home.js';
+
+const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search), STILL = Q.has('still');
+const { stage, p, entry, V, settle } = await boot($('gl'));
+stage.setRoomName('pool');
+$('col').innerHTML = headHTML(p) + bodyHTML(p); mountGallery($('col'), p);
+
+// the five screens: lit panels on a slow carousel around the emblem
+const list = shots(p), loader = new T.TextureLoader(), panels = new T.Group(); stage.scene.add(panels);
+const R = 2.4, frameMat = new T.MeshPhysicalMaterial({ color: 0x0b0b0c, roughness: .3, clearcoat: 1 });
+list.forEach((s, i) => { const tex = loader.load(s.src); tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = 8;
+  const g = new T.Group(); const back = new T.Mesh(new T.BoxGeometry(.92, .59, .025), frameMat); g.add(back);
+  const face = new T.Mesh(new T.PlaneGeometry(.88, .55), new T.MeshBasicMaterial({ map: tex, toneMapped: false })); face.position.z = .017; face.userData.i = i; g.add(face);
+  g.userData.a = (-1 + i / 2) * .92; g.userData.h = 1.12 + [.1, -.08, .22, -.04, .12][i]; panels.add(g); });
+
+// tap a screen: bring it close in the lightbox
+const ray = new T.Raycaster(), mp = new T.Vector2(); let hovered = -1;
+const pickAt = e => { mp.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(mp, stage.camera); const h = ray.intersectObjects(panels.children.map(g => g.children[1]))[0]; return h ? h.object.userData.i : -1; };
+$('gl').addEventListener('pointermove', e => { hovered = pickAt(e); $('gl').classList.toggle('hover', hovered >= 0); });
+$('gl').addEventListener('click', e => { const i = pickAt(e); if (i >= 0) document.querySelectorAll('[data-gal] button')[i].click(); });
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, t0 = performance.now();
+let last = t0, turn = 0;
+function frame(now){
+  const dt = STILL ? .016 : Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000, age = STILL ? 9 : (now - t0) / 1000;
+  stage.EU.uColour.value = ease(seg(age, 1.6, 4.2));
+  turn += dt * (reduce ? 0 : .25); stage.holder.rotation.y = STILL ? .5 : t * .16;
+  // the screens drift along an arc behind the emblem, always facing the viewer
+  panels.children.forEach((g, i) => { const a = g.userData.a + (STILL ? 0 : Math.sin(turn + i * .3) * .12), lift = hovered === i ? .06 : 0;
+    g.position.set(Math.sin(a) * R, g.userData.h + Math.sin(t * .5 + i) * .03 + lift, -Math.cos(a) * R * .8 - .2); g.lookAt(stage.camera.position.x * .5, g.position.y, stage.camera.position.z); });
+  const portrait = innerWidth < innerHeight;
+  stage.setShift(portrait ? 0 : -.2, portrait ? .2 : 0);
+  stage.camera.position.set(0, portrait ? 1.75 : 1.55, portrait ? 7.6 : 5.9); stage.camera.lookAt(0, .98, -.6);
+  stage.frame(t); window.__frames = (window.__frames || 0) + 1;
+}
+await settle(frame);
+const loop = now => { frame(now); requestAnimationFrame(loop); };
+requestAnimationFrame(now => { last = now; V.done(); loop(now); });
+</script>
+</body>
+</html>

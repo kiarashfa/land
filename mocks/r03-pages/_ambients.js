@@ -61,8 +61,8 @@ async function atelier(ctx) {
   const plaster = canvasTex(512, 512, (c, w, h) => { c.fillStyle = '#16151a'; c.fillRect(0, 0, w, h); noise(c, w, h, 12, 7); }, [8, 3]);
   const wall = new T.Mesh(new T.PlaneGeometry(40, 14), new T.MeshStandardMaterial({ map: plaster, roughness: .95 })); wall.position.set(0, 7, -7); g.add(wall);
   [[-4.4, 1], [4.4, 1], [-8.4, .55], [8.4, .55]].forEach(([x, k]) => {
-    const box = new T.Mesh(new T.PlaneGeometry(.55, 5.2), new T.MeshBasicMaterial({ color: new T.Color(1, .93, .84).multiplyScalar(1.25 * k) })); box.position.set(x, 3.2, -6.95); g.add(box);
-    const frame = new T.Mesh(new T.BoxGeometry(.7, 5.4, .1), new T.MeshStandardMaterial({ color: 0x0b0b0c, roughness: .5 })); frame.position.set(x, 3.2, -7.0); g.add(frame);
+    const box = new T.Mesh(new T.PlaneGeometry(.55, 5.2), new T.MeshBasicMaterial({ color: new T.Color(1, .93, .84).multiplyScalar(1.25 * k) })); box.position.set(x, 3.2, -6.93); g.add(box); // in front of its frame (coplanar faces z-fight on real GPUs)
+    const frame = new T.Mesh(new T.BoxGeometry(.7, 5.4, .1), new T.MeshStandardMaterial({ color: 0x0b0b0c, roughness: .5 })); frame.position.set(x, 3.2, -7.04); g.add(frame);
     const rl = new T.RectAreaLight(0xffeedd, 4 * k, .55, 5.2); rl.position.set(x, 3.2, -6.8); rl.lookAt(x * .2, 1, 0); g.add(rl); });
   // overhead softbox and key spot with a soft shadow on the plinth
   const top = new T.Mesh(new T.PlaneGeometry(2.6, 1.2), new T.MeshBasicMaterial({ color: new T.Color(1, .96, .9).multiplyScalar(1.6) })); top.rotation.x = Math.PI / 2; top.position.set(0, 6.2, -.4); g.add(top);

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mercury · Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ui.css">
+<style>
+/* Home: the plinth centre stage, the two words ride the droplets and converge into the name.
+   Opening a project slides the emblem left, lets its colours bloom, and brings the project in from the right. */
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.42) 0,transparent 22%,transparent 62%,rgba(0,0,0,.62) 100%)}
+.word{position:fixed;left:0;top:0;z-index:2;font-family:var(--italic);font-style:italic;font-weight:300;font-size:clamp(26px,2.6vw,40px);white-space:nowrap;pointer-events:none;transform:translate(-50%,-100%);opacity:0;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.home{transition:opacity .6s}
+.mark{position:fixed;left:50%;bottom:clamp(96px,15vh,150px);transform:translateX(-50%);z-index:2;text-align:center;pointer-events:none;width:min(900px,calc(100vw - 32px))}
+.mark .roots{margin-bottom:10px}
+.mark h1{font-family:var(--display);font-weight:400;font-size:clamp(46px,7vw,112px);line-height:.95;margin:0;letter-spacing:-.01em;font-variation-settings:'opsz' 96}
+.mark h1 span{display:inline-block}
+.foot{position:fixed;left:clamp(16px,3vw,44px);right:clamp(16px,3vw,44px);bottom:calc(clamp(20px,4vh,40px) + env(safe-area-inset-bottom,0px));z-index:3;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;border-top:1px solid var(--hair);padding-top:12px}
+.foot .l{font-size:13.5px;line-height:1.55;color:var(--dim);max-width:52ch}
+.foot .l b{color:var(--fg);font-weight:500}
+.foot .f{font-family:var(--italic);font-style:italic;font-size:19px}
+.foot button{all:unset;cursor:pointer;color:var(--fg);font-size:12px;letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid var(--accent);padding-bottom:3px;white-space:nowrap}
+.foot button:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+.rail{position:fixed;right:clamp(16px,3vw,44px);top:50%;transform:translateY(-50%);z-index:2;display:grid;gap:6px;text-align:right}
+.rail button{all:unset;cursor:pointer;font-size:11px;letter-spacing:.06em;color:var(--dim);opacity:.7;transition:color .3s,opacity .3s}
+.rail button.on{color:var(--fg);opacity:1}
+.rail button.on::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:8px;background:radial-gradient(circle at 35% 30%,#fff,#9aa0a8 45%,#3a3d42);vertical-align:0}
+.rail button:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+/* the project, arriving from the right */
+.panel{position:fixed;top:0;right:0;bottom:0;width:min(660px,50vw);z-index:4;overflow-y:auto;overscroll-behavior:contain;padding:132px clamp(24px,4vw,64px) 90px clamp(28px,3vw,52px);
+  background:linear-gradient(90deg,rgba(6,6,7,0) 0,rgba(6,6,7,.86) 14%,rgba(6,6,7,.97) 60%);opacity:0;visibility:hidden;transform:translateX(6%);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform 1.1s cubic-bezier(.2,.7,.2,1),visibility .9s;scrollbar-width:thin}
+.panel.on{opacity:1;visibility:visible;transform:none}
+.panel .pin > *{opacity:0;transform:translateY(16px);transition:opacity .9s,transform 1s cubic-bezier(.2,.7,.2,1)}
+.panel.on .pin > *{opacity:1;transform:none}
+.panel.on .pin > *:nth-child(2){transition-delay:.12s}.panel.on .pin > *:nth-child(3){transition-delay:.2s}.panel.on .pin > *:nth-child(4){transition-delay:.28s}.panel.on .pin > *:nth-child(n+5){transition-delay:.36s}
+.back{all:unset;cursor:pointer;position:fixed;left:clamp(16px,3vw,44px);top:calc(74px + env(safe-area-inset-top,0px));z-index:6;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);opacity:0;visibility:hidden;transition:opacity .6s .3s,visibility .6s}
+.back.on{opacity:1;visibility:visible}
+.back:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+body.open .home{opacity:0;pointer-events:none}
+@media (max-width:760px){ header.top nav .hide-m,.rail{display:none} .foot{flex-direction:column;align-items:flex-start} .foot .l{font-size:12.5px} .mark{bottom:150px}
+  .panel{top:50vh;left:0;width:auto;padding:30px 18px 90px;background:linear-gradient(180deg,rgba(6,6,7,0) 0,rgba(6,6,7,.9) 40px,#060607 160px);transform:translateY(8%)} }
+@media (prefers-reduced-motion:reduce){ .panel,.panel .pin > *{transition:none} }
+</style>
+</head>
+<body>
+<div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-in"><div class="ld-drop"><i></i></div><div class="ld-mk">Kiarash<i>Fa</i></div><div class="ld-line">Warming the mercury</div><div class="ld-bar"><i></i></div><div class="ld-tier">&nbsp;</div></div></div>
+<canvas class="gl" id="gl" aria-label="Liquid mercury fusing two words into each project's emblem"></canvas>
+<div class="scrim"></div>
+<header class="top"><a class="mk" href="01-home.html">Kiarash<i>Fa</i></a><nav><span class="hide-m">Chronology</span><span class="hide-m">Families</span><span class="hide-m">About</span><span class="q" id="q" aria-label="Room"></span></nav></header>
+<button class="back" id="back">← All projects</button>
+<div class="home" id="home">
+  <div class="word" id="wa"></div><div class="word" id="wb"></div>
+  <section class="mark" id="mark"><div class="roots" id="roots"></div><h1 id="name"></h1></section>
+  <nav class="rail" id="rail" aria-label="Projects"></nav>
+  <section class="foot"><div><div class="l" id="line"></div><div class="f" id="for"></div></div><button id="cta">Open the project →</button></section>
+</div>
+<aside class="panel" id="panel" aria-label="Project"><div class="pin" id="pin"></div></aside>
+<a class="mockbar" href="../">← concepts · <b>R04 · Home · Converge in mercury</b> · three.js + ray-marched liquid</a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { createStage, guessTier, saveTier, TIERS, timeFrames, PLINTH_TOP } from './_mercury.js';
+import { SEQUENCE, FUSE, family, nameHTML, rootsText, rail, ease, seg } from './_home.js';
+import { headHTML, bodyHTML, mountGallery, veil } from './_detail.js';
+
+const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search), STILL = Q.has('still'), KQ = parseFloat(Q.get('k'));
+const V = veil(); V.set(.06, 'Warming the mercury');
+const G = guessTier(), LABEL = { high: ['Atelier', 'your graphics card can carry the room'], mid: ['Atelier, lighter', 'tuned for this device'], low: ['The void', 'the light version, for a smooth ride'] };
+const say = (t, why) => V.tier(`<b>${LABEL[t][0]}</b> · ${why || LABEL[t][1]}`); say(G.tier, G.why === 'a capable graphics card' ? null : G.why);
+await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]);
+if (Q.has('veil')) { V.set(.58, 'Polishing the mercury'); say('high'); await new Promise(() => {}); } // ?veil: hold the loading screen (for review)
+const stage = await createStage(gl, { tier: G.tier, progress: (p, s) => V.set(p, s) });
+const U = stage.U, EU = stage.EU, N = SEQUENCE.length;
+
+// quality switch: the room the page chose, which you can change
+const qEl = $('q'); function drawQ(){ qEl.innerHTML = [['high', 'Atelier'], ['low', 'Void']].map(([t, n]) => `<button data-t="${t}" class="${(stage.tier === 'low') === (t === 'low') ? 'on' : ''}">${n}</button>`).join(''); }
+qEl.onclick = e => { const t = e.target.dataset && e.target.dataset.t; if (!t || t === stage.tier) return; stage.setTier(t); saveTier(t); drawQ(); }; drawQ();
+
+// state
+let target = 0, pos = 0, idle = 0, cur = -1, entry = null, k = 0, kT = 0, open = false;
+const openSlug = Q.get('open') || (location.hash.length > 1 ? location.hash.slice(1) : null), openIdx = SEQUENCE.findIndex(p => p.slug === openSlug);
+const startAt = parseFloat(Q.get('at')); if (!isNaN(startAt)) target = pos = startAt; if (openIdx >= 0) target = pos = openIdx + .7;
+const markRail = rail($('rail'), i => { if (!open) { target = i + .66; idle = 0; } });
+addEventListener('wheel', e => { if (!open) { target += e.deltaY * .0008; idle = 0; } }, { passive: true });
+let ty = null; gl.addEventListener('pointerdown', e => ty = e.clientY); addEventListener('pointerup', () => ty = null);
+let mx = 0, my = 0; addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; if (!open && ty !== null && e.pointerType !== 'mouse') { target -= (e.clientY - ty) * .003; ty = e.clientY; idle = 0; } });
+addEventListener('keydown', e => { if (open) { if (e.key === 'Escape') closeProject(); return; } if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { target = Math.floor(target) + 1.66; idle = 0; } if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { target = Math.max(.66, Math.floor(target) - .34); idle = 0; } });
+
+function texts(p){
+  $('name').innerHTML = nameHTML(p); $('roots').textContent = rootsText(p);
+  const r = FUSE[p.slug].roots; $('wa').textContent = r[0]; $('wb').textContent = r[1];
+  $('line').innerHTML = `<b>${family(p)}${p.flagship ? ' · Flagship' : ''}.</b> ${p.line}`; $('for').textContent = p.for ? `Made for ${p.for}.` : '';
+}
+// opening a project: the emblem moves left, its colour blooms, the project arrives from the right
+function openProject(){
+  if (open) return; open = true; kT = 1; const i = Math.floor(pos), p = SEQUENCE[i]; target = pos = i + .7;
+  $('pin').innerHTML = headHTML(p) + bodyHTML(p); mountGallery($('pin'), p); $('panel').scrollTop = 0;
+  $('panel').classList.add('on'); $('back').classList.add('on'); document.body.classList.add('open');
+  try { history.pushState({ p: p.slug }, '', '#' + p.slug); } catch (_) {}
+}
+function closeProject(fromPop){
+  if (!open) return; open = false; kT = 0; $('panel').classList.remove('on'); $('back').classList.remove('on'); document.body.classList.remove('open');
+  if (!fromPop) try { history.pushState(null, '', location.pathname + location.search); } catch (_) {}
+}
+$('cta').onclick = openProject; $('back').onclick = () => closeProject(); addEventListener('popstate', () => closeProject(true));
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, v3 = new T.Vector3();
+let last = performance.now(), spin = 0;
+function frame(now){
+  const dt = STILL ? .016 : Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000; idle += dt;
+  if (!open && idle > 5 && !reduce && !STILL) target += dt * .055;
+  target = Math.max(0, Math.min(N - .001, target)); pos += (target - pos) * (reduce || STILL ? 1 : .07);
+  const i = Math.floor(pos), f = pos - i, p = SEQUENCE[i];
+  if (i !== cur) { cur = i; entry = stage.setProject(p); texts(p); markRail(i); setTimeout(() => SEQUENCE[i + 1] && stage.prepare(SEQUENCE[i + 1]), 900); }
+  k += (kT - k) * (STILL ? 1 : 1 - Math.exp(-dt * 2.4)); if (!isNaN(KQ)) k = KQ; const kk = ease(Math.min(1, k * 1.02));
+  const cy = PLINTH_TOP + entry.height * .42;
+  // split the drop into its two words, hold, fuse, pour into the emblem, set into mercury, hold, melt
+  const apart = ease(seg(f, 0, .14)) * (1 - ease(seg(f, .26, .38))), sep = .82 * apart, bob = Math.sin(t * 1.3) * .035 * apart;
+  U.uA.value.set(-sep, cy + bob, 0, .25 - .03 * apart); U.uB.value.set(sep, cy - bob, 0, .25 - .03 * apart); U.uK.value = .42 - .3 * apart;
+  const morph = ease(seg(f, .38, .52)) * (1 - ease(seg(f, .9, 1))), set = ease(seg(f, .52, .64)) * (1 - ease(seg(f, .84, .92)));
+  U.uMorph.value = morph; U.uWob.value = 1 - morph * .9; U.uHide.value = .05 * set + kk * 2; EU.uSet.value = set;
+  EU.uColour.value = ease(seg(k, .3, .95));
+  spin += dt * (reduce ? 0 : .22 * (1 - kk * .6)); stage.holder.rotation.y = STILL ? .5 : spin + (open ? $('panel').scrollTop * .0025 : 0);
+  // words ride the droplets, then slide together and fade into the name
+  const fuse = ease(seg(f, .26, .38)), wo = apart > .02 ? Math.min(1, apart * 1.6) * (1 - fuse) : 0;
+  [[$('wa'), U.uA.value, -1], [$('wb'), U.uB.value, 1]].forEach(([el, d, s]) => { const [x, y] = stage.project(v3.set(d.x, d.y + d.w + .1, 0));
+    el.style.opacity = wo; el.style.transform = `translate(${x}px,${y}px) translate(-50%,-100%) translateX(${-s * fuse * 40}px)`; el.style.filter = `blur(${fuse * 6}px)`; });
+  const nm = ease(seg(f, .4, .56)) * (1 - ease(seg(f, .9, .98))); $('mark').style.opacity = nm;
+  const sp = document.querySelectorAll('#name span'); if (sp.length) { sp[0].style.transform = `translateX(${(1 - nm) * -40}px)`; sp[1].style.transform = `translateX(${(1 - nm) * 40}px)`; }
+  // camera: centred at home; on opening, the picture slides so the emblem sits left (or up, on a phone) and comes closer
+  const portrait = innerWidth < innerHeight, cam = stage.room.cam;
+  stage.setShift(portrait ? 0 : .2 * kk, portrait ? .27 * kk : 0);
+  stage.camera.position.set(mx * .3 * (1 - kk), cam.y + .05 - my * .12 * (1 - kk) + (portrait ? .25 : 0) + kk * .05, (portrait ? 6.4 : 5.0) - kk * (portrait ? 1.9 : .9));
+  stage.camera.lookAt(0, cam.look + (portrait ? .12 : 0) + kk * .06, 0);
+  stage.frame(t); window.__frames = (window.__frames || 0) + 1;
+}
+
+// first project, warm-up, then a short look at real frame times to settle the room
+V.set(.5, 'Setting the first drop'); entry = stage.setProject(SEQUENCE[Math.floor(pos)]); cur = Math.floor(pos); texts(SEQUENCE[cur]); markRail(cur);
+V.set(.66, 'Compiling the light'); if (stage.renderer.compileAsync) await stage.renderer.compileAsync(stage.scene, stage.camera).catch(() => {});
+if (!G.locked && stage.tier !== 'low' && !STILL) {
+  V.set(.8, 'Measuring this screen');
+  const ms = await timeFrames(frame);
+  if (ms > 40 && stage.tier === 'high') { stage.setTier('mid'); say('mid', 'stepped down to keep it smooth'); }
+  if (ms > 60) { stage.setTier('low'); say('low', 'stepped down to keep it smooth'); }
+  drawQ();
+}
+V.set(1, 'Ready');
+if (openIdx >= 0) openProject();
+const loop = now => { frame(now); requestAnimationFrame(loop); };
+requestAnimationFrame(now => { last = now; V.done(); loop(now); });
+</script>
+</body>
+</html>

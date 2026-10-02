@@ -1,0 +1,90 @@
+/* Shared look for the Round 04 Mercury pages: type, header, the loading veil, quality switch, project panel, gallery. */
+:root{
+  --fg:#EFEAE2; --dim:rgba(239,234,226,.58); --faint:rgba(239,234,226,.32); --hair:rgba(239,234,226,.14); --accent:#D6B36F; --silver:#d9dde2;
+  --bg:#060607; --panel:rgba(9,9,10,.78);
+  --display:'Bodoni Moda',ui-serif,Didot,Georgia,serif; --italic:'Cormorant Garamond',ui-serif,Georgia,serif; --sans:'Manrope',ui-sans-serif,system-ui,sans-serif; --mono:ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);overflow:hidden}
+canvas.gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+a{color:inherit}
+header.top{position:fixed;inset:0 0 auto 0;display:flex;justify-content:space-between;align-items:baseline;padding:calc(24px + env(safe-area-inset-top,0px)) clamp(16px,3vw,44px) 0;z-index:6;font-size:12.5px;letter-spacing:.04em;pointer-events:none}
+header.top > *{pointer-events:auto}
+.mk{font-family:var(--display);font-size:22px;letter-spacing:.02em;text-decoration:none}
+.mk i{font-family:var(--italic);font-weight:300}
+header.top nav{display:flex;gap:26px;color:var(--dim);align-items:baseline}
+header.top nav a{text-decoration:none}
+.dot{display:inline-block;width:.16em;height:.16em;border-radius:50%;margin:0 .06em;vertical-align:.12em;background:radial-gradient(circle at 35% 30%,#fff 0,#cfd3d8 30%,#5d6168 70%,#2a2c30 100%);box-shadow:0 0 12px rgba(255,255,255,.3)}
+
+/* quality switch: Atelier or Void, chosen for you and changeable */
+.q{display:inline-flex;gap:2px;align-items:center;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+.q button{all:unset;cursor:pointer;padding:4px 8px;border:1px solid transparent;border-radius:20px;color:var(--faint)}
+.q button.on{color:var(--fg);border-color:var(--hair)}
+.q button:focus-visible{outline:1px solid var(--accent);outline-offset:2px}
+
+/* ---------- the loading veil ---------- */
+.ld{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 40%,#101012 0,#060607 60%);transition:opacity 1s cubic-bezier(.2,.7,.2,1),visibility 1s}
+.ld.done{opacity:0;visibility:hidden}
+.ld-in{width:min(360px,calc(100vw - 48px));text-align:center;transform:translateY(-2vh);transition:transform 1s cubic-bezier(.2,.7,.2,1)}
+.ld.done .ld-in{transform:translateY(-6vh) scale(.98)}
+.ld-drop{position:relative;width:74px;height:74px;margin:0 auto 34px}
+.ld-drop i{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 34% 28%,#ffffff 0,#eef1f4 9%,#aab0b8 34%,#4a4e55 66%,#16181b 100%);
+  box-shadow:inset -7px -11px 20px rgba(0,0,0,.55),inset 6px 7px 14px rgba(255,255,255,.18),0 22px 40px rgba(0,0,0,.65);animation:wob 3.6s ease-in-out infinite}
+.ld-drop i::after{content:"";position:absolute;left:22%;top:16%;width:26%;height:16%;border-radius:50%;background:rgba(255,255,255,.85);filter:blur(1.5px);transform:rotate(-24deg)}
+.ld-drop::before{content:"";position:absolute;inset:-22px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 62%,rgba(230,234,240,.55) 82%,transparent 100%);-webkit-mask:radial-gradient(closest-side,transparent calc(100% - 1.5px),#000 calc(100% - 1px));mask:radial-gradient(closest-side,transparent calc(100% - 1.5px),#000 calc(100% - 1px));animation:spin 2.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-drop::after{content:"";position:absolute;left:12%;right:12%;bottom:-26px;height:12px;border-radius:50%;background:radial-gradient(closest-side,rgba(220,226,232,.28),transparent);filter:blur(2px);animation:shad 3.6s ease-in-out infinite}
+@keyframes wob{0%,100%{border-radius:50%;transform:translateY(0) scale(1,1)}25%{border-radius:52% 48% 50% 50%/48% 52% 48% 52%;transform:translateY(-3px) scale(.98,1.03)}50%{border-radius:48% 52% 49% 51%/52% 48% 52% 48%;transform:translateY(1px) scale(1.03,.97)}75%{transform:translateY(-1px) scale(.99,1.01)}}
+@keyframes shad{0%,100%{transform:scaleX(1);opacity:.9}25%{transform:scaleX(.9);opacity:.7}50%{transform:scaleX(1.06);opacity:1}}
+.ld-mk{font-family:var(--display);font-size:30px;letter-spacing:.02em}
+.ld-mk i{font-family:var(--italic);font-weight:300}
+.ld-line{font-family:var(--italic);font-style:italic;font-size:19px;color:var(--dim);margin:10px 0 22px;min-height:1.3em;transition:opacity .4s}
+.ld-bar{position:relative;height:1px;background:rgba(255,255,255,.12);overflow:hidden}
+.ld-bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#5e636b,#f3f5f7 70%,#9a9fa7);transition:width .6s cubic-bezier(.2,.7,.2,1)}
+.ld-bar i::after{content:"";position:absolute;top:-2px;right:0;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff}
+.ld-tier{margin-top:18px;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);min-height:1.4em}
+.ld-tier b{color:var(--dim);font-weight:500}
+@media (prefers-reduced-motion:reduce){ .ld-drop i,.ld-drop::before{content:"";position:absolute;inset:-22px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 62%,rgba(230,234,240,.55) 82%,transparent 100%);-webkit-mask:radial-gradient(closest-side,transparent calc(100% - 1.5px),#000 calc(100% - 1px));mask:radial-gradient(closest-side,transparent calc(100% - 1.5px),#000 calc(100% - 1px));animation:spin 2.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-drop::after{animation:none} }
+
+/* ---------- project content (shared by the project-page mocks) ---------- */
+.kick{font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent)}
+.pname{font-family:var(--display);font-weight:400;font-size:clamp(48px,6vw,92px);line-height:.95;margin:14px 0 8px;letter-spacing:-.01em;font-variation-settings:'opsz' 96}
+.roots{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
+.lede{font-family:var(--italic);font-style:italic;font-size:clamp(21px,1.8vw,26px);line-height:1.3;margin:22px 0 0;color:var(--fg)}
+.ctas{display:flex;gap:18px;flex-wrap:wrap;margin-top:24px}
+.btn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-size:12px;letter-spacing:.18em;text-transform:uppercase;padding:13px 20px;border:1px solid var(--hair);border-radius:40px;color:var(--fg);background:rgba(255,255,255,.03)}
+.btn.primary{background:linear-gradient(180deg,#f4f5f6,#b9bec5);color:#121315;border-color:transparent;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.btn:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+.sec{margin-top:52px}
+.sec h2{font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);font-weight:500;margin:0 0 14px;display:flex;gap:12px;align-items:center}
+.sec h2::after{content:"";flex:1;height:1px;background:var(--hair)}
+.sec p{font-size:15px;line-height:1.7;margin:0 0 12px;color:rgba(239,234,226,.84);max-width:62ch}
+.chal{list-style:none;margin:0;padding:0;display:grid;gap:22px}
+.chal li{display:grid;grid-template-columns:42px 1fr;gap:6px 14px}
+.chal .n{font-family:var(--display);font-size:28px;line-height:1;color:var(--silver)}
+.chal b{font-family:var(--display);font-weight:400;font-size:21px;line-height:1.2;display:block;margin-bottom:4px}
+.chal span{font-size:14.5px;line-height:1.65;color:rgba(239,234,226,.78)}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:9px 22px;margin:0;font-size:13.5px}
+.facts dt{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);padding-top:2px}
+.facts dd{margin:0}
+.note{margin-top:40px;font-size:11.5px;color:var(--faint);font-style:italic}
+
+/* gallery: one large shot and four beneath; click to enlarge */
+.gal{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.gal button{all:unset;cursor:zoom-in;display:block;position:relative;overflow:hidden;border-radius:6px;background:#111;aspect-ratio:16/10;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.gal button:first-child{grid-column:1 / -1}
+.gal img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.gal button:hover img{transform:scale(1.03)}
+.gal button:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+.gal figcaption{position:absolute;left:10px;bottom:8px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.lb{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(4,4,5,.88);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s;cursor:zoom-out}
+.lb.on{opacity:1;visibility:visible}
+.lb img{max-width:min(1200px,92vw);max-height:82vh;border-radius:8px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.lb p{position:absolute;bottom:4vh;left:0;right:0;text-align:center;font-family:var(--italic);font-style:italic;font-size:18px;color:var(--dim)}
+
+.mockbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));font:10px/1.2 var(--mono);color:#a7a39b;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);padding:6px 9px;border-radius:3px;text-decoration:none;z-index:60;white-space:nowrap}
+.mockbar b{color:#efeae2;font-weight:500}
+@media (max-width:760px){ header.top nav .hide-m{display:none} .gal{grid-template-columns:repeat(2,1fr)} .mockbar{top:auto;bottom:calc(4px + env(safe-area-inset-bottom,0px))} .pname{font-size:52px} }

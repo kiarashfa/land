@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mercury · Exploded View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ui.css">
+<style>
+/* The project as an engineering drawing in mercury: scroll pulls the emblem apart; each part carries one of the
+   challenges on a hairline callout; then it closes up and its colours bloom. The story and gallery follow. */
+html,body{height:auto;overflow-y:auto;overflow-x:hidden}
+.grid{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.5;background-image:linear-gradient(rgba(220,226,232,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(220,226,232,.045) 1px,transparent 1px);background-size:56px 56px;
+  -webkit-mask:radial-gradient(70% 70% at 62% 50%,#000,transparent);mask:radial-gradient(70% 70% at 62% 50%,#000,transparent)}
+svg.lines{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+svg.lines line{stroke:rgba(230,234,240,.55);stroke-width:1}
+svg.lines circle{fill:#fff}
+.tag{position:fixed;left:0;top:0;z-index:3;pointer-events:none;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);white-space:nowrap;transition:color .4s,opacity .5s}
+.tag b{font-family:var(--display);font-weight:400;font-size:20px;letter-spacing:0;text-transform:none;color:var(--fg);margin-right:8px}
+.tag.on{color:var(--fg)}
+.col{position:fixed;left:clamp(16px,4vw,64px);top:50%;transform:translateY(-50%);z-index:3;width:min(440px,36vw);transition:opacity .6s}
+.col .slot{position:absolute;left:0;right:0;top:50%;transform:translateY(-40%);opacity:0;visibility:hidden;transition:opacity .7s,transform .8s cubic-bezier(.2,.7,.2,1),visibility .7s}
+.col .slot.on{opacity:1;visibility:visible;transform:translateY(-50%)}
+.col .num{font-family:var(--display);font-size:72px;line-height:1;color:var(--silver)}
+.col h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,2.6vw,40px);line-height:1.1;margin:8px 0 14px}
+.col p{font-size:15px;line-height:1.7;color:rgba(239,234,226,.82);margin:0}
+.col .pname{font-size:clamp(48px,5vw,80px)}
+.hint{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint);transition:opacity .5s}
+.track{height:560vh}
+.end{position:relative;z-index:4;background:linear-gradient(180deg,rgba(6,6,7,0) 0,rgba(6,6,7,.92) 140px,#060607 260px);padding:240px clamp(16px,6vw,96px) 120px}
+.end .in{max-width:980px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:clamp(24px,5vw,72px)}
+.end .sec:first-child{margin-top:0}
+@media (max-width:760px){ .col{left:16px;right:16px;width:auto;top:auto;bottom:90px;transform:none;height:220px} .col .slot{top:auto;bottom:0;transform:translateY(10px)} .col .slot.on{transform:none} .col .num{font-size:44px} .col p{font-size:13.5px}
+  .tag b{font-size:16px} .tag span{display:none} .end .in{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){ .col .slot{transition:none} }
+</style>
+</head>
+<body>
+<div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-in"><div class="ld-drop"><i></i></div><div class="ld-mk">Kiarash<i>Fa</i></div><div class="ld-line">Warming the mercury</div><div class="ld-bar"><i></i></div><div class="ld-tier">&nbsp;</div></div></div>
+<canvas class="gl" id="gl" aria-label="The project's emblem in mercury, pulled apart into its parts like an engineering drawing"></canvas>
+<div class="grid"></div>
+<svg class="lines" id="lines" aria-hidden="true"></svg>
+<div id="tags"></div>
+<header class="top"><a class="mk" href="01-home.html">Kiarash<i>Fa</i></a><nav><a class="hide-m" href="01-home.html">Home</a><span class="hide-m">Chronology</span><span class="hide-m">Families</span></nav></header>
+<div class="col" id="col"></div>
+<div class="hint" id="hint">Scroll to take it apart</div>
+<main><div class="track" id="track"></div><section class="end" id="end"><div class="in"><div id="endA"></div><div id="endB"></div></div></section></main>
+<a class="mockbar" href="../">← concepts · <b>R04 · Project page · Exploded View</b> · three.js · mercury parts + callouts</a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { boot } from './_page.js';
+import { headHTML, copy, mountGallery } from './_detail.js';
+import { ease, seg } from './_home.js';
+
+const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search), STILL = Q.has('still');
+const { stage, p, entry, V, settle } = await boot($('gl'));
+stage.setRoomName('void'); stage.mholder.visible = false; stage.U.uMirror.value = 0; // a drawing wants the plain void
+const c = copy(p), R = ['I', 'II', 'III', 'IV', 'V', 'VI'], CH = c.challenges.slice(0, 4);
+
+// text column: the name, then one slot per challenge, then the closing line
+$('col').innerHTML = `<div class="slot" data-s="0">${headHTML(p).replace(/<div class="ctas">[\s\S]*<\/div>$/, '')}</div>` +
+  CH.map(([t, d], i) => `<div class="slot" data-s="${i + 1}"><div class="num">${R[i]}</div><h2>${t}</h2><p>${d}</p></div>`).join('') +
+  `<div class="slot" data-s="${CH.length + 1}"><div class="kick">Whole again</div><h2>Every part, in its true colours.</h2><p>${c.special}</p></div>`;
+$('endA').innerHTML = `<section class="sec"><h2>The idea</h2><p>${c.idea}</p></section><section class="sec"><h2>The story</h2>${c.story.map(s => `<p>${s}</p>`).join('')}</section>
+  <section class="sec"><h2>In short</h2><dl class="facts"><dt>Made for</dt><dd>${p.for ? 'Those ' + p.for.replace(/^those /, '') : 'Anyone curious'}</dd><dt>Built with</dt><dd>${c.stack}</dd></dl></section>`;
+$('endB').innerHTML = `<section class="sec"><h2>Gallery</h2><div class="gal" data-gal></div></section><div class="ctas">${headHTML(p).match(/<div class="ctas">([\s\S]*?)<\/div>/)[1]}</div><p class="note">Placeholder copy and screens for layout only.</p>`;
+mountGallery($('end'), p);
+
+// parts: the sculpture's top-level pieces, largest first; each challenge rides one of them
+// descend through single-child wrappers to the node that holds the separate pieces (same path in all four copies)
+const down = o => { while (o.children.length === 1 && !o.children[0].isMesh) o = o.children[0]; return o; };
+const objs = [entry.chrome, entry.colour, entry.mirror.children[0], entry.mirror.children[1]].map(down);
+stage.holder.rotation.y = 0; stage.scene.updateMatrixWorld(true);
+const O = objs[0], whole = new T.Box3().setFromObject(O), C = O.worldToLocal(whole.getCenter(new T.Vector3())), S = O.getWorldScale(new T.Vector3()).x;
+const H = whole.max.y - whole.min.y, list = O.children.map((ch, i) => { const b = new T.Box3().setFromObject(ch); if (b.isEmpty()) return null;
+  return { i, b, ctr: O.worldToLocal(b.getCenter(new T.Vector3())), wy: b.getCenter(new T.Vector3()).y, size: b.getSize(new T.Vector3()).length() }; }).filter(Boolean);
+const anchor = list.reduce((a, q) => (q.wy < a.wy || (q.wy === a.wy && q.size > a.size)) ? q : a, list[0]);
+// the lowest, largest piece stays as the base; the rest rise and spread outward, never through the floor
+const parts = list.map((q, n) => { const h = new T.Vector2(q.ctr.x - C.x, q.ctr.z - C.z); if (h.length() < .02 / S) h.set(Math.cos(n * 2.4), Math.sin(n * 2.4));
+  h.normalize(); const rise = q === anchor ? 0 : .22 + .55 * (q.wy - whole.min.y) / H, out = q === anchor ? 0 : .34;
+  const off = new T.Vector3(h.x * out, rise, h.y * out).divideScalar(S);
+  return { ...q, off, home: objs.map(o => o.children[q.i].position.clone()) }; });
+const callouts = [...parts].sort((a, b) => b.size - a.size).slice(0, CH.length).sort((a, b) => b.wy + b.off.y * 9 - a.wy - a.off.y * 9); // biggest pieces, read top to bottom
+$('tags').innerHTML = callouts.map((q, k) => `<div class="tag" data-k="${k}"><b>${R[k]}</b><span>${CH[k][0]}</span></div>`).join('');
+const tags = [...document.querySelectorAll('.tag')], slots = [...document.querySelectorAll('.slot')];
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, v = new T.Vector3();
+const prog = () => { const at = parseFloat(Q.get('s')); if (!isNaN(at)) return at; const h = $('track').offsetHeight - innerHeight; return Math.min(1, Math.max(0, scrollY / h)); };
+let last = performance.now(), spin = .4, slotOn = -1;
+function frame(now){
+  const dt = STILL ? .016 : Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000, s = prog();
+  // 0–.1 whole · .1–.24 apart · .24–.84 the challenges, one by one · .84–.97 closing up, colours bloom
+  const apart = ease(seg(s, .1, .24)) * (1 - ease(seg(s, .84, .95))), colour = ease(seg(s, .86, .98)), slot = s < .2 ? 0 : s < .84 ? 1 + Math.min(CH.length - 1, Math.floor((s - .24) / (.6 / CH.length))) : CH.length + 1;
+  const active = slot >= 1 && slot <= CH.length ? slot - 1 : -1;
+  stage.EU.uColour.value = colour;
+  parts.forEach(q => objs.forEach((o, n) => { const ch = o.children[q.i]; ch.position.copy(q.home[n]).addScaledVector(q.off, apart * (1 + (active >= 0 && callouts[active] === q ? .18 : 0))); }));
+  spin += dt * (reduce ? 0 : (.22 - apart * .14)); stage.holder.rotation.y = STILL ? .6 : spin;
+  if (slot !== slotOn) { slotOn = slot; slots.forEach((el, k) => el.classList.toggle('on', +el.dataset.s === slot)); }
+  $('hint').style.opacity = s < .05 ? 1 : 0;
+  const portrait = innerWidth < innerHeight; stage.setShift(portrait ? 0 : -.14, portrait ? .16 : 0);
+  stage.camera.position.set(0, 1.55 + apart * .35, (portrait ? 6.2 : 4.8) + apart * .9); stage.camera.lookAt(0, .95 + apart * .3, 0);
+  stage.frame(t);
+  // callouts: a dot on the part, a hairline out to its label
+  let svg = ''; const cx = innerWidth * (portrait ? .5 : .64);
+  callouts.forEach((q, k) => { const o = O, ch = o.children[q.i]; v.copy(q.ctr).addScaledVector(q.off, apart); o.localToWorld(v); const [x, y] = stage.project(v);
+    const right = x >= cx, lx = right ? Math.min(innerWidth - 220, x + 120) : Math.max(innerWidth * (portrait ? .04 : .42), x - 260), ly = y - 30 + (k % 2) * 16, vis = apart > .6 ? 1 : 0, on = k === active;
+    tags[k].style.opacity = vis * (on || active < 0 ? 1 : .45); tags[k].classList.toggle('on', on); tags[k].style.transform = `translate(${lx}px,${ly - 12}px)`;
+    if (vis) svg += `<line x1="${x}" y1="${y}" x2="${right ? lx - 8 : lx + (tags[k].offsetWidth || 160) + 8}" y2="${ly}" opacity="${on || active < 0 ? 1 : .4}"/><circle cx="${x}" cy="${y}" r="${on ? 3.5 : 2.5}"/>`; });
+  $('lines').innerHTML = svg; window.__frames = (window.__frames || 0) + 1;
+}
+await settle(frame);
+const loop = now => { frame(now); requestAnimationFrame(loop); };
+requestAnimationFrame(now => { last = now; V.done(); loop(now); });
+</script>
+</body>
+</html>

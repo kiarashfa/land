@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mercury · The Lot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ui.css">
+<style>
+/* The project page as a lot at auction: the auctioneer's patter, chapter by chapter, sells the challenges as the
+   reasons this piece is valuable. Scroll (or the arrow) to move the sale along; the emblem turns on the plinth. */
+html,body{height:auto;overflow-y:auto;overflow-x:hidden}
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.35) 0,transparent 22%,transparent 52%,rgba(0,0,0,.78) 100%)}
+.ticket{text-shadow:0 1px 14px rgba(0,0,0,.8);position:fixed;left:clamp(16px,3vw,44px);top:calc(78px + env(safe-area-inset-top,0px));z-index:3;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);line-height:2}
+.ticket b{display:block;font-family:var(--display);font-weight:400;font-size:44px;letter-spacing:0;text-transform:none;color:var(--fg);line-height:1}
+.ticket .est{color:var(--accent)}
+.hear{all:unset;cursor:pointer;position:fixed;right:clamp(16px,3vw,44px);top:calc(78px + env(safe-area-inset-top,0px));z-index:3;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);border:1px solid var(--hair);border-radius:20px;padding:7px 12px}
+.hear.on{color:var(--fg);border-color:var(--accent)}
+.hear:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+main{position:relative;z-index:2}
+.ch{min-height:100vh;display:flex;align-items:flex-end;justify-content:center;padding:0 clamp(16px,6vw,96px) calc(13vh + env(safe-area-inset-bottom,0px))}
+.say{max-width:900px;text-align:center}
+.say small{display:block;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.say p{font-family:var(--italic);font-style:italic;font-weight:300;font-size:clamp(26px,3vw,44px);line-height:1.22;margin:0;text-shadow:0 2px 24px rgba(0,0,0,.6);opacity:.25;transform:translateY(10px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1)}
+.ch.on .say p{opacity:1;transform:none}
+.say .sub{display:block;margin-top:16px;font-family:var(--sans);font-style:normal;font-size:14px;line-height:1.6;color:var(--dim);max-width:60ch;margin-inline:auto;opacity:0;transition:opacity 1s .3s}
+.ch.on .say .sub{opacity:1}
+.ch.plates{align-items:center;padding-top:16vh}
+.plates .box,.sold .box{position:relative;padding:44px clamp(16px,3vw,48px);border-radius:24px;background:radial-gradient(closest-side,rgba(6,6,7,.86),rgba(6,6,7,.6) 70%,rgba(6,6,7,0))}
+.plates .box{width:min(1100px,100%)}
+.plates .box h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,3.6vw,54px);margin:0 0 6px;text-align:center}
+.plates .box .cap{text-align:center;font-family:var(--italic);font-style:italic;color:var(--dim);font-size:19px;margin-bottom:26px}
+.plates .gal{grid-template-columns:repeat(5,1fr)}
+.plates .gal button:first-child{grid-column:auto}
+.plates .gal figcaption::before{content:attr(data-p) " · "}
+.ch.sold{align-items:center}
+.sold .box{text-align:center;max-width:760px}
+.sold .gavel{font-family:var(--display);font-size:clamp(64px,9vw,140px);line-height:.9;margin:0}
+.sold .pname{font-size:clamp(40px,4vw,64px)}
+.sold .ctas{justify-content:center}
+.sold .facts{margin:40px auto 0;max-width:520px;text-align:left}
+.next{all:unset;cursor:pointer;position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+.next:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+.progress{position:fixed;right:clamp(16px,3vw,44px);top:50%;transform:translateY(-50%);z-index:3;display:grid;gap:10px}
+.progress i{width:6px;height:6px;border-radius:50%;background:var(--hair);transition:background .4s,transform .4s}
+.progress i.on{background:radial-gradient(circle at 35% 30%,#fff,#9aa0a8 45%,#3a3d42);transform:scale(1.4)}
+@media (max-width:760px){ .ticket b{font-size:32px} .plates .gal{grid-template-columns:repeat(2,1fr)} .plates .gal button:first-child{grid-column:1 / -1} .progress{display:none} .ch{padding-bottom:calc(16vh + env(safe-area-inset-bottom,0px))} }
+@media (prefers-reduced-motion:reduce){ .say p,.say .sub{transition:none} }
+</style>
+</head>
+<body>
+<div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-in"><div class="ld-drop"><i></i></div><div class="ld-mk">Kiarash<i>Fa</i></div><div class="ld-line">Warming the mercury</div><div class="ld-bar"><i></i></div><div class="ld-tier">&nbsp;</div></div></div>
+<canvas class="gl" id="gl" aria-label="The project's emblem in mercury on a lacquer plinth, offered as a lot"></canvas>
+<div class="scrim"></div>
+<header class="top"><a class="mk" href="01-home.html">Kiarash<i>Fa</i></a><nav><a class="hide-m" href="01-home.html">Home</a><span class="hide-m">Chronology</span><span class="hide-m">Families</span><span class="q" id="q" aria-label="Room"></span></nav></header>
+<div class="ticket" id="ticket"></div>
+<button class="hear" id="hear" aria-pressed="false">Hear the auctioneer</button>
+<div class="progress" id="prog" aria-hidden="true"></div>
+<main id="main"></main>
+<button class="next" id="next">Continue ↓</button>
+<a class="mockbar" href="../">← concepts · <b>R04 · Project page · The Lot</b> · three.js + auction patter</a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { boot, roomSwitch } from './_page.js';
+import { byDate, fmtDate } from './_data.js';
+import { headHTML, copy, familyName, mountGallery, siteURL, shots } from './_detail.js';
+import { nameHTML, rootsText, ease, seg } from './_home.js';
+
+const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search), STILL = Q.has('still');
+const { stage, p, entry, V, settle } = await boot($('gl'));
+roomSwitch($('q'), stage);
+const c = copy(p), lot = byDate().findIndex(x => x.slug === p.slug) + 1, words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+$('ticket').innerHTML = `Lot<b>${lot}</b>${familyName(p)}${p.flagship ? ' · Flagship' : ''}<br>Since ${fmtDate(p.started)}<br><span class="est">Estimate: free</span>`;
+
+// the sale, as the auctioneer would tell it
+const R = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+const CH = [
+  { k: 'Lot ' + lot, say: `Lot ${words[lot] || lot}. ${p.name}. ${rootsText(p).replace(' + ', ', plus ')}.`, sub: p.line },
+  { k: 'Provenance', say: `Made by Kia, and never sold, because it was never for sale. Observe it now in its true colours.`, sub: c.story[0] },
+  { k: 'The idea', say: `What you are looking at, ladies and gentlemen, is this:`, sub: c.idea },
+  ...c.challenges.map(([t, d], i) => ({ k: `Condition report · ${R[i]}`, say: `Note ${['first', 'next', 'also', 'and finally'][Math.min(i, 3)]}: ${t.charAt(0).toLowerCase() + t.slice(1)}.`, sub: d })),
+  { k: 'Plates', plates: true },
+  { k: 'Sold', sold: true },
+];
+$('main').innerHTML = CH.map((ch, i) => ch.plates
+  ? `<section class="ch plates" data-i="${i}"><div class="box"><h2>The catalogue plates</h2><div class="cap">Five views of the lot, as offered</div><div class="gal" data-gal></div></div></section>`
+  : ch.sold
+  ? `<section class="ch sold" data-i="${i}"><div class="box"><p class="gavel">Sold.</p><div class="kick" style="margin-top:18px">To you, for nothing at all</div><h1 class="pname">${nameHTML(p)}</h1><div class="roots">${rootsText(p)}</div>
+      <div class="ctas"><a class="btn primary" href="${siteURL(p)}" target="_blank" rel="noopener">Collect it: open ${p.name} ↗</a><a class="btn" href="01-home.html#${p.slug}">Back to the sale</a></div>
+      <dl class="facts"><dt>Made for</dt><dd>${p.for ? 'Those ' + p.for.replace(/^those /, '') : 'Anyone curious'}</dd><dt>Special</dt><dd>${c.special}</dd><dt>Built with</dt><dd>${c.stack}</dd></dl>
+      <p class="note">Placeholder copy and screens for layout only.</p></div></section>`
+  : `<section class="ch" data-i="${i}"><div class="say"><small>${ch.k}</small><p>${ch.say}</p><span class="sub">${ch.sub}</span></div></section>`).join('');
+mountGallery($('main'), p); document.querySelectorAll('.plates figcaption').forEach((f, i) => f.dataset.p = 'Plate ' + R[i]);
+$('prog').innerHTML = CH.map(() => '<i></i>').join('');
+
+// speech (off by default)
+let hear = false; const synth = window.speechSynthesis;
+$('hear').onclick = () => { hear = !hear; $('hear').classList.toggle('on', hear); $('hear').setAttribute('aria-pressed', hear); if (!hear && synth) synth.cancel(); else speak(cur); };
+function speak(i){ if (!hear || !synth || !CH[i] || !CH[i].say) return; synth.cancel(); const u = new SpeechSynthesisUtterance(CH[i].say + ' ' + (CH[i].sub || '')); u.rate = .98; u.pitch = .9; synth.speak(u); }
+
+// chapter from scroll
+let cur = -1; const secs = [...document.querySelectorAll('.ch')];
+const at = parseInt(Q.get('ch')); if (!isNaN(at)) setTimeout(() => scrollTo(0, at * innerHeight), 50);
+function chapter(){ const i = Math.min(CH.length - 1, Math.max(0, Math.round(scrollY / innerHeight))); if (i === cur) return; cur = i;
+  secs.forEach((s, k) => s.classList.toggle('on', k === i)); [...$('prog').children].forEach((d, k) => d.classList.toggle('on', k === i)); $('next').style.opacity = i === CH.length - 1 ? 0 : 1; speak(i); }
+addEventListener('scroll', chapter, { passive: true }); $('next').onclick = () => scrollTo({ top: (cur + 1) * innerHeight, behavior: 'smooth' });
+addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); $('next').click(); } });
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = performance.now(), spin = .5, colour = 0, flash = 0, wasSold = false;
+function frame(now){
+  const dt = STILL ? .016 : Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  const sc = scrollY / innerHeight, sold = cur === CH.length - 1, plates = !!(CH[cur] && CH[cur].plates);
+  colour += ((cur >= 1 ? 1 : 0) - colour) * (STILL ? 1 : 1 - Math.exp(-dt * 1.2)); stage.EU.uColour.value = ease(colour);
+  if (sold && !wasSold) flash = 1; wasSold = sold; flash *= Math.exp(-dt * 3); stage.bloom.strength = stage.room.bloom[0] + flash * .45;
+  spin += dt * (reduce ? 0 : .18); stage.holder.rotation.y = STILL ? .5 : spin + sc * .6;
+  const portrait = innerWidth < innerHeight, cam = stage.room.cam, close = ease(Math.min(1, sc / 3)), away = plates || sold ? 1 : 0;
+  stage.setShift(0, portrait ? .2 : -.04 * (1 - away) + .12 * away);
+  stage.camera.position.set(Math.sin(t * .1) * .12, cam.y + .2 - close * .12 + away * .2, (portrait ? 6.6 : 5.2) - close * .7 + away * .8); stage.camera.lookAt(0, cam.look + .1 + away * .1, 0);
+  stage.frame(t); window.__frames = (window.__frames || 0) + 1;
+}
+chapter();
+await settle(frame);
+const loop = now => { frame(now); requestAnimationFrame(loop); };
+requestAnimationFrame(now => { last = now; V.done(); loop(now); });
+</script>
+</body>
+</html>

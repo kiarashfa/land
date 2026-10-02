@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mercury · Dust</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ui.css">
+<style>
+/* Kia's "latent" idea, made of mercury: a cloud of tiny beads condenses into the emblem as you scroll, takes on its
+   colours, breathes while the challenges are told, then drifts apart into a slow ring behind the gallery. */
+html,body{height:auto;overflow-y:auto;overflow-x:hidden}
+.scrim{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,rgba(6,6,7,.86) 0,rgba(6,6,7,.5) 36%,transparent 56%)}
+@media (max-width:760px){ .scrim{background:linear-gradient(0deg,rgba(6,6,7,.92) 0,rgba(6,6,7,.6) 34%,transparent 52%)} }
+.col{position:fixed;left:clamp(16px,4vw,64px);top:50%;transform:translateY(-50%);z-index:3;width:min(440px,36vw);height:60vh;pointer-events:none}
+.col .slot{position:absolute;left:0;right:0;top:50%;transform:translateY(-40%);opacity:0;visibility:hidden;transition:opacity .8s,transform .9s cubic-bezier(.2,.7,.2,1),visibility .8s;pointer-events:auto}
+.col .slot.on{opacity:1;visibility:visible;transform:translateY(-50%)}
+.col .num{font-family:var(--display);font-size:64px;line-height:1;color:var(--silver)}
+.col h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,2.6vw,40px);line-height:1.1;margin:8px 0 14px}
+.col p{font-size:15px;line-height:1.7;color:rgba(239,234,226,.82);margin:0}
+.hint{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint);transition:opacity .5s}
+.track{height:520vh}
+.end{position:relative;z-index:4;background:linear-gradient(180deg,rgba(6,6,7,0) 0,rgba(6,6,7,.55) 200px,rgba(6,6,7,.8) 420px);padding:300px clamp(16px,6vw,96px) 120px}
+.end .in{max-width:980px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:clamp(24px,5vw,72px)}
+.end .sec:first-child{margin-top:0}
+@media (max-width:760px){ .col{left:16px;right:16px;width:auto;top:auto;bottom:80px;transform:none;height:240px} .col .slot{top:auto;bottom:0;transform:translateY(10px)} .col .slot.on{transform:none} .col .num{font-size:40px} .col p{font-size:13.5px} .end .in{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){ .col .slot{transition:none} }
+</style>
+</head>
+<body>
+<div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-in"><div class="ld-drop"><i></i></div><div class="ld-mk">Kiarash<i>Fa</i></div><div class="ld-line">Warming the mercury</div><div class="ld-bar"><i></i></div><div class="ld-tier">&nbsp;</div></div></div>
+<canvas class="gl" id="gl" aria-label="A cloud of tiny mercury beads gathering into the project's emblem"></canvas>
+<div class="scrim"></div>
+<header class="top"><a class="mk" href="01-home.html">Kiarash<i>Fa</i></a><nav><a class="hide-m" href="01-home.html">Home</a><span class="hide-m">Chronology</span><span class="hide-m">Families</span><span class="q" id="q" aria-label="Room"></span></nav></header>
+<div class="col" id="col"></div>
+<div class="hint" id="hint">Scroll to gather the mercury</div>
+<main><div class="track" id="track"></div><section class="end" id="end"><div class="in"><div id="endA"></div><div id="endB"></div></div></section></main>
+<a class="mockbar" href="../">← concepts · <b>R04 · Project page · Mercury Dust</b> · three.js · instanced beads (the latent idea)</a>
+
+<script type="module">
+import * as T from '../vendor/three.r03.min.js';
+import { boot, roomSwitch } from './_page.js';
+import { headHTML, copy, mountGallery } from './_detail.js';
+import { ease, seg } from './_home.js';
+
+const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search), STILL = Q.has('still');
+const { stage, p, entry, V, settle } = await boot($('gl'));
+roomSwitch($('q'), stage);
+const c = copy(p), R = ['I', 'II', 'III', 'IV', 'V', 'VI'], CH = c.challenges.slice(0, 4);
+$('col').innerHTML = `<div class="slot" data-s="0">${headHTML(p).replace(/<div class="ctas">[\s\S]*<\/div>$/, '')}</div>` +
+  `<div class="slot" data-s="1"><div class="kick">The idea</div><h2>Out of the dust, a shape.</h2><p>${c.idea}</p></div>` +
+  CH.map(([t, d], i) => `<div class="slot" data-s="${i + 2}"><div class="num">${R[i]}</div><h2>${t}</h2><p>${d}</p></div>`).join('');
+$('endA').innerHTML = `<section class="sec"><h2>The story</h2>${c.story.map(s => `<p>${s}</p>`).join('')}</section>
+  <section class="sec"><h2>In short</h2><dl class="facts"><dt>Made for</dt><dd>${p.for ? 'Those ' + p.for.replace(/^those /, '') : 'Anyone curious'}</dd><dt>Special</dt><dd>${c.special}</dd><dt>Built with</dt><dd>${c.stack}</dd></dl></section>`;
+$('endB').innerHTML = `<section class="sec"><h2>Gallery</h2><div class="gal" data-gal></div></section><div class="ctas">${headHTML(p).match(/<div class="ctas">([\s\S]*?)<\/div>/)[1]}</div><p class="note">Placeholder copy and screens for layout only.</p>`;
+mountGallery($('end'), p);
+const slots = [...document.querySelectorAll('.slot')];
+
+// the solid emblem steps aside: the beads are the emblem here
+entry.group.visible = false; entry.mirror.visible = false;
+const N = { high: 9000, mid: 5600, low: 4200 }[stage.tier];
+// sample the coloured sculpture's surface, area-weighted, with the colour under each point
+stage.holder.rotation.y = 0; stage.scene.updateMatrixWorld(true);
+const inv = new T.Matrix4().copy(stage.holder.matrixWorld).invert(), tris = [], pix = new Map(); let total = 0;
+const A = new T.Vector3(), B = new T.Vector3(), Cc = new T.Vector3(), E1 = new T.Vector3(), E2 = new T.Vector3();
+entry.colour.traverse(o => { if (!o.isMesh) return; const g = o.geometry, pos = g.attributes.position, idx = g.index, m = new T.Matrix4().multiplyMatrices(inv, o.matrixWorld), mat = [].concat(o.material)[0];
+  const n = (idx ? idx.count : pos.count) / 3;
+  for (let t = 0; t < n; t++) { const i0 = idx ? idx.getX(3 * t) : 3 * t, i1 = idx ? idx.getX(3 * t + 1) : 3 * t + 1, i2 = idx ? idx.getX(3 * t + 2) : 3 * t + 2;
+    A.fromBufferAttribute(pos, i0).applyMatrix4(m); B.fromBufferAttribute(pos, i1).applyMatrix4(m); Cc.fromBufferAttribute(pos, i2).applyMatrix4(m);
+    const area = E1.subVectors(B, A).cross(E2.subVectors(Cc, A)).length() * .5; if (area <= 0) continue; total += area; tris.push({ i0, i1, i2, m, mat, g, cum: total }); } });
+function colourAt(mat, g, i0, i1, i2, u, v){
+  const col = mat.color ? mat.color.clone() : new T.Color(1, 1, 1);
+  if (mat.map && mat.map.image && g.attributes.uv) { const img = mat.map.image; let d = pix.get(img);
+    if (!d) { const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0); d = { w: cv.width, h: cv.height, px: cx.getImageData(0, 0, cv.width, cv.height).data }; pix.set(img, d); }
+    const uv = g.attributes.uv, w = 1 - u - v, tu = uv.getX(i0) * w + uv.getX(i1) * u + uv.getX(i2) * v, tv = uv.getY(i0) * w + uv.getY(i1) * u + uv.getY(i2) * v;
+    const x = Math.floor(((tu % 1) + 1) % 1 * (d.w - 1)), y = Math.floor((1 - ((tv % 1) + 1) % 1) * (d.h - 1)), k = (y * d.w + x) * 4;
+    col.multiply(new T.Color().setRGB(d.px[k] / 255, d.px[k + 1] / 255, d.px[k + 2] / 255, T.SRGBColorSpace)); }
+  return col;
+}
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const target = new Float32Array(N * 3), scatter = new Float32Array(N * 3), ring = new Float32Array(N * 3), delay = new Float32Array(N), size = new Float32Array(N), colours = [];
+for (let k = 0; k < N; k++) {
+  const r = rnd() * total; let lo = 0, hi = tris.length - 1; while (lo < hi) { const mid = (lo + hi) >> 1; if (tris[mid].cum < r) lo = mid + 1; else hi = mid; }
+  const tr = tris[lo], pos = tr.g.attributes.position; let u = rnd(), v = rnd(); if (u + v > 1) { u = 1 - u; v = 1 - v; }
+  A.fromBufferAttribute(pos, tr.i0).applyMatrix4(tr.m); B.fromBufferAttribute(pos, tr.i1).applyMatrix4(tr.m); Cc.fromBufferAttribute(pos, tr.i2).applyMatrix4(tr.m);
+  const P = A.clone().multiplyScalar(1 - u - v).addScaledVector(B, u).addScaledVector(Cc, v); target.set([P.x, P.y, P.z], k * 3);
+  colours.push(colourAt(tr.mat, tr.g, tr.i0, tr.i1, tr.i2, u, v));
+  const th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1), rr = .9 + Math.cbrt(rnd()) * 1.5; scatter.set([Math.sin(ph) * Math.cos(th) * rr * 1.3, .55 + Math.cos(ph) * rr * .55, Math.min(1.1, Math.sin(ph) * Math.sin(th) * rr) - .5], k * 3);
+  const ra = rnd() * Math.PI * 2, rd = 2.1 + rnd() * 1.6; ring.set([Math.cos(ra) * rd, .55 + (rnd() - .5) * .5, Math.sin(ra) * rd - .6], k * 3);
+  delay[k] = rnd(); size[k] = .6 + rnd() * .6; }
+const bead = new T.InstancedMesh(new T.IcosahedronGeometry(.0068, 1), new T.MeshPhysicalMaterial({ color: 0xffffff, metalness: .85, roughness: .16, envMapIntensity: 1.1 }), N);
+bead.instanceMatrix.setUsage(T.DynamicDrawUsage); bead.frustumCulled = false; stage.holder.add(bead);
+const chrome = new T.Color(.82, .84, .87), tmp = new T.Color(); for (let k = 0; k < N; k++) bead.setColorAt(k, chrome);
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, M = bead.instanceMatrix.array;
+const prog = () => { const at = parseFloat(Q.get('s')); if (!isNaN(at)) return at; const h = $('track').offsetHeight - innerHeight; return Math.min(1, Math.max(0, scrollY / h)); };
+let last = performance.now(), spin = .4, slotOn = -1, lastCol = -1;
+function frame(now){
+  const dt = STILL ? .016 : Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000, s = prog();
+  // .00–.28 gather · .28–.40 colour · .40–.82 breathe, one challenge at a time · .82–1 drift into a ring
+  const gather = seg(s, .02, .3), col = ease(seg(s, .28, .4)), away = ease(seg(s, .84, 1)), breathe = seg(s, .4, .84) > 0 && away < 1 ? 1 : 0;
+  const slot = s < .14 ? 0 : s < .4 ? 1 : 2 + Math.min(CH.length - 1, Math.floor((s - .4) / (.44 / CH.length)));
+  if (slot !== slotOn) { slotOn = slot; slots.forEach(el => el.classList.toggle('on', +el.dataset.s === slot)); }
+  if (Math.abs(col - lastCol) > .002) { lastCol = col; for (let k = 0; k < N; k++) bead.setColorAt(k, tmp.copy(chrome).lerp(colours[k], col)); bead.instanceColor.needsUpdate = true; }
+  const ph = slot - 2, wave = breathe ? (t * .9) % 1 : -1, ra = t * .05;
+  for (let k = 0; k < N; k++) {
+    const i3 = k * 3, g = ease(Math.min(1, Math.max(0, (gather * 1.6 - delay[k] * .6)))), dr = (1 - g) * .06;
+    let x = scatter[i3] + Math.sin(t * .4 + k) * dr * 3, y = scatter[i3 + 1] + Math.cos(t * .33 + k * 1.3) * dr * 3, z = scatter[i3 + 2] + Math.sin(t * .27 + k * .7) * dr * 3;
+    const tx = target[i3], ty = target[i3 + 1], tz = target[i3 + 2], pulse = wave >= 0 ? Math.exp(-Math.pow((ty - wave * 1.1) * 9, 2)) * .03 : 0;
+    x += (tx * (1 + pulse) - x) * g; y += (ty - y) * g; z += (tz * (1 + pulse) - z) * g;
+    if (away > 0) { const c2 = Math.cos(ra), s2 = Math.sin(ra), rx = ring[i3] * c2 - ring[i3 + 2] * s2, rz = ring[i3] * s2 + ring[i3 + 2] * c2; const a = ease(Math.min(1, Math.max(0, away * 1.5 - delay[k] * .5))); x += (rx - x) * a; y += (ring[i3 + 1] - y) * a; z += (rz - z) * a; }
+    const sc = size[k] * (1 - .35 * g * (1 - col)); const o = k * 16; M[o] = sc; M[o + 5] = sc; M[o + 10] = sc; M[o + 12] = x; M[o + 13] = y; M[o + 14] = z; M[o + 15] = 1; }
+  bead.instanceMatrix.needsUpdate = true;
+  spin += dt * (reduce ? 0 : .16 * (1 - away * .7)); stage.holder.rotation.y = STILL ? .5 : spin;
+  $('hint').style.opacity = s < .03 ? 1 : 0;
+  const portrait = innerWidth < innerHeight; stage.setShift(portrait ? 0 : -.15 * (1 - away), portrait ? .16 : 0);
+  stage.camera.position.set(0, 1.45 + away * .4, (portrait ? 6.4 : 4.9) + away * 1.2); stage.camera.lookAt(0, .95, 0);
+  stage.frame(t); window.__frames = (window.__frames || 0) + 1;
+}
+// static matrices' unused entries
+for (let k = 0; k < N; k++) { const o = k * 16; for (let j = 0; j < 16; j++) M[o + j] = 0; }
+await settle(frame);
+const loop = now => { frame(now); requestAnimationFrame(loop); };
+requestAnimationFrame(now => { last = now; V.done(); loop(now); });
+</script>
+</body>
+</html>

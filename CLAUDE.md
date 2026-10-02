@@ -23,6 +23,7 @@ The future `kiarashfa.github.io`: a landing site that gathers all of Kia's side 
 | `mocks/` | Design mocks, one folder per round. `mocks/index.html` is the gallery. |
 | `tools/screenshots/` | Headless screenshot and thumbnail scripts for checking mocks. |
 | `tools/assets/` | Converters that turn EXR and GLB into files any static host serves. |
+| `GlassRoom/`, `SaleRoom/` | Spin-off projects handed off in R04 (self-contained, with their own README and docs). Not part of the landing site. |
 
 The production Astro app does not exist yet; it arrives in the architecture round (R06).
 
@@ -43,6 +44,7 @@ The production Astro app does not exist yet; it arrives in the architecture roun
 4. **Each project gets a bespoke sculpture** (see `mocks/r02-worlds/_sculptures.js`), not an extruded icon.
 5. **Never delete a mock.** Revise by adding `NN-name-v2.html`; keep the old file and its thumbnail.
 6. Kia's bar: very 3D, creative, out of the box, luxurious. Rejected in R01: cards in a grid, chaotic motion, a big type list with a magnifier, childish physics toys.
+7. **Mercury binds every page** (R04): Quicksilver only, Converge for the words, emblems pure mercury until a project's page.
 
 ## Conventions
 
@@ -53,6 +55,8 @@ The production Astro app does not exist yet; it arrives in the architecture roun
 - Every mock has a small `.mockbar` link back to the gallery naming the concept and its tech.
 - `08-riso-boxes.html` is deliberately self-contained (inline data, system fonts, Canvas 2D, one request), following `docs/references/riso-boxes-spec.md`.
 - `_dev-*` files are scratch pages (git-ignored), e.g. `r02-worlds/_dev-sheet.html` renders every sculpture in one contact sheet, and `r03-pages/_dev-vitrine.html?room=<slug>` renders one glass case.
+- Round 04 (current) lives in `mocks/r04-mercury/`: `_mercury.js` (the engine: liquid, pure-mercury emblems with a colour bloom, rooms `atelier` / `void` / `pool`, tiers, frame timing, NaN guard), `_ui.css` (shared look, loading veil, project sections, gallery), `_detail.js` (placeholder copy, five canvas "screenshots", gallery lightbox), `_page.js` (shared start-up for project pages), `_home.js` (fusions). Pages take `?tier=high|mid|low`, `?still`, `?open=<slug>` / `?p=<slug>`, `?at=`, `?ch=`, `?s=`, `?veil`.
+- Mercury rule (D-040): emblems are pure mercury everywhere except a project's own page, where they bloom into colour.
 - Round 03 shared modules in `mocks/r03-pages/`: `_qs.js` (liquid-metal engine, SDF bake, molten dissolve), `_ambients.js` (Atelier, Dusk, Travertine; each returns its `plinth`), `_home.js` (word fusions), `_rig.js` (aim-based posing for Mixamo skeletons), `_figures.js` (painted figures and living loops), `_vitrine.js` (glass case, modelling kit, light rescaling, gallery environment), `_rooms.js` (one miniature room per project, built in real metres).
 - A new family room = a builder in `_rooms.js` keyed by the project slug, plus a line in `SCENE_NOTES`. Model in metres with people 1.75 m tall; `rescaleLights` fixes light intensities after the room is shrunk into a case.
 - Heavy pages take `?still` (a settled frame) and `?i=` / `?lot=` / `?at=` to pick a state, so screenshots and thumbnails are reproducible.
